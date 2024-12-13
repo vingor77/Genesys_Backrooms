@@ -1,11 +1,12 @@
 import { Box, Toolbar } from "@mui/material";
+import NotLoggedIn from "../Components/notLoggedIn";
 
 export default function Outposts() {
   return (
-    <Box>
-      <Toolbar />
-      <h1>Outposts</h1>
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <h1>Outposts</h1>
+      </Box>
   )
 }
 

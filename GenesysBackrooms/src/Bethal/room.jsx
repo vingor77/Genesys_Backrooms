@@ -10,11 +10,19 @@ export default function Room(props) {
   let equipment = '';
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '435px', padding: 1}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '480px', padding: 1}}>
       <Stack justifyContent="space-between" alignItems="center">
-        {props.data.fireExit ? <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType} (Fire Exit)</Typography> : <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType}</Typography>}
-        <Chip label={'Room: ' + props.data.roomNum} />
+        <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType}</Typography>
+        <Stack direction='row' justifyContent="space-between" alignItems="center">
+          <Chip label={'Room: ' + props.data.roomNum} />
+          {props.data.fireExit ? <Chip label={"Fire Exit"} /> : ""}
+        </Stack>
       </Stack>
+      <br />
+      <Divider />
+      <Typography><b>Light levels:</b></Typography>
+      <Typography>Apparatus Active: {props.data.lightsOn !== undefined ? props.data.lightsOn : 5}</Typography>
+      <Typography>Apparatus Inactive: {props.data.lightsOff !== undefined ? props.data.lightsOff : 5}</Typography>
       {props.data.scraps.length !== 0 ? 
         <Box>
           <br />

@@ -31,6 +31,7 @@ export default function Bethal() {
   const [nightSpawned, setNightSpawned] = useState([]);
   const [dataRetrieved, setDataRetrieved] = useState(false);
   const [floodLevel, setFloodLevel] = useState(0);
+  const [moonList, setMoonList] = useState(false);
 
   const mapSizes = [21, 18, 32, 18, 36, 23, 32, 40, 21];
   const quotas = [130, 236, 361, 517, 717, 973, 1300, 1700, 2205, 2811, 3536, 4392, 5392, 5392, 6548, 7873, 9380];
@@ -73,9 +74,17 @@ export default function Bethal() {
 
   const getWeather = () => {
     const temp = [];
+    const maxUnknown = 4;
+    let unknown = 0;
 
     for(let i = 0; i < moons.length; i++) {
-      temp.push(moons[i].weather[Math.floor(Math.random() * moons[i].weather.length)]);
+      if(unknown < maxUnknown && Math.floor(Math.random() * 2) === 1) {
+        temp.push(moons[i].weather[Math.floor(Math.random() * moons[i].weather.length)] + "?");
+        unknown++;
+      }
+      else {
+        temp.push(moons[i].weather[Math.floor(Math.random() * moons[i].weather.length)]);
+      }
     }
 
     setWeather(temp);
@@ -302,7 +311,9 @@ export default function Bethal() {
         spikeTrap: false,
         turret: false,
         placed: false,
-        connections: []
+        connections: [],
+        lightsOn: 5,
+        lightsOff: 5
       }
     ];
     const maxScrap = Math.floor(Math.random() * (moon.maxScrap - moon.minScrap + 1) + moon.minScrap);
@@ -329,6 +340,11 @@ export default function Bethal() {
       currScrap = determineScrap(currScrap, maxScrap, roomList, moon, i); //DONE
       currEntityPower = determineInsideEntity(currEntityPower, maxEntityPower, roomList, moon, i, currentlyInsideSpawned); //DONE
       determineRoomType(roomList, currentlySpawnedRooms, i);
+      const lightsOn = Math.floor(Math.random() * 5) + 3;
+      let lightsOff = lightsOn - 4;
+      if(lightsOff < 0) lightsOff = 0;
+      roomList[i].lightsOn = lightsOn;
+      roomList[i].lightsOff = lightsOff;
     }
 
     determineOutsideEntities(moon, dayEntityList, nightEntityList);
@@ -489,12 +505,6 @@ export default function Bethal() {
         }
       }
     }
-  }
-
-  const handlePlayerLocationChange = (e, index) => {
-    const temp = entityLocations;
-    temp[index].roomNum = e.target.value;
-    setEntityLocations(temp);
   }
 
   const generateEntityLocations = () => {
@@ -746,22 +756,18 @@ export default function Bethal() {
             return (
               <Box>
                 {data.soak !== undefined ? 
-                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '180px'}}>
+                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
                     <NightEntity data={data}/>
                     {chosenDayEntities.length === 0 ?
                       nightSpawned[index] ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>
                     :
                       nightSpawned[index - 4] ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>
                     }
-                    <Typography>Dead?</Typography>
-                    <Checkbox />
                   </Card>
                 : 
-                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '180px'}}>
+                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
                     <Typography textAlign='center' sx={{fontWeight: 'bold'}}>{data}</Typography>
                     <Checkbox checked disabled />
-                    <Typography>Dead?</Typography>
-                    <Checkbox />
                   </Card>
                 }
               </Box>
@@ -808,29 +814,15 @@ export default function Bethal() {
       <Box display='flex'>
         {weather.length === 0 ? getWeather() : ""}
 
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: {xs: '20%', md: '12%'},
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: { width: {xs: '20%', md: '12%'}, boxSizing: 'border-box' }
-          }}
-        >
-          <Toolbar />
+        <Drawer open={moonList} onClick={() => setMoonList(false)} anchor="top" sx={{width: {xs: '20%', md: '12%'}}}>
           <Box>
-            <Stack>
-              <Button variant="outlined" onClick={handleDayChange}>Advance Day</Button>
-            </Stack>
+            <Button variant="contained" onClick={handleDayChange}>Advance Day</Button>
             <Divider />
-            <List>
+            <Stack direction='row' flexWrap='wrap' spacing={2}>
               {moons.map((moon, index) => (
-                <ListItem key={index} disablePadding>
-                  <ListItemButton onClick={() => handleMoonChange(moon.name, "n")}>
-                    <ListItemText primary={moon.name + " (" + weather[index] + ") [" + moon.cost + "]"} />
-                  </ListItemButton>
-                </ListItem>
+                <Button onClick={() => handleMoonChange(moon.name, "n")} sx={{color: 'black'}}>{moon.name + " (" + weather[index] + ") [" + moon.cost + "]"}</Button>
               ))}
-            </List>
+            </Stack>
           </Box>
         </Drawer>
 
@@ -839,6 +831,7 @@ export default function Bethal() {
             return (
               moon.name === currMoon ?
                 <Box>
+                  <Button variant="contained" onClick={() => setMoonList(true)}>Show moons</Button>
                   {shop.length === 0 ? getShopData() : <DisplayShop />}
                   <Typography variant="h2">{moon.name} ({weather[index]})</Typography>
                   {time.hour ? 
@@ -850,7 +843,7 @@ export default function Bethal() {
                   <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
                   {weather[index] === 'Flooded' ? <DisplayFloodLevel /> : ""}
                   {weather[index] === 'Foggy' ? <DisplayFogLevel /> : ""}
-                  <Button variant="outlined" onClick={() => handleRoundChange(index)}>Advance Round</Button>
+                  <Button variant="contained" onClick={() => handleRoundChange(index)}>Advance Round</Button>
                   
                   {insideEntities.length === 0 ? 
                     <>
@@ -883,39 +876,12 @@ export default function Bethal() {
                                             ""
                                           :
                                             <Box>
-                                              <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '180px'}}>
+                                              <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
                                                 <Typography textAlign='center' sx={{fontWeight: 'bold'}}>{loc.name}</Typography>
                                                 <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
                                                 {loc.spawned ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}
-                                                <Typography>Dead?</Typography>
-                                                <Checkbox />
                                               </Card>
                                             </Box>
-                                          }
-                                        </Box>
-                                      )
-                                    })}
-                                  </Stack>
-                                </Box>
-                              }
-                            </Box>
-                            <Box overflow='auto'>
-                              <Typography variant="h5" textAlign='center'>Player Locations</Typography>
-                              <Divider />
-                              <br />
-                              {entityLocations.length === 0 ? "" :
-                                <Box>
-                                  <Stack direction='row' flexWrap='wrap'>
-                                    {entityLocations.map((loc) => {
-                                      return (
-                                        <Box>
-                                          {loc.player ?
-                                            <Card sx={{width: {xs: '25%', md: '125px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '125px', marginRight: '8px', marginBottom: '8px'}}>
-                                              <Typography>{loc.name}</Typography>
-                                              <Input value={loc.roomNum} onChange={e => handlePlayerLocationChange(e, index)} sx={{maxWidth: '25px'}}></Input>
-                                            </Card>
-                                          :
-                                            ""
                                           }
                                         </Box>
                                       )
@@ -1060,7 +1026,6 @@ export default function Bethal() {
 
   return (
     <Box>
-      <Toolbar />
       {moons.length === 0 ? 
         getData('Moons')
       :

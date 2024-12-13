@@ -1,181 +1,138 @@
 import React, { useState } from 'react'
-import { AppBar, Stack, Toolbar, Link, Menu, Button, MenuItem, Box, IconButton, Divider, Drawer, Typography, Input, List, ListItem, ListItemButton, ListItemText, ListItemIcon, ListSubheader, Icon } from '@mui/material';
+import { AppBar, Stack, Toolbar, Link, Menu, Button, MenuItem, Box, IconButton, Divider, Drawer, Typography, Input, List, ListItem, ListItemButton, ListItemText, ListItemIcon, ListSubheader, Icon, Tabs, Tab } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
+import HouseIcon from '@mui/icons-material/House';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import TimerIcon from '@mui/icons-material/Timer';
 
 export default function Navbar() {
-  const [open, setOpen] = useState('');
-  const [openSmall, setOpenSmall] = useState(null);
-  const generalInfoMenu = ['Crafting', 'Groups', 'Interest', 'Quests'];
+  const [desktopTab, setDesktopTab] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const generalInfoMenu = ['Crafting', 'Groups', 'Interest', 'Quests', 'Phenomenons'];
   const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
-  const playerInfoMenu = ['Information', 'Phenomenons'];
   const DMInfoMenu = ['Entities', 'Levels', 'Outposts', 'Bethal'];
 
-
-  const Menus = () => {
-    return (
-      <>
-        <Toolbar />
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton href='/'>
-              <ListItemText primary='Home'></ListItemText>
-            </ListItemButton>
-          </ListItem>
-        </List>
-        <List>
-          <ListSubheader>General Links</ListSubheader>
-          {generalInfoMenu.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton href={'/' + text.toLowerCase()}>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          <ListSubheader>Object Links</ListSubheader>
-          {objectMenu.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton href={'/' + text.toLowerCase()}>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          <ListSubheader>Player Links</ListSubheader>
-          {playerInfoMenu.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton href={'/' + text.toLowerCase()}>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          <ListSubheader>DM Links</ListSubheader>
-          {DMInfoMenu.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton href={'/' + text.toLowerCase()}>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </>
-    )
-  }
-
-  const DesktopMenu = () => {
-    return (
-      <>
-        <Toolbar />
-        <Stack direction='row'>
-          <Button href='/' color='inherit'>Home</Button>
-          <Button onClick={() => setOpen('General')} color='inherit'>General Links</Button>
-          <Button onClick={() => setOpen('Player')} color='inherit'>Player Links</Button>
-          <Button onClick={() => setOpen('DM')} color='inherit'>DM Links</Button>
-        </Stack>
-      </>
-    )
+  const signOut = () => {
+    localStorage.setItem('loggedIn', 'false');
   }
 
   return (
-    <Box paddingLeft={5} paddingRight={5}>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }}}>
-            <IconButton onClick={(event) => setOpenSmall(true)} size='large' color='inherit'><MenuIcon /></IconButton>
-            <Drawer open={openSmall} onClose={() => setOpenSmall(false)}>
-              <Box sx={{ width: 250 }} role="presentation" onClick={() => setOpenSmall(false)}><Menus /></Box>
-            </Drawer>
-          </Box>
+    <Box>
+      <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }}}>
+        <IconButton onClick={() => setMobileMenuOpen(true)}><MenuIcon /></IconButton>
+        <Drawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
+          <List>
+            <ListItem disablePadding>
+              {localStorage.getItem('loggedIn') === 'false' || !localStorage.getItem('loggedIn') ?
+                <Button href='/login' variant='outlined' startIcon={<SwitchAccountIcon />}>Sign in</Button>
+              :
+                <Button onClick={signOut} href='/' variant='outlined' startIcon={<SwitchAccountIcon />}>Sign out</Button>
+              }
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton href='/'>
+                <ListItemText>Home</ListItemText>
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton href='/information'>
+                <ListItemText>Rules</ListItemText>
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton href='/timers'>
+                <ListItemText>Timers</ListItemText>
+              </ListItemButton>
+            </ListItem>
+          </List>
+          <Divider />
+          <List>
+            {generalInfoMenu.map((text) => (
+              <ListItem key={text} disablePadding>
+                <ListItemButton href={'/' + text.toLowerCase()}>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Divider />
+          <List>
+            {objectMenu.map((text) => (
+              <ListItem key={text} disablePadding>
+                <ListItemButton href={'/' + text.toLowerCase()}>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Divider />
+          <List>
+            {DMInfoMenu.map((text) => (
+              <ListItem key={text} disablePadding>
+                <ListItemButton href={'/' + text.toLowerCase()}>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+      </Box>
 
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }}}>
-            <DesktopMenu />
-            {open === 'General' ?
-              <>
-                <Drawer open={open} onClose={() => setOpen(false)}>
-                  <Toolbar />
-                  <Box sx={{ width: 250 }} role="presentation" onClick={() => setOpen(false)}>
-                    <List>
-                      <ListSubheader>General Links</ListSubheader>
-                      <Divider />
-                      {generalInfoMenu.map((text) => (
-                        <ListItem key={text} disablePadding>
-                          <ListItemButton href={'/' + text.toLowerCase()}>
-                            <ListItemText primary={text} />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                    <Divider />
-                    <List>
-                      <ListSubheader>Object Links</ListSubheader>
-                      {objectMenu.map((text) => (
-                        <ListItem key={text} disablePadding>
-                          <ListItemButton href={'/' + text.toLowerCase()}>
-                            <ListItemText primary={text} />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Drawer>
-              </>
-            :
-              ""
-            }
-            {open === 'Player' ?
-              <>
-                <Drawer open={open} onClose={() => setOpen(false)}>
-                  <Toolbar />
-                  <Box sx={{ width: 250 }} role="presentation" onClick={() => setOpen(false)}>
-                    <List>
-                      <ListSubheader>Player Links</ListSubheader>
-                      <Divider />
-                      {playerInfoMenu.map((text) => (
-                        <ListItem key={text} disablePadding>
-                          <ListItemButton href={'/' + text.toLowerCase()}>
-                            <ListItemText primary={text} />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Drawer>
-              </>
-            :
-              ""
-            }
-            {open === 'DM' ?
-              <>
-                <Drawer open={open} onClose={() => setOpen(false)}>
-                  <Toolbar />
-                  <Box sx={{ width: 250 }} role="presentation" onClick={() => setOpen(false)}>
-                    <List>
-                      <ListSubheader>DM Links</ListSubheader>
-                      <Divider />
-                      {DMInfoMenu.map((text) => (
-                        <ListItem key={text} disablePadding>
-                          <ListItemButton href={'/' + text.toLowerCase()}>
-                            <ListItemText primary={text} />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Drawer>
-              </>
-            :
-              ""
-            }
-          </Box>
-        </Toolbar>
-      </AppBar>
+      {/* Desktop Menu */}
+      <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }}}>
+        {localStorage.getItem('loggedIn') === 'false' || !localStorage.getItem('loggedIn') ? <Button startIcon={<SwitchAccountIcon />} href='/login' variant='outlined'>Log in</Button> : <Button startIcon={<SwitchAccountIcon />} onClick={signOut} variant='outlined'>Sign out</Button>}
+        <Button href='/' startIcon={<HouseIcon />} variant='outlined'>Home</Button>
+        <Button href='/information' startIcon={<ReceiptLongIcon />} variant='outlined'>Rules</Button>
+        <Button href='/timers' startIcon={<TimerIcon />} variant='outlined'>Timers</Button>
+
+        <Button onClick={() => setDesktopTab('General')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>General</Button>
+        <Menu open={desktopTab === 'General'} onClose={() => setDesktopTab(null)}>
+        <List>
+            {generalInfoMenu.map((text) => {
+              return (
+                <ListItem dense>
+                  <ListItemButton href={'/' + text}>
+                    <ListItemText>{text}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              )
+            })}
+          </List>
+        </Menu>
+
+        <Button onClick={() => setDesktopTab('Objects')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>objects</Button>
+        <Menu open={desktopTab === 'Objects'} onClose={() => setDesktopTab(null)}>
+          <List>
+            {objectMenu.map((text) => {
+              return (
+                <ListItem dense>
+                  <ListItemButton href={'/' + text}>
+                    <ListItemText>{text}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              )
+            })}
+          </List>
+        </Menu>
+
+        <Button onClick={() => setDesktopTab('DM')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>Dungeon Master</Button>
+        <Menu open={desktopTab === 'DM'} onClose={() => setDesktopTab(null)}>
+        <List>
+            {DMInfoMenu.map((text) => {
+              return (
+                <ListItem dense>
+                  <ListItemButton href={'/' + text}>
+                    <ListItemText>{text}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              )
+            })}
+          </List>
+        </Menu>
+      </Box>
     </Box>
   )
 }

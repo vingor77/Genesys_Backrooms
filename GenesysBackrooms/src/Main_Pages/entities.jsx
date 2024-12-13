@@ -1,26 +1,29 @@
 import { Box, Card, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import NotLoggedIn from "../Components/notLoggedIn";
 
 export default function Entities() {
-  const data = [
-    {"name":"Smiler (Rival)","description":"A reflective white gleam in the shape of eyes and a grinning mouth","stats":"2, 4, 1, 2, 2, 2","soak":3,"wounds":10,"strain":0,"defenses":"0, 0","skills":"Athletics 3, Perception 2, Brawl 4","talents":null,"abilities":"Rush: The Smiler may use two movement manuevers per turn","actions":"Charge (attack): Brawl; Damage 8; Range [Engaged]; Pierce 3, Test: Brawl; Damage 0; Critical 2; Range[Engaged]","equipment":null},
-    {"name":"Window (Rival)","description":"A window that matches the surrounding area. Within this window sometimes appears a shadowed humanoid figure","stats":"2,1,2,2,2,2","soak":2,"wounds":14,"strain":0,"defenses":"0.0","skills":"Brawl 2,Charm 3","talents":null,"abilities":"Whisper: The Window whispers within a short range. At the start of a player's turn, the player must make a contensted Cool check versus the Window's Charm check. On a fail, the player is staggered and must use thier free maneuver to move towards the Window. For the next 3 turns, that player is unaffected by this ability.","actions":"Grab (Attack): Brawl; Damage 6; Critical 5; Range [Engaged]; Stun Damage","equipment":null}
-  ]
+  const data = [{"name":"Smiler (Rival)","description":"A reflective white gleam in the shape of eyes and a grinning mouth","stats":"2, 4, 1, 2, 2, 2","soak":3,"wounds":10,"strain":0,"defenses":"0, 0","skills":"Athletics 3,Brawl 4, Perception 2","talents":"None","abilities":"Rush: The Smiler may use two movement manuevers per turn","actions":"Charge(attack): Brawl; Damage 8; Range [Engaged]; Pierce 3","equipment":"None","drops":"1 Smiler Eye"},
+    {"name":"Window (Rival)","description":"A window that matches the surrounding area. Within this window sometimes appears a shadowed humanoid figure","stats":"2,1,2,2,2,2","soak":2,"wounds":14,"strain":0,"defenses":"0.0","skills":"Brawl 2,Charm 3","talents":"None","abilities":"Whisper: The Window whispers within a short range. At the start of a player's turn, the player must make a contensted Cool check versus the Window's Charm check. On a fail, the player is staggered and must use thier free maneuver to move towards the Window. For the next 3 turns, that player is unaffected by this ability","actions":"Grab(Attack): Brawl; Damage 6; Critical 5; Range [Engaged]; Stun Damage","equipment":"None","drops":"1 Plank of Wood"},
+    {"name":"Deathmoth (Rival)","description":"A giant moth. Male Deathmoths are docile unless attacked while female Deathmoths are aggressive","stats":"2,2,1,2,2,3","soak":4,"wounds":14,"strain":0,"defenses":"0.1","skills":"Brawl 3, Ranged 2","talents":"Quick Strike 2","abilities":"Darkvision: The Deathmoth can clearly see in the dark.","actions":"Charge(Attack): Brawl; Damage 6; Range [Engaged]/Dissolve: The Deathmoth attempts to dissolve a metal or wooden object held or worn; Range [Engaged]/Spit(Attack)(Female): Ranged; Damage 6; Range [Medium]","equipment":"None","drops":"2 Moth Wings(Male),1 Vial of Acid(Female)"}]
 
   const DisplayEntity = (props) => {
     const statNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", "Presence"];
     const stats = props.entity.stats.split(",");
     const defenses = props.entity.defenses.split(",");
     const skills = props.entity.skills.split(",");
+    const drops = props.entity.drops.split(",");
     
     let talents = '', abilities = '', actions = '', equipment = '';
-    if(props.entity.talents !== null) talents = props.entity.talents.split("/");
-    if(props.entity.abilities !== null) abilities = props.entity.abilities.split("/");
-    if(props.entity.actions !== null) actions = props.entity.actions.split("/");
-    if(props.entity.equipment !== null) equipment = props.entity.equipment.split("/");
+    if(props.entity.talents !== "None") talents = props.entity.talents.split(","); //Not putting descriptions of talents in the stat block.
+    if(props.entity.abilities !== "None") abilities = props.entity.abilities.split("/");
+    if(props.entity.actions !== "None") actions = props.entity.actions.split("/");
+    if(props.entity.equipment !== "None") equipment = props.entity.equipment.split("/");
 
     return (
       <Card variant="outlined" sx={{width: {xs: '100%', md: '700px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '700px'}}>
         <Typography variant="h4">{props.entity.name}</Typography>
+        <Typography><b>Drops:</b> {drops.join(", ")}</Typography>
+        <br />
         <Typography>{props.entity.description}</Typography>
         <br />
         <Stack direction='row' gap={2} justifyContent='center'>
@@ -114,15 +117,15 @@ export default function Entities() {
   }
 
   return (
-    <Box>
-      <Toolbar />
-      <h1>Entities</h1>
-      <Stack direction={{xs: 'column', md: 'row'}} flexWrap='wrap' gap={1} paddingBottom={2}>
-        {data.map((entity) => {
-          return <DisplayEntity entity={entity}/>
-        })}
-      </Stack>
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <h1>Entities</h1>
+        <Stack direction={{xs: 'column', md: 'row'}} flexWrap='wrap' gap={1} paddingBottom={2}>
+          {data.map((entity) => {
+            return <DisplayEntity entity={entity}/>
+          })}
+        </Stack>
+      </Box>
   )
 }
 

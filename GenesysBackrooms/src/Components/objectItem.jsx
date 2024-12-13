@@ -35,7 +35,7 @@ export default function ObjectItem(props) {
           aria-labelledby="table"
           aria-describedby="tableDescription"
         >
-          <Box sx={{position: "absolute", top: '50%', left: '50%', width: 550, bgcolor: 'background.paper', padding: 1, transform: 'translate(-50%, -50%)'}}>
+          <Box sx={{position: "absolute", top: '50%', left: '50%', width: 550, bgcolor: 'background.paper', padding: 1, transform: 'translate(-50%, -50%)', maxHeight: '900px', overflow: 'auto'}}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -97,10 +97,13 @@ export default function ObjectItem(props) {
           :
             ""
           }
-          {props.currObject.shownToPlayer ?
-            <Button size="small" onClick={changeVisibility}>Hide from player</Button>
+          {props.mainPage ?
+            props.currObject.shownToPlayer ?
+              <Button size="small" onClick={changeVisibility}>Hide from player</Button>
+            :
+              <Button size="small" onClick={changeVisibility}>Show to player</Button>
           :
-            <Button size="small" onClick={changeVisibility}>Show to player</Button>
+            ""
           }
         </Stack>
         <ShowTable />

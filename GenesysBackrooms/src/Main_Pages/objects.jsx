@@ -1,8 +1,9 @@
 import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar } from "@mui/material";
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ObjectItem from "../Components/objectItem";
+import NotLoggedIn from "../Components/notLoggedIn";
 
 //0-8 is worth 1-9 respectively. 9s and 10s are based on what it is. Any that seem too much to be worth 1, sell or buy it in stacks.
 /*
@@ -83,7 +84,7 @@ export default function Objects() {
     {price: 1, shownToPlayer: false, objectNumber: 3, spawnLocations: ["All"], name: "Smiler Repellent", rarity: 0, table: 'No', encumbrance: 0, description: "Clear liquid, usually in a spray bottle. Whenever you spray this liquid on a smiler, it has a 20% chance to instantly kill it."},
     {price: 1, shownToPlayer: false, objectNumber: 0, spawnLocations: ["All"], name: "Cashew Water", rarity: 0, table: 'No', encumbrance: 0, description: "An aluminum bottle with a grey label saying Almond Water on it. This water attracts entities. While you have the water with you, increase the entity spawn chance by 30%. If you ingest the water, you gain a stage of the Wretch (Entity 15)'s Disease."},
     {price: 0, shownToPlayer: false, objectNumber: 88, spawnLocations: ["All"], name: "The Apocrypha Flute", rarity: 10, table: 'No', encumbrance: 0, description: "A red see-through plastic recorder flute. When you are at 5 exhaustion stacks, 10 or more sanity drain stacks, have less than half of your wounds and strain remaining, this flute will automatically move to your lips and force you to blow into it. When you do this, your mind is transported to an area with sunny skies and big grassy fields with a slight breeze. In the sky there are two shadow-like figures. These are the gods Jacob and Esau. Both of these gods show nothing but love for you yet bicker with each other about your mortality. Any questions you ask here are answered to the best of thier abilities. After what feels like hours pass, you wake up with no exhaustion, no sanity drain, max wounds, and max strain. The flute is also nowhere to be seen."},
-    {price: 9, shownToPlayer: false, objectNumber: 17, spawnLocations: ["93"], name: "Liquid Silence", rarity: 8, table: 'No', encumbrance: 0, description: "Pure black liquid inside of a special sealed beaker. This liquid comes from Scream Eaters (Entity 97) exclusively. When you open this beaker, the liquid rockets out. Once it lands, in a medium range around it all sound is gone for the next 10 rounds. If another beaker of this liquid is added before the 10 rounds end, the timer resets and the range increases. After these 10 rounds pass without new liquid being added, the liquid congeals into solid silence. The size of the solid silence is based on how many beakers were added."},
+    {price: 9, shownToPlayer: false, objectNumber: 17, spawnLocations: ["93"], name: "Liquid Silence", rarity: 8, table: 'No', encumbrance: 0, description: "Pure black liquid inside of a specialty beaker and is sealed. This liquid comes from Scream Eaters (Entity 97) exclusively. When you open this beaker, the liquid rockets out. Once it lands, in a medium range around it all sound is gone for the next 10 rounds. If another beaker of this liquid is added before the 10 rounds end, the timer resets and the range increases. After these 10 rounds pass without new liquid being added, the liquid congeals into solid silence. The size of the solid silence is based on how many beakers were added."},
     {price: 9, shownToPlayer: false, objectNumber: 17, spawnLocations: ["All"], name: "Solid Silence", rarity: 8, table: 'No', encumbrance: 0, description: "A pure black cube. This cube is formed from Liquid Silence. If you damage this cube in any way, it explodes with the same range as the liquid silence that created it. For each beaker added, the damage also increases. At 1 beaker it does 4 strain and 4 wound. Each extra beyond the first adds 3 strain and 3 wound damage."},
     {price: 1, shownToPlayer: false, objectNumber: 83, spawnLocations: ["All"], name: "Mobile Vacuum Cleaner", rarity: 0, table: 'No', encumbrance: 2, description: "A standard vacuum cleaner. If you call for it, it will move to you."},
     {price: 3, shownToPlayer: false, objectNumber: 51, spawnLocations: ["9"], name: "Pocket", rarity: 2, table: 'No', encumbrance: 0, description: "A small metal bracelet with a golden gem embedded. This item can store an endless amount of items, but does not remove the encumbrance of items inside. The Pocket does, however, add 5 to your maximum encumbrance."},
@@ -157,7 +158,7 @@ export default function Objects() {
     return (
       <Stack direction='row' flexWrap='wrap' gap={1}>
         {filtered.map((object) => {
-          return <ObjectItem currObject={object}/>
+          return <ObjectItem currObject={object} mainPage={true}/>
         })}
       </Stack>
     )
@@ -179,72 +180,72 @@ export default function Objects() {
   }
 
   return (
-    <Box>
-      <Toolbar />
-      <Button onClick={addData}>Add data</Button>
-      {objects.length === 0 ?
-        getObjectsFromDB()
-      :
-        <Box>
-          <Stack direction={{xs: 'column', md: 'row'}} spacing={2} flexWrap='wrap' gap={1} paddingBottom={2}>
-            <Box>
-              <Input value={objectName} onChange={e => setObjectName(e.target.value)} placeholder='Enter object name' labelId='Object name'></Input>
-            </Box>
-            <Box>
-              <Input value={objectNum} onChange={e => setObjectNum(e.target.value)} placeholder='Enter object number' labelId='Object number'></Input>
-            </Box>
-            <Box>
-              <Input value={spawnLocation} onChange={e => setSpawnLocation(e.target.value)} placeholder='Enter spawn location' labelId='Spawn location'></Input>
-            </Box>
-            <FormControl sx={{minWidth: 150}}>
-              <InputLabel id="price">Select Price</InputLabel>
-              <Select
-                labelId='price'
-                label={"Select Price"}
-                onChange={e => setPrice(e.target.value)}
-                value={price}
-              >
-                <MenuItem value=''>Any</MenuItem>
-                <MenuItem value='0'>0</MenuItem>
-                <MenuItem value='1'>1</MenuItem>
-                <MenuItem value='2'>2</MenuItem>
-                <MenuItem value='3'>3</MenuItem>
-                <MenuItem value='4'>4</MenuItem>
-                <MenuItem value='5'>5</MenuItem>
-                <MenuItem value='6'>6</MenuItem>
-                <MenuItem value='7'>7</MenuItem>
-                <MenuItem value='8'>8</MenuItem>
-                <MenuItem value='9'>9</MenuItem>
-                <MenuItem value='10'>10+</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl sx={{minWidth: 150}}>
-              <InputLabel id="rarity">Select Rarity</InputLabel>
-              <Select
-                labelId='rarity'
-                label={"Select Rarity"}
-                onChange={e => setRarity(e.target.value)}
-                value={rarity}
-              >
-                <MenuItem value=''>Any</MenuItem>
-                <MenuItem value='0'>0</MenuItem>
-                <MenuItem value='1'>1</MenuItem>
-                <MenuItem value='2'>2</MenuItem>
-                <MenuItem value='3'>3</MenuItem>
-                <MenuItem value='4'>4</MenuItem>
-                <MenuItem value='5'>5</MenuItem>
-                <MenuItem value='6'>6</MenuItem>
-                <MenuItem value='7'>7</MenuItem>
-                <MenuItem value='8'>8</MenuItem>
-                <MenuItem value='9'>9</MenuItem>
-                <MenuItem value='10'>10</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-          <DisplayObjects />
-        </Box>
-      }
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <Button onClick={addData}>Add data</Button>
+        {objects.length === 0 ?
+          getObjectsFromDB()
+        :
+          <Box>
+            <Stack direction={{xs: 'column', md: 'row'}} spacing={2} flexWrap='wrap' gap={1} paddingBottom={2}>
+              <Box>
+                <Input value={objectName} onChange={e => setObjectName(e.target.value)} placeholder='Enter object name' labelId='Object name'></Input>
+              </Box>
+              <Box>
+                <Input value={objectNum} onChange={e => setObjectNum(e.target.value)} placeholder='Enter object number' labelId='Object number'></Input>
+              </Box>
+              <Box>
+                <Input value={spawnLocation} onChange={e => setSpawnLocation(e.target.value)} placeholder='Enter spawn location' labelId='Spawn location'></Input>
+              </Box>
+              <FormControl sx={{minWidth: 150}}>
+                <InputLabel id="price">Select Price</InputLabel>
+                <Select
+                  labelId='price'
+                  label={"Select Price"}
+                  onChange={e => setPrice(e.target.value)}
+                  value={price}
+                >
+                  <MenuItem value=''>Any</MenuItem>
+                  <MenuItem value='0'>0</MenuItem>
+                  <MenuItem value='1'>1</MenuItem>
+                  <MenuItem value='2'>2</MenuItem>
+                  <MenuItem value='3'>3</MenuItem>
+                  <MenuItem value='4'>4</MenuItem>
+                  <MenuItem value='5'>5</MenuItem>
+                  <MenuItem value='6'>6</MenuItem>
+                  <MenuItem value='7'>7</MenuItem>
+                  <MenuItem value='8'>8</MenuItem>
+                  <MenuItem value='9'>9</MenuItem>
+                  <MenuItem value='10'>10+</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl sx={{minWidth: 150}}>
+                <InputLabel id="rarity">Select Rarity</InputLabel>
+                <Select
+                  labelId='rarity'
+                  label={"Select Rarity"}
+                  onChange={e => setRarity(e.target.value)}
+                  value={rarity}
+                >
+                  <MenuItem value=''>Any</MenuItem>
+                  <MenuItem value='0'>0</MenuItem>
+                  <MenuItem value='1'>1</MenuItem>
+                  <MenuItem value='2'>2</MenuItem>
+                  <MenuItem value='3'>3</MenuItem>
+                  <MenuItem value='4'>4</MenuItem>
+                  <MenuItem value='5'>5</MenuItem>
+                  <MenuItem value='6'>6</MenuItem>
+                  <MenuItem value='7'>7</MenuItem>
+                  <MenuItem value='8'>8</MenuItem>
+                  <MenuItem value='9'>9</MenuItem>
+                  <MenuItem value='10'>10</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+            <DisplayObjects />
+          </Box>
+        }
+      </Box>
   )
 }
 

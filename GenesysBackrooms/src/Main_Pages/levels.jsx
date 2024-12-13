@@ -1,12 +1,41 @@
-import { Box, Button, Card, Chip, Divider, Drawer, FormControl, InputLabel, List, ListItem, ListItemButton, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Card, Chip, Divider, FormControl, InputLabel, List, ListItem, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import { useState } from "react";
+import ObjectItem from '../Components/objectItem';
+import MundaneItem from '../Components/mundaneItem';
+import ArmorItem from '../Components/armorItem';
+import WeaponItem from '../Components/weaponItem';
+import NotLoggedIn from "../Components/notLoggedIn";
 
 export default function Levels() {
   const [levels, setLevels] = useState([]);
   const [currLevel, setCurrLevel] = useState("Tutorial Level");
   const [generated, setGenerated] = useState(false);
+  const [objects, setObjects] = useState([]);
+  const [mundane, setMundane] = useState([]);
+  const [weapons, setWeapons] = useState([]);
+  const [armor, setArmor] = useState([]);
+
+  const getFromDB = (spawnType) => {
+    const q = query(collection(db, spawnType));
+
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const queryData = [];
+      querySnapshot.forEach((doc) => {
+        queryData.push(doc.data());
+      })
+
+      if(spawnType === 'Objects') setObjects(queryData);
+      if(spawnType === 'MundaneObjects') setMundane(queryData);
+      if(spawnType === 'Weapons') setWeapons(queryData);
+      if(spawnType === 'Armor') setArmor(queryData);
+    })
+
+    return () => {
+      unsub();
+    };
+  }
 
   const GenerateTile = () => {
     let level = {};
@@ -109,27 +138,72 @@ export default function Levels() {
         const objectType = Math.floor(Math.random() * 4);
         switch(objectType) {
           case 0:
-            spawns.push('Object');
+            if(objects.length !== 0) {
+              const filtered = [];
+              const rarity = determineRarity();
+              for(let i = 0; i < objects.length; i++) {
+                if(objects[i].rarity === rarity || objects[i].rarity === (rarity - 1)) {
+                  if(objects[i].spawnLocations.includes(level.level) || objects[i].spawnLocations[0] === 'All') filtered.push(objects[i]);
+                }
+              }
+              spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Object"]); //remove .name afterwards.
+            }
             break;
           case 1:
-            spawns.push('Mundane Object');
+            if(mundane.length !== 0) {
+              const filtered = [];
+              const rarity = determineRarity();
+              for(let i = 0; i < mundane.length; i++) {
+                if(mundane[i].rarity === rarity || mundane[i].rarity === (rarity - 1)) {
+                  const locations = mundane[i].spawnLocations.split("/");
+                  if(locations.includes(level.level) || mundane[i].spawnLocations === 'All') filtered.push(mundane[i]);
+                }
+              }
+              if(filtered.length > 0) //Remove later
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Mundane"]); //remove .name afterwards.
+              else spawns.push(rarity + " Mundane");
+            }
             break;
           case 2:
-            spawns.push('Armor');
+            if(armor.length !== 0) {
+              const filtered = [];
+              const rarity = determineRarity();
+              for(let i = 0; i < armor.length; i++) {
+                if(armor[i].rarity === rarity || armor[i].rarity === (rarity - 1)) {
+                  const locations = armor[i].spawnLocations.split("/");
+                  if(locations.includes(level.level) || armor[i].spawnLocations === 'All') filtered.push(armor[i]);
+                }
+              }
+              if(filtered.length > 0) //Remove later
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Armor"]); //remove .name afterwards.
+              else spawns.push(rarity + " Armor");
+            }
             break;
           default:
-            spawns.push('Weapon');
+            if(weapons.length !== 0) {
+              const filtered = [];
+              const rarity = determineRarity();
+              for(let i = 0; i < weapons.length; i++) {
+                if(weapons[i].rarity === rarity || weapons[i].rarity === (rarity - 1)) {
+                  const locations = weapons[i].spawnLocations.split("/");
+                  if(locations.includes(level.level) || weapons[i].spawnLocations === 'All') filtered.push(weapons[i]);
+                }
+              }
+              if(filtered.length > 0) //Remove later
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Weapon"]); //remove .name afterwards.
+              else spawns.push(rarity + " Weapon");
+            }
             break;
         }
       }
       else if(spawn >= level.spawnRates[1] && spawn < level.spawnRates[2]) {
-        spawns.push('Entity');
+        spawns.push(['Entity', 'Entity']);
       }
       else if(spawn >= level.spawnRates[2] && spawn < level.spawnRates[3]) {
-        spawns.push("Event: " + level.events[Math.floor(Math.random() * level.events.length)]);
+        spawns.push(["Event: " + level.events[Math.floor(Math.random() * level.events.length)], "Event"]); //Add people of interest and phenomenons(Environmental only).
       }
       else if(spawn >= level.spawnRates[3] && spawn < level.spawnRates[4]) {
-        spawns.push("Exit: " + level.randomExits[Math.floor(Math.random() * level.randomExits.length)]);
+        spawns.push(["Exit: " + level.randomExits[Math.floor(Math.random() * level.randomExits.length)], "Exit"]);
       }
     }
 
@@ -158,6 +232,18 @@ export default function Levels() {
 
     updateDB(tileCount, level.tilesGenerated, level, newTile);
     return <Tile drain={drain} tile={newTile}/>
+  }
+
+  const determineRarity = () => {
+    const rarity = Math.floor(Math.random() * 100) + 1;
+    let chosenRarity = 0;
+    if(rarity < 40) chosenRarity = 1;
+    else if(rarity >= 40 && rarity < 70) chosenRarity = 3;
+    else if(rarity >= 70 && rarity < 90) chosenRarity = 5;
+    else if(rarity >= 90 && rarity < 98) chosenRarity = 7;
+    else chosenRarity = 9;
+
+    return chosenRarity;
   }
 
   const updateDB = (tileGeneratedCount, generatedTiles, level, newTile) => {
@@ -189,9 +275,31 @@ export default function Levels() {
       maxExits: level.maxExits,
       exitTypes: level.exitTypes,
       specialExits: level.specialExits,
+      tags: level.tags
     })
 
     setGenerated(true);
+  }
+
+  const DisplaySpawned = (props) => {
+    switch(props.spawned[1]) {
+      case "Object":
+        return <ObjectItem currObject={props.spawned[0]} mainPage={false} />
+      case "Mundane":
+        return <MundaneItem currMundane={props.spawned[0]} />
+      case "Armor":
+        return <ArmorItem currArmor={props.spawned[0]} />
+      case "Weapon":
+        return <WeaponItem currWeapon={props.spawned[0]} />
+      case "Entity":
+        return <Typography>{props.spawned[0]}</Typography>
+      case "Event":
+        return <Typography>{props.spawned[0]}</Typography>
+      case "Exit":
+        return <Typography>{props.spawned[0]}</Typography>
+      default:
+        return;
+    }
   }
 
   const Tile = (props) => {
@@ -249,15 +357,13 @@ export default function Levels() {
         {props.tile.spawnList.length > 0 ?
           <Box>
             <Typography>Spawns</Typography>
-            <List>
-              {props.tile.spawnList.map((spawn, index) => {
+            <Stack direction='row' gap={1}>
+              {props.tile.spawnList.map((spawn) => {
                 return (
-                  <>
-                    {spawn !== 'Nothing' ? <ListItem key={index}>{spawn}</ListItem> : ""}
-                  </>
+                  <DisplaySpawned spawned={spawn}/>
                 )
               })}
-            </List>
+            </Stack>
           </Box>
         :
           ""
@@ -286,7 +392,8 @@ export default function Levels() {
         "The humming from the flourescent lights becomes deafening, followed by abrupt silence.", 
         "Human-like speech in an unknown language can be heard in the distance or around a corner.", 
         "Sounds of insects chittering.",
-        "A floor or ceiling darkens, allowing for noclipping."
+        "A floor or ceiling darkens, allowing for noclipping.",
+        "A mirror appears."
       ],
       randomExits: ["Red Rooms", "Manila Room", "Zenith Station", "Remodeled Mess"],
       spawnRates: [0, 25, 25, 45, 55],
@@ -302,6 +409,7 @@ export default function Levels() {
       maxExits: 6,
       exitTypes: ["Hole in the wall", "Locked door", "Doorway", "Unlocked door", "Vent", "Small hole"], //What kind of exit to the room.
       specialExits: {"Level 1": "Noclip anywhere on the level."},
+      tags: ["Indoors", "Light"] //This is to help items spawn places. These tags can be Indoors, Outdoors, Dark, Light, etc.
     },
     "Red Rooms": {
       name: "Red Rooms",
@@ -334,6 +442,7 @@ export default function Levels() {
       maxExits: 4,
       exitTypes: ["Hole in the wall", "Locked door", "Doorway", "Unlocked door", "Vent", "Small hole"],
       specialExits: {"Level 1": "Noclip anywhere on the level."},
+      tags: ["Indoors", "Light"]
     },
     "Manila Room": {
       name: "Manila Room",
@@ -368,6 +477,7 @@ export default function Levels() {
       maxExits: 0,
       exitTypes: [],
       specialExits: {"Level 0": "Walking through a door."},
+      tags: ["Indoors", "Light"]
     },
     "Zenith Station": {
       name: "Zenith Station",
@@ -474,6 +584,7 @@ export default function Levels() {
       maxExits: 0,
       exitTypes: [],
       specialExits: {"Level 1": "Noclip anywhere on the level."},
+      tags: ["Indoors", "Light"]
     },
     "Remodeled Mess": {
       name: "Remodeled Mess",
@@ -499,6 +610,7 @@ export default function Levels() {
       maxExits: 6,
       exitTypes: ["Hole in the wall", "Locked door", "Doorway", "Unlocked door", "Vent", "Small hole"],
       specialExits: {"Level 1": "Noclip anywhere on the level."},
+      tags: ["Indoors", "Light"]
     },
     /*
     "": {
@@ -525,6 +637,7 @@ export default function Levels() {
       maxExits: 0,
       exitTypes: [],
       specialExits: {},
+      tags: []
     }
     */
   }
@@ -555,6 +668,7 @@ export default function Levels() {
         maxExits: data[i].maxExits,
         exitTypes: data[i].exitTypes,
         specialExits: data[i].specialExits,
+        tags: data[i].tags
       })
     }
   }
@@ -576,31 +690,35 @@ export default function Levels() {
   }
 
   return (
-    <Box>
-      <Toolbar />
-      <h1>Levels</h1>
-      <Button onClick={addData}>Add data</Button>
-      {levels.length === 0 ? 
-        getLevels() 
-      :
-        <Box>
-          <FormControl sx={{minWidth: 150}}>
-            <InputLabel id="level">Select Level</InputLabel>
-            <Select
-              labelId='level'
-              label={"Select Level"}
-              onChange={e => {setCurrLevel(e.target.value); setGenerated(false)}}
-              value={currLevel}
-            >
-              {levels.map((level, index) => {
-                return <MenuItem value={level.name} key={index}>{level.name}</MenuItem>
-              })}
-            </Select>
-          </FormControl>
-          <GenerateTile />
-        </Box>
-      }
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <h1>Levels</h1>
+        <Button onClick={addData}>Add data</Button>
+        {levels.length === 0 ? 
+          getLevels() 
+        :
+          <Box>
+            <FormControl sx={{minWidth: 150}}>
+              <InputLabel id="level">Select Level</InputLabel>
+              <Select
+                labelId='level'
+                label={"Select Level"}
+                onChange={e => {setCurrLevel(e.target.value); setGenerated(false)}}
+                value={currLevel}
+              >
+                {levels.map((level, index) => {
+                  return <MenuItem value={level.name} key={index}>{level.name}</MenuItem>
+                })}
+              </Select>
+            </FormControl>
+            {objects.length === 0 ? getFromDB('Objects') : ""}
+            {mundane.length === 0 ? getFromDB('MundaneObjects') : ""}
+            {weapons.length === 0 ? getFromDB('Weapons') : ""}
+            {armor.length === 0 ? getFromDB('Armor') : ""}
+            <GenerateTile />
+          </Box>
+        }
+      </Box>
   )
 }
 
@@ -680,4 +798,6 @@ Level 365:
 
 Level 906:
   Blanche's Gifts (Object 96) are given by Blanche (Entity 140) here.
+
+Add People of Interest into the event section of the levels.
 */

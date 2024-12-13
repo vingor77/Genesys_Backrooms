@@ -1,19 +1,18 @@
 import { Box, Toolbar } from "@mui/material";
+import NotLoggedIn from "../Components/notLoggedIn";
 
 export default function Information() {
   return (
-    <Box>
-      <Toolbar />
-      <h1>Information</h1>
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <h1>Information</h1>
+      </Box>
   )
 }
 
 
 /*
-Boon Elixir comes from massive achievements.
-
-Glitched: At random intervals you glitch, potentially resulting in an action you did not intend to do. Before every skill roll, roll 1d6. If you roll a 1, you glitch during the skill and add 2 setback dice to that roll. Otherwise, nothing happens.
+Boon Elixir comes from massive achievements. TBD what those are.
 
 Resting.
   Resting can be done for any amount of time so long as the area is deemed as safe. The benefits for resting are as follows:
@@ -39,14 +38,5 @@ Sanity.
 
   If it says "Roll Sanity", its a default difficulty 2 to see if a level of sanity drain is gained or not.
 
-Exhaustion.
-  There are 5 levels of exhaustion.
-  Level 1: 
-  Level 2:
-  Level 3:
-  Level 4:
-  Level 5:
-  5+: Death
-
-Tier 5 Talent: Gain 3 soak to strain
+Crafting talents: Each tier has one and it unlocks the ability to craft tiered items. Also gives a boost in some way (WIP)
 */

@@ -1,11 +1,12 @@
 import { Box, Toolbar } from "@mui/material";
+import NotLoggedIn from "../Components/notLoggedIn";
 
 export default function Groups() {
   return (
-    <Box>
-      <Toolbar />
-      <h1>Groups</h1>
-    </Box>
+    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
+      <Box>
+        <h1>Groups</h1>
+      </Box>
   )
 }
 
