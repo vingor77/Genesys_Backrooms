@@ -19,7 +19,7 @@ export default function Information() {
     switch(generalValue) {
       case 0:
         return (
-          <Stack direction={{sm: 'column', md: 'row'}} gap={3}>
+          <Stack direction={{sm: 'column', md: 'row'}} gap={3} maxHeight='750px' overflow='auto'>
             <Box>
               <Typography><b>One of the following actions per turn</b></Typography>
               <Typography>Use a maneuver</Typography>
@@ -54,7 +54,7 @@ export default function Information() {
         )
       case 1:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Typography>Defense: 4</Typography>
             <Typography>Soak: 10</Typography>
             <Typography>Wounds: 150</Typography>
@@ -65,7 +65,7 @@ export default function Information() {
         )
       case 2:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Stack>
               <Box>
                 <Typography><b>Maxiumum dice per source</b></Typography>
@@ -232,7 +232,7 @@ export default function Information() {
         )
       case 3:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Typography><b>Staggered:</b> You may not use your action while staggered, including downgrading to a maneuver.</Typography>
             <Typography><b>Immobilized:</b> You may not use any maneuvers, including any that may be part of an extra effect.</Typography>
             <Typography><b>Disoriented:</b> You add one setback dice to all checks while Disoriented.</Typography>
@@ -248,7 +248,7 @@ export default function Information() {
         )
       case 4:
         return (
-          <Stack direction={{sm: 'column', md: 'row'}} gap={3}>
+          <Stack direction={{sm: 'column', md: 'row'}} gap={3} maxHeight='750px' overflow='auto'>
             <List>
               <ListItem disablePadding>
                 <ListItemText><b>Movement requiring 1 maneuver:</b></ListItemText>
@@ -348,7 +348,91 @@ export default function Information() {
           </Stack>
         )
       case 5:
-        return <Typography>Hacking</Typography>
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>To begin the hacking encounter, a terminal or some kind of access point must be present.</Typography>
+            <Typography>Hacking encounters share initiatives the same way combat encounters do. This means you can hack while the rest of your team is in combat if needed.</Typography>
+            <Divider>Steps to hacking</Divider>
+            <Typography><b>Step 1</b></Typography>
+            <Typography>The hacker needs to access the terminal and perform an Access System check. The difficulty is based on the type of system being hacked into. The check type is the Computers skill.</Typography>
+            <Typography>Unsecured/password known: 0</Typography>
+            <Typography>Public terminal, PAD, Personal computer: 1</Typography>
+            <Typography>Small business server: 2</Typography>
+            <Typography>Government network/corporate server: 3</Typography>
+            <Typography>Hacker darknet or military server: 4</Typography>
+            <Typography>Megacorp core system, intelligence agency server: 5</Typography>
+            <br />
+            <Typography><b>Step 2</b></Typography>
+            <Typography>After gaining basic access to the system, there may be a need to override a security program. This is done through a difficulty 2 Computers check.</Typography>
+            <Typography>In order to success in overriding a program, you must have as many successes as the strength of the program.</Typography>
+            <br />
+            <Typography><b>Step 3</b></Typography>
+            <Typography>Once you have access to the part of a system, you unlock the Enact Command and Activate Programs maneuvers.</Typography>
+            <Typography>Enact Command allows you to do something within the system(s) that you have access to.</Typography>
+            <Typography>Activate Programs allows you to activate/re-activate some kind of security program.</Typography>
+            <br />
+            <Divider>Steps to defending a hack</Divider>
+            <br />
+            <Typography><b>Step 1</b></Typography>
+            <Typography>Upon noticing that a system is being hacked, you may immediately perform the Trace User action. This is a contested Computers check. On a success, you are one step closer to tracing the hacker.</Typography>
+            <Typography>Normally in a hacking combat, tracing the user helps to pinpoint the physical location. In the Backrooms, it does something a little bit different.</Typography>
+            <Typography>First success: You know what level the hacker is on. Decrease the Lockout action difficulty by one.</Typography>
+            <Typography>Second success: You know the group or groups the hacker is asocciated with. Decrease the Lockout action difficulty by one.</Typography>
+            <Typography>Third success: You know the exact location of the hacker. Decrease the Lockout action difficulty by one.</Typography>
+            <Typography>Fourth success: You know the exact access point the hacker is using. Decrease the Lockout action difficulty action by one.</Typography>
+            <Typography>Anything more than four successes allows for personal data such as name, age, and other physical features to be determined.</Typography>
+            <br />
+            <Typography><b>Step 2</b></Typography>
+            <Typography>Now that you know about the hacker, you may attempt to boot them from the system entirely. The Lockout action may be taken with a difficulty of 5 - Trace successes.</Typography>
+            <Typography>On a successful Lockout, the hacker loses access to the system. Sometimes its permanent while sometimes the hacker can get back in, but the difficulty is increased by 2.</Typography>
+            <br />
+            <Divider>Security Programs</Divider>
+            <br />
+            <Typography>Firewall: Program strength: 3. Failure effect: None.</Typography>
+            <Typography>Sentry: Program strength: 2. Failure effect: The sysops (defender) is immediately notified and gives one automatic Trace success.</Typography>
+            <Typography>Gate: Program strength: 2. Failure effect: You lose access to the system.</Typography>
+            <Typography>Gate (Pop-up): Program strength: 1. Failure effect: You take 2 strain and should honestly think about your life choices.</Typography>
+            <br />
+            <Divider>Spending rolls</Divider>
+            <br />
+            <Typography><b>One advantage</b></Typography>
+            <Typography>1. Add a boost dice to your next computers check.</Typography>
+            <Typography>2. If a security program was successfully overridden, it cannot be reactivated for an extra round. (Hacker Only)</Typography>
+            <br />
+            <Typography><b>Two advantages</b></Typography>
+            <Typography>1. You may immediately perform an additional Enact Command maneuver as an incidental.</Typography>
+            <Typography>2. You may add a setback dice to the next Trace command. (Hacker Only)</Typography>
+            <Typography>3. You may modify a program to add a setback dice to all Override Security Program actions. (Defender Only)</Typography>
+            <br />
+            <Typography><b>Three advantages</b></Typography>
+            <Typography>1. You may make the opponent take 3 strain damage.</Typography>
+            <Typography>2. You may make a backdoor access, causing all Access System checks to be of difficulty 1. (Hacker Only)</Typography>
+            <Typography>3. You may automatically succeed on the Trace action, in addition to the effect of the roll. (Defender Only)</Typography>
+            <br />
+            <Typography><b>A triumph</b></Typography>
+            <Typography>1. If you succeeded on an Override Security Program, the program may be permanently disabled. (Hacker Only)</Typography>
+            <Typography>2. You may cancel a successful Trace action. (Hacker Only)</Typography>
+            <Typography>3. You may give a system an immediate backup firewall of strength 3, protecting the chosen server. (Defender Only)</Typography>
+            <Typography>4. You may remove a backdoor access if there is one. (Defender Only)</Typography>
+            <br />
+            <Typography><b>One threat</b></Typography>
+            <Typography>1. You recieve a setback dice to your next Computers check.</Typography>
+            <Typography>2. You recieve two setback dice to any non-Computers check on your next turn.</Typography>
+            <br />
+            <Typography><b>Two threats</b></Typography>
+            <Typography>1. You may perform either one action or one maneuver on your next turn. (Hacker Only)</Typography>
+            <Typography>2. You gain a 2nd success the next time you successfully use the Trace action. (Defender Only)</Typography>
+            <Typography>3. Reduce the strength of a system to a minimum of 1. (Defender Only)</Typography>
+            <br />
+            <Typography><b>Three threats</b></Typography>
+            <Typography>1. All users with access to the system know you are hacking. (Hacker Only)</Typography>
+            <Typography>2. You accidentally create a backdoor for the hacker, causing all Access System actions to be of difficulty 1. (Defender Only)</Typography>
+            <br />
+            <Typography><b>A Despair</b></Typography>
+            <Typography>1. You allow the defender to automatically succeed on a Trace action. (Hacker Only)</Typography>
+            <Typography>2. You get the wrong person. This does not remove any Traces but does remove any real-world retaliation. (Defender Only)</Typography>
+          </Box>
+        )
       case 6:
         return (
           <Box>
@@ -379,7 +463,7 @@ export default function Information() {
     switch(effectValue) {
       case 0:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Divider>Lighting</Divider>
             <Typography>Light levels range from 0 (pitch darkness) to 10 (blinding light). If it becomes too dark or bright, penalties are incurred.</Typography>
             <Typography>Light sources replace the light level of the area you are in, based on the range of the light.</Typography>
@@ -397,7 +481,7 @@ export default function Information() {
         )
       case 1:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Divider>Ways to get exhaustion</Divider>
             <Typography>After spending 10 rounds in a heat level of 0 or 10 without gear</Typography>
             <Typography>After recieving a critical injury or a critical remark, you may choose to take a level of exhaustion instead, after the roll.</Typography>
@@ -417,7 +501,7 @@ export default function Information() {
         )
       case 2:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Divider>Fear</Divider>
             <Typography>Fear is used when a character encounters something otherworldly and terrifying.</Typography>
             <Typography>Fear checks use the sanity skill, but have different effects.</Typography>
@@ -458,7 +542,7 @@ export default function Information() {
         )
       case 3:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Divider>Length of rests based on danger</Divider>
             <Typography>Danger level 0: You may rest for any amount of time</Typography>
             <Typography>Danger level 1: You may rest for 24 hours</Typography>
@@ -486,16 +570,16 @@ export default function Information() {
         )
       case 4:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Typography>Atmospheres may be toxic or corrosive to breathe in. The harshness is determined by a rating scale.</Typography>
             <Typography>At the beginning of each turn while breathing in the atmosphere, you may make a resilience check with a difficulty equal to half of the rating rounded up.</Typography>
             <Typography>On a success, nothing happens. On a failure, you recieve wound damage equal to the rating and recieve the additional effect.</Typography>
             <Typography>Holding your breath allows you to ignore these detriments.</Typography>
             <Divider>Additional effects of a corrosive atmosphere</Divider>
             <Typography>Rating 1-2: No additional effects</Typography>
-            <Typography>Rating 3-4: TBD</Typography>
-            <Typography>Rating 5-6: TBD</Typography>
-            <Typography>Rating 7-8: TBD</Typography>
+            <Typography>Rating 3-4: Recieve 1 strain damage</Typography>
+            <Typography>Rating 5-6: Recieve 3 strain damage</Typography>
+            <Typography>Rating 7-8: Recieve 5 strain damage</Typography>
             <Typography>Rating 9-10: You recieve a critical injury</Typography>
             <br />
             <Divider>Heat levels</Divider>
@@ -508,7 +592,7 @@ export default function Information() {
         )
       case 5:
         return (
-          <Box padding={1}>
+          <Box padding={1} maxHeight='750px' overflow='auto'>
             <Typography>Falling from a height hurts not only body but also mind. The damage you recieve is based on the height.</Typography>
             <Typography>Short: 10 wounds and 10 strain</Typography>
             <Typography>Medium: 30 wounds and 20 strain</Typography>
