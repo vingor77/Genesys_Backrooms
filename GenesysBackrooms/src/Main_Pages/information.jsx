@@ -456,6 +456,33 @@ export default function Information() {
             <Typography>Painkillers heal (5 - times used already). This defecit resets 24 hours after the first painkiller was used.</Typography>
           </Box>
         )
+      case 7:
+        return (
+          <Box>
+            <Divider>The passage of time</Divider>
+            <Typography>Time passes on a room to room basis with a minimum but no maximum.</Typography>
+            <Typography>Each room is considered to be 1 minute of time passing while traversing through and small or medium sized room.</Typography>
+            <Typography>A large sized room is 2 minutes of time. These are the basis for time.</Typography>
+            <Typography>Time passing is modified by two things: time dilation and actions.</Typography>
+            <Typography>For each action performed within a room, 1 minute is added to the time spent there.</Typography>
+            <Typography>The time dilation is based upon the level or area you reside in and could range from going twice as fast to twice as slow.</Typography>
+            <br />
+            <Typography><b>For example:</b></Typography>
+            <Typography>A small room takes 1 minute. You find an object and examine it. This adds 1 minute. You also decide to search the room for secrets. This adds another minute.</Typography>
+            <Typography>This leaves you at 3 minutes of time taken, or 2 if that search check was done by a different player at the same time. Finally, the time dilation of the level is 1.5x</Typography>
+            <Typography>This all comes together to say you took either 3 minutes or 4.5 minutes if the search was done at the same time. Any decimals round normally. This translates to 3 or 5 minutes.</Typography>
+            <br />
+            <Divider>Sanity in regards to time</Divider>
+            <br />
+            <Typography>You must perform a sanity check once every 4 hours while within a level that has a difficulty level of 1 or higher.</Typography>
+            <Typography>This time is augmented based on the level you currently reside on. Your basic timer is as follows</Typography>
+            <Typography>Survival Difficulty 1: 4 hours</Typography>
+            <Typography>Survival Difficulty 2: 2 hours</Typography>
+            <Typography>Survival Difficulty 3: 1 hour</Typography>
+            <Typography>Survival Difficulty 4: 30 minutes</Typography>
+            <Typography>Survival Difficulty 5: 15 minutes</Typography>
+          </Box>
+        )
     }
   }
 
@@ -621,6 +648,7 @@ export default function Information() {
               <Tab label='Combat' />
               <Tab label='Hacking' />
               <Tab label='Healing' />
+              <Tab label='Time' />
             </Tabs>
             <DisplayGeneralTab />
           </AccordionDetails>

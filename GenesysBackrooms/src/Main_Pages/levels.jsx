@@ -146,7 +146,7 @@ export default function Levels() {
                   if(objects[i].spawnLocations.includes(level.level) || objects[i].spawnLocations[0] === 'All') filtered.push(objects[i]);
                 }
               }
-              spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Object"]); //remove .name afterwards.
+              spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Object"]);
             }
             break;
           case 1:
@@ -160,7 +160,7 @@ export default function Levels() {
                 }
               }
               if(filtered.length > 0) //Remove later
-                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Mundane"]); //remove .name afterwards.
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Mundane"]);
               else spawns.push(rarity + " Mundane");
             }
             break;
@@ -175,7 +175,7 @@ export default function Levels() {
                 }
               }
               if(filtered.length > 0) //Remove later
-                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Armor"]); //remove .name afterwards.
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Armor"]);
               else spawns.push(rarity + " Armor");
             }
             break;
@@ -190,7 +190,7 @@ export default function Levels() {
                 }
               }
               if(filtered.length > 0) //Remove later
-                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Weapon"]); //remove .name afterwards.
+                spawns.push([filtered[Math.floor(Math.random() * filtered.length)], "Weapon"]);
               else spawns.push(rarity + " Weapon");
             }
             break;

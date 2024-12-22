@@ -39,7 +39,7 @@ export default function SignUp() {
     let nameAvailable = true;
 
     for(let i = 0; i < loginInfo.length; i++) {
-      if(loginInfo[i].information[0] === username || username === 'false') {
+      if(loginInfo[i].information[0].toUpperCase() === username.toUpperCase() || username.toLowerCase() === 'false') {
         setFailedSignUp('That username is already in use.');
         nameAvailable = false;
       }

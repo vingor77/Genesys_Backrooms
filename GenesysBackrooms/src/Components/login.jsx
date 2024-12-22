@@ -32,7 +32,7 @@ export default function Login() {
     if(loginInfo.length === 0) setFailedLogin('Username or password is incorrect.');
 
     for(let i = 0; i < loginInfo.length; i++) {
-      if(loginInfo[i].information[0] === username && loginInfo[i].information[1] === password) {
+      if(loginInfo[i].information[0].toUpperCase() === username.toUpperCase() && loginInfo[i].information[1] === password) {
         localStorage.setItem('loggedIn', username);
         setFailedLogin('Successfully logged in.');
         break;

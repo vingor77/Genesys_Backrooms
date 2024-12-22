@@ -11,9 +11,9 @@ export default function Navbar() {
   const [desktopTab, setDesktopTab] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const generalInfoMenu = ['Crafting', 'Groups', 'Interest', 'Quests', 'Phenomenons'];
+  const generalInfoMenu = ['Crafting', 'Interest', 'Quests', 'Phenomenons'];
   const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
-  const DMInfoMenu = ['Entities', 'Levels', 'Outposts', 'Bethal'];
+  const DMInfoMenu = ['Entities', 'Groups', 'Levels', 'Outposts', 'Bethal'];
 
   const signOut = () => {
     localStorage.setItem('loggedIn', 'false');
@@ -45,6 +45,11 @@ export default function Navbar() {
             <ListItem disablePadding>
               <ListItemButton href='/timers'>
                 <ListItemText>Timers</ListItemText>
+              </ListItemButton>
+            </ListItem>
+            <ListItem>
+              <ListItemButton href='/equipment'>
+                <ListItemText>Equipment</ListItemText>
               </ListItemButton>
             </ListItem>
           </List>
@@ -87,6 +92,7 @@ export default function Navbar() {
         <Button href='/' startIcon={<HouseIcon />} variant='outlined'>Home</Button>
         <Button href='/information' startIcon={<ReceiptLongIcon />} variant='outlined'>Rules</Button>
         <Button href='/timers' startIcon={<TimerIcon />} variant='outlined'>Timers</Button>
+        <Button href='/equipment' startIcon={<TimerIcon />} variant='outlined'>Equipment</Button>
 
         <Button onClick={() => setDesktopTab('General')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>General</Button>
         <Menu open={desktopTab === 'General'} onClose={() => setDesktopTab(null)}>

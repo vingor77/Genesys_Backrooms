@@ -19,6 +19,7 @@ import Timers from './Main_Pages/timers'
 import Login from './Components/login'
 import NotLoggedIn from './Components/notLoggedIn'
 import SignUp from './Components/signUp'
+import Equipment from './Main_Pages/equipment'
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/notLoggedIn' element={<NotLoggedIn />} />
           <Route path='/signUp' element={<SignUp />} />
+          <Route path='/equipment' element={<Equipment />} />
         </Routes>
       </Router>
     </>
