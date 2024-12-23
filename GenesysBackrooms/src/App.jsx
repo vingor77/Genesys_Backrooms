@@ -15,11 +15,10 @@ import MundaneObjects from './Main_Pages/mundaneObjects'
 import Armor from './Main_Pages/armor'
 import Weapons from './Main_Pages/weapons'
 import Phenomenons from './Main_Pages/phenomenons'
-import Timers from './Main_Pages/timers'
+import PlayerFunctions from './Main_Pages/playerFunctions'
 import Login from './Components/login'
 import NotLoggedIn from './Components/notLoggedIn'
 import SignUp from './Components/signUp'
-import Equipment from './Main_Pages/equipment'
 
 function App() {
   return (
@@ -42,11 +41,10 @@ function App() {
           <Route path='/armor' element={<Armor />} />
           <Route path='/weapons' element={<Weapons />} />
           <Route path='/phenomenons' element={<Phenomenons />} />
-          <Route path='/timers' element={<Timers />} />
+          <Route path='/functions' element={<PlayerFunctions />} />
           <Route path='/login' element={<Login />} />
           <Route path='/notLoggedIn' element={<NotLoggedIn />} />
           <Route path='/signUp' element={<SignUp />} />
-          <Route path='/equipment' element={<Equipment />} />
         </Routes>
       </Router>
     </>

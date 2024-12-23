@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AppBar, Stack, Toolbar, Link, Menu, Button, MenuItem, Box, IconButton, Divider, Drawer, Typography, Input, List, ListItem, ListItemButton, ListItemText, ListItemIcon, ListSubheader, Icon, Tabs, Tab } from '@mui/material';
+import { Menu, Button, Box, IconButton, Divider, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
@@ -47,11 +47,6 @@ export default function Navbar() {
                 <ListItemText>Timers</ListItemText>
               </ListItemButton>
             </ListItem>
-            <ListItem>
-              <ListItemButton href='/equipment'>
-                <ListItemText>Equipment</ListItemText>
-              </ListItemButton>
-            </ListItem>
           </List>
           <Divider />
           <List>
@@ -91,8 +86,7 @@ export default function Navbar() {
         {localStorage.getItem('loggedIn') === 'false' || !localStorage.getItem('loggedIn') ? <Button startIcon={<SwitchAccountIcon />} href='/login' variant='outlined'>Log in</Button> : <Button startIcon={<SwitchAccountIcon />} onClick={signOut} variant='outlined'>Sign out</Button>}
         <Button href='/' startIcon={<HouseIcon />} variant='outlined'>Home</Button>
         <Button href='/information' startIcon={<ReceiptLongIcon />} variant='outlined'>Rules</Button>
-        <Button href='/timers' startIcon={<TimerIcon />} variant='outlined'>Timers</Button>
-        <Button href='/equipment' startIcon={<TimerIcon />} variant='outlined'>Equipment</Button>
+        <Button href='/functions' startIcon={<TimerIcon />} variant='outlined'>Player Functions</Button>
 
         <Button onClick={() => setDesktopTab('General')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>General</Button>
         <Menu open={desktopTab === 'General'} onClose={() => setDesktopTab(null)}>
