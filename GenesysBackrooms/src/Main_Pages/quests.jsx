@@ -48,7 +48,7 @@ export default function Quests() {
         {quests.length > 0 ? 
           <Stack direction='row' flexWrap='wrap' gap={1}>
             {quests.map((item) => {
-              return <QuestItem currQuest={item}/>
+              return item.hidden === 'No' ? <QuestItem currQuest={item}/> : ""
             })}
           </Stack>
         :

@@ -1,5 +1,5 @@
 import { Box, Button, Card, Divider, debounce, MenuItem, Select, Stack, TextField, Tooltip, Typography, CardContent, CardHeader, Tabs, Tab } from "@mui/material";
-import { collection, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import db from '../Components/firebase';
 import NotLoggedIn from "../Components/notLoggedIn";
 import { useState } from "react";
@@ -115,9 +115,19 @@ export default function PlayerFunctions() {
     const q = query(collection(db, 'Equipped'), where('playerName', "==", localStorage.getItem('loggedIn')));
 
     const unsub = onSnapshot(q, (querySnapshot) => {
+      let empty = true;
       querySnapshot.forEach((doc) => {
         setPage(doc.data());
+        empty = false;
       })
+      if(empty) {
+        setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+          playerName: localStorage.getItem('loggedIn'),
+          gear: {head: "", chest: "", arms: "", legs: "", feet: ""},
+          jewelry: {earrings: "", choker: "", bracelet: "", leftRing: "", rightRing: ""},
+          resources: [{name: "", remaining: "", maximum: ""}]
+        })
+      }
     })
 
     return () => {
@@ -299,25 +309,19 @@ export default function PlayerFunctions() {
         <Card>
           <CardHeader title="Equipped Gear" />
           <CardContent>
-            <Stack gap={1}>
-              <Stack direction='row' gap={1}>
+            <Stack gap={1} direction={{sm: 'column', md: 'row'}}>
+              <Stack gap={1} width={{sm: '100%', md: '50%'}}>
                 <TextFieldElement fullWidth control={control} name="gear.head" label='Head' onChange={(event) => gearChange(event, "head")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Earrings' onChange={(event) => jewelryChange(event, "earrings")} />
-              </Stack>
-              <Stack direction='row' gap={1}>
                 <TextFieldElement fullWidth control={control} name="gear.chest" label='Chest' onChange={(event) => gearChange(event, "chest")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Choker' onChange={(event) => jewelryChange(event, "choker")} />
-              </Stack>
-              <Stack direction='row' gap={1}>
                 <TextFieldElement fullWidth control={control} name="gear.arms" label='Arms' onChange={(event) => gearChange(event, "arms")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Bracelet' onChange={(event) => jewelryChange(event, "bracelet")} />
-              </Stack>
-              <Stack direction='row' gap={1}>
                 <TextFieldElement fullWidth control={control} name="gear.legs" label='Legs' onChange={(event) => gearChange(event, "legs")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.leftRing" label='Left Ring' onChange={(event) => jewelryChange(event, "leftRing")} />
-              </Stack>
-              <Stack direction='row' gap={1}>
                 <TextFieldElement fullWidth control={control} name="gear.feet" label='Feet' onChange={(event) => gearChange(event, "feet")} />
+              </Stack>
+              <Stack gap={1} width={{sm: '100%', md: '50%'}}>
+                <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Earrings' onChange={(event) => jewelryChange(event, "earrings")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Choker' onChange={(event) => jewelryChange(event, "choker")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Bracelet' onChange={(event) => jewelryChange(event, "bracelet")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.leftRing" label='Left Ring' onChange={(event) => jewelryChange(event, "leftRing")} />
                 <TextFieldElement fullWidth control={control} name="jewelry.rightRing" label='Right Ring' onChange={(event) => jewelryChange(event, "rightRing")} />
               </Stack>
             </Stack>
@@ -381,54 +385,13 @@ export default function PlayerFunctions() {
         <Box>
           <Divider>Timers</Divider>
           <br />
-          <Stack direction='row' spacing={1}>
-            <Box width='33%' border='1px solid black'>
-              <br />
-              <Typography variant="h4" textAlign='center'>Add New Timer</Typography>
-              <br />
-              <Stack direction='row' spacing={2} padding={2}>
-                <TextField label='Timer Name' value={addName} variant="outlined" onChange={(e) => setAddName(e.target.value)} />
-                <TextField type="number" label='Timer value' variant="outlined" value={addTime} onChange={(e) => setAddTime(e.target.value)} />
-                <TextField label='Timer Description' variant="outlined" value={addDescription} onChange={(e) => setAddDescription(e.target.value)} />
-                <Button onClick={addTimer} variant="outlined">Confirm</Button>
-              </Stack>
-            </Box>
-            <Box width='33%' border='1px solid black'>
-              <br />
-              <Typography variant="h4" textAlign='center'>Edit Timer</Typography>
-              <br />
-              <Stack direction='row' spacing={2} padding={2}>
-                <Select value={editName} onChange={handleEditSelect}>
-                  {timers.map((timer) => {
-                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
-                  })}
-                </Select>
-                <TextField type="number" label='New Timer value' variant="outlined" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
-                <TextField label='New Timer Description' variant="outlined" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
-                <Button onClick={editTimer} variant="outlined">Confirm</Button>
-              </Stack>
-            </Box>
-            <Box border='1px solid black' padding={2}>
-              <Typography variant="h4" textAlign='center'>Remove Timer</Typography>
-              <br />
-              <Stack direction='row' spacing={2}>
-                <Select value={removeName} onChange={(e) => setRemoveName(e.target.value)}>
-                  {timers.map((timer) => {
-                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
-                  })}
-                </Select>
-                <Button onClick={removeTimer} variant="outlined">Confirm</Button>
-              </Stack>
-            </Box>
-          </Stack>
-          <br />
           {timers.length > 0 || globalTimers.length > 0 ?
             <Box>
-              <Stack direction='row' height='600px'>
-                <Box width='60%' border='1px solid black'>
+              <Stack direction={{sm: 'column', md: 'row'}} maxHeight='500px' gap={1}>
+                <Box width={{sm: '100%', md: '60%'}} border='1px solid black' maxHeight='500px' overflow='auto'>
                   <br />
-                  <Typography variant="h4" textAlign='center'>Your timers</Typography>
-                  <Stack direction='row' flexWrap='wrap' gap={1} padding={2}>
+                  <Typography variant="h4" textAlign='center'>Personal Timers</Typography>
+                  <Stack direction={{sm: 'column', md: 'row'}} flexWrap='wrap' gap={1} padding={2}>
                     {timers.map((item) => {
                       return (
                         <Card variant="outlined" sx={{width: {xs: '100%', md: '200px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
@@ -443,9 +406,9 @@ export default function PlayerFunctions() {
                     })}
                   </Stack>
                 </Box>
-                <Box width='40%' border='1px solid black'>
+                <Box width={{sm: '100%', md: '40%'}} border='1px solid black' maxHeight='500px' overflow='auto'>
                   <br />
-                  <Typography variant="h4" textAlign='center'>Global timers</Typography>
+                  <Typography variant="h4" textAlign='center'>Global Timers</Typography>
                   <Stack direction='row' flexWrap='wrap' gap={1} padding={2}>
                     {globalTimers.map((item) => {
                       return (
@@ -466,6 +429,47 @@ export default function PlayerFunctions() {
           :
             getFromDB()
           }
+          <br />
+          <Stack direction={{sm: 'column', md: 'row'}} spacing={1}>
+            <Box width={{sm: '100%', md: '33%'}} border='1px solid black'>
+              <br />
+              <Typography variant="h4" textAlign='center'>Add New Timer</Typography>
+              <br />
+              <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
+                <TextField label='Timer Name' value={addName} variant="outlined" onChange={(e) => setAddName(e.target.value)} />
+                <TextField type="number" label='Timer value' variant="outlined" value={addTime} onChange={(e) => setAddTime(e.target.value)} />
+                <TextField label='Timer Description' variant="outlined" value={addDescription} onChange={(e) => setAddDescription(e.target.value)} />
+                <Button onClick={addTimer} variant="outlined">Confirm</Button>
+              </Stack>
+            </Box>
+            <Box width={{sm: '100%', md: '33%'}} border='1px solid black'>
+              <br />
+              <Typography variant="h4" textAlign='center'>Edit Timer</Typography>
+              <br />
+              <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
+                <Select value={editName} onChange={handleEditSelect}>
+                  {timers.map((timer) => {
+                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
+                  })}
+                </Select>
+                <TextField type="number" label='New Timer value' variant="outlined" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
+                <TextField label='New Timer Description' variant="outlined" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                <Button onClick={editTimer} variant="outlined">Confirm</Button>
+              </Stack>
+            </Box>
+            <Box border='1px solid black' padding={2}>
+              <Typography variant="h4" textAlign='center'>Remove Timer</Typography>
+              <br />
+              <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
+                <Select value={removeName} onChange={(e) => setRemoveName(e.target.value)}>
+                  {timers.map((timer) => {
+                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
+                  })}
+                </Select>
+                <Button onClick={removeTimer} variant="outlined">Confirm</Button>
+              </Stack>
+            </Box>
+          </Stack>
         </Box>
         :
           ""

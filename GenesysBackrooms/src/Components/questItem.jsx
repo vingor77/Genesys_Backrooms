@@ -5,7 +5,7 @@ export default function QuestItem(props) {
   const rewards = props.currQuest.rewards.split("/").join(", ");
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '350px'}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: props.currQuest.complete === 'Yes' ? "1px solid green" : "1px solid red", overflow: 'auto', height: '350px'}}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h4">{props.currQuest.name}</Typography>
         <Typography textAlign='left'>{props.currQuest.description}</Typography>
@@ -22,6 +22,8 @@ export default function QuestItem(props) {
         <br />
         <Divider />
         <Typography textAlign='left'><b>Rewards:</b> {rewards}</Typography>
+        <br />
+        <Typography>Quest status: {props.currQuest.complete === 'Yes' ? "Complete" : "Incomplete"}</Typography>
       </Box>
     </Card>
   )

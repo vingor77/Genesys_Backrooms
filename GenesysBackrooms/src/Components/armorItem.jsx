@@ -28,9 +28,10 @@ export default function ArmorItem(props) {
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '350px'}}>
       <Box sx={{ p: 2 }}>
+        <Typography variant="h5">{props.currArmor.name}</Typography>
         <Stack direction='row' justifyContent="space-between" alignItems="center">
           <Chip label={"Rarity: " + props.currArmor.rarity}></Chip>
-          <Typography variant="h5">{props.currArmor.name}</Typography>
+          <Chip label={"Type: " + props.currArmor.equippedTo} />
           <Chip label={"Price: " + props.currArmor.price}></Chip>
         </Stack>
         <Typography>{props.currArmor.description}</Typography>

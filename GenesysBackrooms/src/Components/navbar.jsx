@@ -43,8 +43,8 @@ export default function Navbar() {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton href='/timers'>
-                <ListItemText>Timers</ListItemText>
+              <ListItemButton href='/functions'>
+                <ListItemText>Player Functions</ListItemText>
               </ListItemButton>
             </ListItem>
           </List>
