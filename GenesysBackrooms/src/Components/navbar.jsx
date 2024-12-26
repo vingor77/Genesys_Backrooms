@@ -6,6 +6,7 @@ import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
 import HouseIcon from '@mui/icons-material/House';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import TimerIcon from '@mui/icons-material/Timer';
+import { auth } from './firebase';
 
 export default function Navbar() {
   const [desktopTab, setDesktopTab] = useState(null);
@@ -15,7 +16,14 @@ export default function Navbar() {
   const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
   const DMInfoMenu = ['Entities', 'Groups', 'Levels', 'Outposts', 'Bethal'];
 
-  const signOut = () => {
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+      window.location.assign('/login');
+      console.log('Logged out');
+    } catch (error) {
+      console.log('Error logging out: ' + error.message);
+    }
     localStorage.setItem('loggedIn', 'false');
   }
 

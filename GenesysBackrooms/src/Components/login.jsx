@@ -1,83 +1,63 @@
 import { Box, Button, FormControl, Icon, IconButton, Input, InputAdornment, InputLabel, Link, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { collection, onSnapshot, query } from "firebase/firestore";
-import db from '../Components/firebase';
+import db, { auth } from '../Components/firebase';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
-  const [loginInfo, setLoginInfo] = useState([]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [failedLogin, setFailedLogin] = useState('');
 
-  const getFromDB = () => {
-    const q = query(collection(db, 'logins'));
-
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      setLoginInfo(queryData);
-    })
-
-    return () => {
-      unsub();
-    }
-  }
-
-  const attemptLogin = () => {
-    if(loginInfo.length === 0) setFailedLogin('Username or password is incorrect.');
-
-    for(let i = 0; i < loginInfo.length; i++) {
-      if(loginInfo[i].information[0].toUpperCase() === username.toUpperCase() && loginInfo[i].information[1] === password) {
-        localStorage.setItem('loggedIn', username);
-        setFailedLogin('Successfully logged in.');
-        break;
-      }
-      else {
-        setFailedLogin('Username or password is incorrect.');
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.assign("/");
+    } catch (error) {
+      console.log(error.message);
     }
   }
 
   return (
-    <Box>
-      {loginInfo.length === 0 ? getFromDB() : ""}
-      <Stack>
-        <Typography>Log in:</Typography>
-        <TextField
-          label="Username"
-          sx={{ m: 1, width: '25ch' }}
-          variant="standard"
-          onChange={(event) => setUsername(event.target.value)}
-        />
-        <FormControl sx={{ m: 1, width: '25ch' }} variant="standard">
-          <InputLabel htmlFor="password">Password</InputLabel>
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label={
-                    showPassword ? 'hide the password' : 'display the password'
-                  }
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-            onChange={(event) => setPassword(event.target.value)}
+    <Box border='1px solid black' width={{sm: '100%', md: '300px'}}>
+      <form onSubmit={handleSubmit}>
+        <Stack padding={2} alignItems='center'>
+          <Typography>Sign In</Typography>
+          <TextField
+            label="Email"
+            sx={{ m: 1, width: '25ch' }}
+            variant="standard"
+            onChange={(event) => setEmail(event.target.value)}
+            required
           />
-        </FormControl>
-        <Typography>{failedLogin}</Typography>
-        <Button variant="contained" sx={{ m: 1, width: '25ch' }} onClick={attemptLogin}>Submit</Button>
-        <Typography>Don't have an account? <Link href='/signUp' underline="hover">Click here.</Link></Typography>
-      </Stack>
+          <FormControl sx={{ m: 1, width: '25ch' }} variant="standard">
+            <InputLabel htmlFor="password">Password</InputLabel>
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={
+                      showPassword ? 'hide the password' : 'display the password'
+                    }
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </FormControl>
+          <Button type="submit" variant="outlined" sx={{width: '75%'}}>Submit</Button>
+          <Typography>Don't have an account? <a href="/signUp">Click here.</a></Typography>
+        </Stack>
+      </form>
     </Box>
   )
 }
