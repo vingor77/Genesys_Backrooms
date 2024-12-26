@@ -2,22 +2,29 @@ import { Box, Button, Card, Divider, debounce, MenuItem, Select, Stack, TextFiel
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import db from '../Components/firebase';
 import NotLoggedIn from "../Components/notLoggedIn";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TextFieldElement, useFieldArray, useForm } from 'react-hook-form-mui';
 import { Add, Delete } from '@mui/icons-material';
 
 export default function PlayerFunctions() {
   const [timers, setTimers] = useState([]);
   const [globalTimers, setGlobalTimers] = useState([]);
+  const [allTimers, setAllTimers] = useState([]);
   const [addTime, setAddTime] = useState(0);
   const [addName, setAddName] = useState("");
   const [addDescription, setAddDescription] = useState("");
-  const [editName, setEditName] = useState('');
+  const [editName, setEditName] = useState('None');
   const [editTime, setEditTime] = useState(0);
   const [editDescription, setEditDescription] = useState('');
   const [removeName, setRemoveName] = useState('');
   const [page, setPage] = useState({});
   const [tabValue, setTabValue] = useState(0);
+  const [globalTimer, setGlobalTimer] = useState({
+    name: "",
+    value: 0,
+    description: ""
+  })
+  const [tick, setTick] = useState(0);
 
   const getFromDB = () => {
     const q = query(collection(db, 'Timers'), orderBy("time", "desc"));
@@ -25,20 +32,17 @@ export default function PlayerFunctions() {
     const unsub = onSnapshot(q, (querySnapshot) => {
       const nonGlobal = [];
       const global = [];
+      const queryData = [];
 
       querySnapshot.forEach((doc) => {
         if(doc.data().global === false && doc.data().user.toUpperCase() === localStorage.getItem("loggedIn").toUpperCase()) nonGlobal.push(doc.data());
         else if(doc.data().global) global.push(doc.data());
+
+        queryData.push(doc.data());
       })
       setTimers(nonGlobal);
       setGlobalTimers(global);
-      
-      if(nonGlobal.length > 0) {
-        setEditName(nonGlobal[0].name);
-        setEditTime(nonGlobal[0].time);
-        setEditDescription(nonGlobal[0].description);
-        setRemoveName(nonGlobal[0].name);
-      }
+      setAllTimers(queryData);
     })
 
     return () => {
@@ -64,9 +68,7 @@ export default function PlayerFunctions() {
     }
 
     if(ready) {
-      if(timers.length === 0) setEditName(addName);
-
-      setDoc(doc(db, 'Timers', addName + localStorage.getItem('loggedIn')), {
+      setDoc(doc(db, 'Timers', addName + localStorage.getItem('loggedIn').toUpperCase()), {
         name: addName,
         time: parseInt(addTime),
         user: localStorage.getItem('loggedIn'),
@@ -98,17 +100,21 @@ export default function PlayerFunctions() {
       return;
     }
 
-    setDoc(doc(db, 'Timers', editName + localStorage.getItem('loggedIn')), {
+    setDoc(doc(db, 'Timers', editName.includes('://:') ? editName.split('://:')[0] + localStorage.getItem('loggedIn').toUpperCase() + 'GLOBAL' : editName + localStorage.getItem('loggedIn').toUpperCase()), {
       name: editName,
       time: parseInt(editTime),
       user: localStorage.getItem('loggedIn'),
-      global: false,
+      global: editName.includes('://:') ? true : false,
       description: editDescription
     })
   }
 
   const removeTimer = () => {
-    deleteDoc(doc(db, 'Timers', removeName + localStorage.getItem('loggedIn')));
+    deleteDoc(doc(db, 'Timers', removeName.includes('://:') ? removeName.split('://:')[0] + localStorage.getItem('loggedIn').toUpperCase() + 'GLOBAL' : removeName + localStorage.getItem('loggedIn').toUpperCase()));
+    setEditName('None');
+    setEditTime(0);
+    setEditDescription("");
+    setRemoveName('None');
   }
 
   const getFromEquippedDB = () => {
@@ -121,7 +127,7 @@ export default function PlayerFunctions() {
         empty = false;
       })
       if(empty) {
-        setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+        setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
           playerName: localStorage.getItem('loggedIn'),
           gear: {head: "", chest: "", arms: "", legs: "", feet: ""},
           jewelry: {earrings: "", choker: "", bracelet: "", leftRing: "", rightRing: ""},
@@ -177,7 +183,7 @@ export default function PlayerFunctions() {
         else gear[Object.keys(page.gear)[i]] = page.gear[Object.keys(page.gear)[i]]
       }
 
-      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
         playerName: localStorage.getItem('loggedIn'),
         gear: gear,
         jewelry: page.jewelry,
@@ -185,7 +191,7 @@ export default function PlayerFunctions() {
       })
     }
 
-    const handeJewelry = (event, piece) => {
+    const handleJewelry = (event, piece) => {
       const jewelry = {};
 
       for(let i = 0; i < Object.keys(page.jewelry).length; i++) {
@@ -193,7 +199,7 @@ export default function PlayerFunctions() {
         else jewelry[Object.keys(page.jewelry)[i]] = page.jewelry[Object.keys(page.jewelry)[i]]
       }
 
-      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: jewelry,
@@ -260,7 +266,7 @@ export default function PlayerFunctions() {
         }
       }
 
-      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: page.jewelry,
@@ -278,7 +284,7 @@ export default function PlayerFunctions() {
       }
       resources.push({name: "New Resource", remaining: '', maximum: ''});
 
-      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+      setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: page.jewelry,
@@ -295,13 +301,13 @@ export default function PlayerFunctions() {
         if(i !== index) resources.push(page.resources[i])
       }
 
-      updateDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn')), {
+      updateDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
         resources: resources
       })
     }
 
     const gearChange = debounce(handleGear, 500);
-    const jewelryChange = debounce(handeJewelry, 500);
+    const jewelryChange = debounce(handleJewelry, 500);
     const resourcesChange = debounce(handleResources, 500);
 
     return (
@@ -360,6 +366,60 @@ export default function PlayerFunctions() {
     setTabValue(val);
   }
 
+  const addGlobalTimer = () => {
+    let ready = true;
+
+    for(let i = 0; i < globalTimers.length; i++) {
+      if(globalTimers[i].name.toUpperCase() === (globalTimer.name + "://:(Global)").toUpperCase() && globalTimers[i].user.toUpperCase() === localStorage.getItem('loggedIn').toUpperCase()) ready = false;
+    }
+
+    if(globalTimer.name === '') {
+      alert('The timer name cannot be empty.');
+      return;
+    }
+
+    if(parseInt(globalTimer.value) <= 0) {
+      alert('The value cannot be 0 or lower.');
+      return;
+    }
+
+    if(ready) {
+      setDoc(doc(db, 'Timers', globalTimer.name + localStorage.getItem('loggedIn').toUpperCase() + 'GLOBAL'), {
+        name: globalTimer.name + "://:(Global)",
+        time: parseInt(globalTimer.value),
+        user: localStorage.getItem('loggedIn'),
+        global: true,
+        description: globalTimer.description
+      })
+
+      setGlobalTimer({name: "", value: 0, description: ""});
+    }
+    else {
+      alert("That timer already exists.");
+    }
+  }
+
+  const reduceTime = () => {
+    for(let i = 0; i < allTimers.length; i++) {
+      if(allTimers[i].time - tick <= 0) {
+        deleteDoc(doc(db, 'Timers', allTimers[i].name.includes('://:') ? allTimers[i].name.split("://:")[0] + allTimers[i].user.toUpperCase() + 'GLOBAL' : allTimers[i].name + localStorage.getItem('loggedIn').toUpperCase()));
+        setEditName('None');
+        setEditTime(0);
+        setEditDescription("");
+        setRemoveName('None');
+      }
+      else {
+        setDoc(doc(db, 'Timers', allTimers[i].name.includes('://:') ? allTimers[i].name.split("://:")[0] + allTimers[i].user.toUpperCase() + 'GLOBAL' : allTimers[i].name + localStorage.getItem('loggedIn').toUpperCase()), {
+          name: allTimers[i].name,
+          time: (allTimers[i].time - tick),
+          user: allTimers[i].user,
+          global: allTimers[i].global,
+          description: allTimers[i].description
+        })
+      }
+    }
+  }
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
       <Box padding={2}>
@@ -392,7 +452,7 @@ export default function PlayerFunctions() {
                   <br />
                   <Typography variant="h4" textAlign='center'>Personal Timers</Typography>
                   <Stack direction={{sm: 'column', md: 'row'}} flexWrap='wrap' gap={1} padding={2}>
-                    {timers.map((item) => {
+                    {timers.length === 0 ? "" : timers.map((item) => {
                       return (
                         <Card variant="outlined" sx={{width: {xs: '100%', md: '200px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
                           <Box sx={{ p: 2 }}>
@@ -410,12 +470,12 @@ export default function PlayerFunctions() {
                   <br />
                   <Typography variant="h4" textAlign='center'>Global Timers</Typography>
                   <Stack direction='row' flexWrap='wrap' gap={1} padding={2}>
-                    {globalTimers.map((item) => {
+                    {globalTimers.length === 0 ? "" : globalTimers.map((item) => {
                       return (
                         <Card variant="outlined" sx={{width: {xs: '100%', md: '200px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
                           <Box sx={{ p: 2 }}>
                             <Tooltip title={item.description}>
-                              <Typography variant="h4">{item.name}</Typography>
+                              <Typography variant="h4">{item.name.split('://:')[0]}</Typography>
                             </Tooltip>
                             <Typography>Time remaining: {item.time}</Typography>
                           </Box>
@@ -442,15 +502,39 @@ export default function PlayerFunctions() {
                 <Button onClick={addTimer} variant="outlined">Confirm</Button>
               </Stack>
             </Box>
+            {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
+              <Box border='1px solid black' padding={2}>
+                <Typography variant="h4" textAlign='center'>Add Global Timer</Typography>
+                <br />
+                <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
+                  <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
+                    <TextField label='Timer Name' value={globalTimer.name} variant="outlined" onChange={(e) => setGlobalTimer({...globalTimer, name: e.target.value})} />
+                    <TextField type="number" label='Timer value' variant="outlined" value={globalTimer.value} onChange={(e) => setGlobalTimer({...globalTimer, value: e.target.value})} />
+                    <TextField label='Timer Description' variant="outlined" value={globalTimer.description} onChange={(e) => setGlobalTimer({...globalTimer, description: e.target.value})} />
+                    <Button onClick={addGlobalTimer} variant="outlined">Confirm</Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            :
+              ""
+            }
             <Box width={{sm: '100%', md: '33%'}} border='1px solid black'>
               <br />
               <Typography variant="h4" textAlign='center'>Edit Timer</Typography>
               <br />
               <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
-                <Select value={editName} onChange={handleEditSelect}>
-                  {timers.map((timer) => {
+                <Select value={editName || 'None'} onChange={handleEditSelect}>
+                  {timers.length === 0 ? "" : timers.map((timer) => {
                     return <MenuItem value={timer.name}>{timer.name}</MenuItem>
                   })}
+                  {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
+                    globalTimers.map((timer) => {
+                      return <MenuItem value={timer.name}>{timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}</MenuItem>
+                    })
+                  :
+                    ""
+                  }
+                  <MenuItem value='None'>None Selected</MenuItem>
                 </Select>
                 <TextField type="number" label='New Timer value' variant="outlined" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
                 <TextField label='New Timer Description' variant="outlined" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
@@ -461,14 +545,36 @@ export default function PlayerFunctions() {
               <Typography variant="h4" textAlign='center'>Remove Timer</Typography>
               <br />
               <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
-                <Select value={removeName} onChange={(e) => setRemoveName(e.target.value)}>
+                <Select value={removeName || 'None'} onChange={(e) => setRemoveName(e.target.value)}>
                   {timers.map((timer) => {
                     return <MenuItem value={timer.name}>{timer.name}</MenuItem>
                   })}
+                  {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
+                    globalTimers.map((timer) => {
+                      return <MenuItem value={timer.name}>{timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}</MenuItem>
+                    })
+                  :
+                    ""
+                  }
+                  <MenuItem value='None'>None Selected</MenuItem>
                 </Select>
                 <Button onClick={removeTimer} variant="outlined">Confirm</Button>
               </Stack>
             </Box>
+            {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
+              <Box border='1px solid black' padding={2}>
+                <Typography variant="h4" textAlign='center'>Tick Timers</Typography>
+                <br />
+                <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
+                  <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
+                    <TextField type="number" label='Tick Value' value={tick} variant="outlined" onChange={(e) => setTick(e.target.value)} />
+                    <Button onClick={reduceTime} variant="outlined">Confirm</Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            :
+              ""
+            }
           </Stack>
         </Box>
         :

@@ -1,5 +1,7 @@
 import { Box, Button, Card, Chip, Modal, Stack, Typography } from "@mui/material";
+import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
+import db from '../Components/firebase';
 
 export default function ArmorItem(props) {
   const [anomalousDisplayed, setAnomalousDisplayed] = useState(false);
@@ -25,6 +27,25 @@ export default function ArmorItem(props) {
     )
   }
 
+  const flipArmor = () => {
+    setDoc(doc(db, 'Armor', props.currArmor.name), {
+      name: props.currArmor.name,
+      defense: props.currArmor.defense,
+      soak: props.currArmor.soak,
+      encumbrance: props.currArmor.encumbrance,
+      price: props.currArmor.price,
+      rarity: props.currArmor.rarity,
+      specials: props.currArmor.specials,
+      setBonus: props.currArmor.setBonus,
+      spawnLocations: props.currArmor.spawnLocations,
+      durability: props.currArmor.durability,
+      description: props.currArmor.description,
+      anomalousEffect: props.currArmor.anomalousEffect,
+      equippedTo: props.currArmor.equippedTo,
+      hidden: props.currArmor.hidden === 'Yes' ? 'No' : 'Yes'
+    })
+  }
+
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '350px'}}>
       <Box sx={{ p: 2 }}>
@@ -45,11 +66,12 @@ export default function ArmorItem(props) {
           <Typography>Set bonus: {props.currArmor.setBonus}</Typography>
         </Box>
         {props.currArmor.anomalousEffect !== "None" ?
-          <Button size="small" onClick={() => setAnomalousDisplayed(true)}>Display Anomalous Effect</Button>
+          <Button size="small" onClick={() => setAnomalousDisplayed(true)} variant="outlined">Display Anomalous Effect</Button>
         :
           ""
         }
         <DisplayAnomalousProperty />
+        {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ? props.currArmor.hidden === 'Yes' ? <Button onClick={flipArmor} variant="outlined">Show Armor</Button> : <Button onClick={flipArmor} variant="outlined">Hide Armor</Button> : ""}
       </Box>
     </Card>
   )

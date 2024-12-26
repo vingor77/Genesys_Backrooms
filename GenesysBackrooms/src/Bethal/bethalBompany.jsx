@@ -32,6 +32,7 @@ export default function Bethal() {
   const [dataRetrieved, setDataRetrieved] = useState(false);
   const [floodLevel, setFloodLevel] = useState(0);
   const [moonList, setMoonList] = useState(false);
+  const [toxicLevels, setToxicLevels] = useState(-1);
 
   const mapSizes = [21, 18, 32, 18, 36, 23, 32, 40, 21];
   const quotas = [130, 236, 361, 517, 717, 973, 1300, 1700, 2205, 2811, 3536, 4392, 5392, 5392, 6548, 7873, 9380];
@@ -313,7 +314,8 @@ export default function Bethal() {
         placed: false,
         connections: [],
         lightsOn: 5,
-        lightsOff: 5
+        lightsOff: 5,
+        toxicity: 0
       }
     ];
     const maxScrap = Math.floor(Math.random() * (moon.maxScrap - moon.minScrap + 1) + moon.minScrap);
@@ -345,6 +347,13 @@ export default function Bethal() {
       if(lightsOff < 0) lightsOff = 0;
       roomList[i].lightsOn = lightsOn;
       roomList[i].lightsOff = lightsOff;
+
+      const toxicChance = Math.floor(Math.random() * 100) + 1;
+      if(toxicChance <= 85) roomList[i].toxicity = 0;
+      else if(toxicChance > 85 && toxicChance <= 90) roomList[i].toxicity = Math.floor(Math.random() * 3) + 1;
+      else if(toxicChance > 90 && toxicChance <= 95) roomList[i].toxicity = Math.floor(Math.random() * 3) + 4;
+      else if(toxicChance > 95 && toxicChance <= 99) roomList[i].toxicity = Math.floor(Math.random() * 3) + 7;
+      else roomList[i].toxicity = 10
     }
 
     determineOutsideEntities(moon, dayEntityList, nightEntityList);
@@ -379,6 +388,7 @@ export default function Bethal() {
     setRound(0);
     setNightSpawned([]);
     setFloodLevel(0);
+    setToxicLevels(Math.floor(Math.random() * 11));
   }
 
   const handleDayChange = () => {
@@ -398,6 +408,7 @@ export default function Bethal() {
     setWeather([]);
     setPrevMoon(currMoon);
     setFloodLevel(0);
+    setToxicLevels(Math.floor(Math.random() * 11));
   }
 
   const handleRoundChange = (index) => {
@@ -841,6 +852,7 @@ export default function Bethal() {
                   }
                   {day % 3 === 0 ? <Typography variant="h5">Day: {day} (Quota Deadline)</Typography> : <Typography variant="h5">Day: {day < 0 ? 0 : day}</Typography>}
                   <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
+                  <Typography>Toxicity level: {toxicLevels}</Typography>
                   {weather[index] === 'Flooded' ? <DisplayFloodLevel /> : ""}
                   {weather[index] === 'Foggy' ? <DisplayFogLevel /> : ""}
                   <Button variant="contained" onClick={() => handleRoundChange(index)}>Advance Round</Button>
@@ -999,6 +1011,7 @@ export default function Bethal() {
     localStorage.setItem("shop", JSON.stringify(shop));
     localStorage.setItem("mapGenerated", mapGenerated);
     localStorage.setItem("nightSpawned", JSON.stringify(nightSpawned));
+    localStorage.setItem('toxicLevels', toxicLevels);
   }
 
   const retrieveLocalStorage = () => {
@@ -1008,6 +1021,7 @@ export default function Bethal() {
     if(localStorage.getItem("prevMoon") !== null && prevMoon === "") setPrevMoon(localStorage.getItem("prevMoon"));
     if(localStorage.getItem("day") !== null && day === -1) setDay(localStorage.getItem("day"));
     if(localStorage.getItem("round") !== null && round === -1) setRound(localStorage.getItem("round"));
+    if(localStorage.getItem('toxicLevels') !== null && toxicLevels === -1) setToxicLevels(localStorage.getItem('toxicLevels'))
     if(JSON.parse(localStorage.getItem("grid")) !== null && grid.length === 0) {
       setGrid(JSON.parse(localStorage.getItem("grid")));
       setMapGenerated(localStorage.getItem("mapGenerated"));

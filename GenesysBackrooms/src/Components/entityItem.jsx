@@ -1,5 +1,4 @@
-import { Box, Button, Card, Chip, Divider, Modal, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { Card, Chip, Divider, Stack, Typography } from "@mui/material";
 
 export default function EntityItem(props) {
   const statNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", "Presence"];
@@ -15,11 +14,11 @@ export default function EntityItem(props) {
 
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '700px', padding: 1}}>
-      <Stack direction='row' justifyContent='space-between' alignItems='center'>
+      <Stack direction='row' justifyContent='space-around' alignItems='center'>
         <Typography variant="h4">{props.entity.name}</Typography>
+        <Chip label={'Type: ' + props.entity.type} />
         <Chip label={'Difficulty: ' + props.entity.difficulty} />
       </Stack>
-
       <br />
       <Typography>{props.entity.description}</Typography>
       <br />

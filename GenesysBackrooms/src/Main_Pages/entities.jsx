@@ -4,14 +4,16 @@ import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/fi
 import { useState } from "react";
 import db from '../Components/firebase';
 import EntityItem from "../Components/entityItem";
+import { DataGrid } from '@mui/x-data-grid';
 
 export default function Entities() {
   const [entities, setEntities] = useState([]);
+  const [currEntity, setCurrEntity] = useState('Deathmoth');
 
-  const data = [{"name":"Smiler (Rival)","description":"A reflective white gleam in the shape of eyes and a grinning mouth","stats":"3/3/2/2/2/1","soak":4,"wounds":16,"strain":0,"defenses":"1/0","skills":"Athletics 3/Brawl 4/Perception 2","talents":"None","abilities":"Rush: The Smiler does not use strain to perform a second maneuver each turn./Darkvision: When making skill checks, The Smiler removes up to two setback dice imposed due to darkness.","actions":"Charge(attack): Brawl; Damage 10; Range [Engaged]; Pierce 3","equipment":"None","drops":"1 Smiler Eye","difficulty":1,"spawnLocations":"All"},
-    {"name":"Window (Rival)","description":"A window that matches the surrounding area. Within this window sometimes appears a shadowed humanoid figure","stats":"3/1/2/2/2/3","soak":4,"wounds":22,"strain":0,"defenses":"0/0","skills":"Brawl 2/Charm 3","talents":"None","abilities":"Whisper: The Window whispers within a short range. At the start of a player's turn, the player must make a contensted Cool check versus the Window's Charm check. On a fail, the player is staggered and must use thier free maneuver to move towards the Window. For the next 3 turns, that player is unaffected by this ability","actions":"Grab(Attack): Brawl; Damage 7; Critical 5; Range [Engaged]; Stun Damage","equipment":"None","drops":"1 Plank of Wood","difficulty":1,"spawnLocations":"Indoors"},
-    {"name":"Deathmoth (Rival)","description":"A giant moth. Male Deathmoths are docile unless attacked while female Deathmoths are aggressive","stats":"2/3/1/2/2/3","soak":4,"wounds":20,"strain":0,"defenses":"0/1","skills":"Brawl 3/Ranged 2","talents":"Quick Strike 2: Add two boost dice to any target who has not taken thier turn yet in the current encounter.","abilities":"Darkvision: When making skill checks, The Deathmoth removes up to two setback dice imposed due to darkness.","actions":"Charge(Attack): Brawl; Damage 7; Range [Engaged]/Dissolve: The Deathmoth attempts to dissolve a metal or wooden object held or worn; Range [Engaged]/Spit(Attack)[Female]: Ranged; Damage 7; Range [Medium]","equipment":"None","drops":"2 Moth Wings(Male)/1 Vial of Acid(Female)","difficulty":1,"spawnLocations":"All"}]
-    
+  const data = [{"name":"Smiler","description":"A reflective white gleam in the shape of eyes and a grinning mouth","stats":"3/3/2/2/2/1","soak":4,"wounds":16,"strain":0,"defenses":"1/0","skills":"Athletics 3/Brawl 4/Perception 2","talents":"None","abilities":"Rush: The Smiler does not use strain to perform a second maneuver each turn./Darkvision: When making skill checks, The Smiler removes up to two setback dice imposed due to darkness.","actions":"Charge(attack): Brawl; Damage 10; Range [Engaged]; Pierce 3","equipment":"None","drops":"1 Smiler Eye","difficulty":1,"spawnLocations":"All","xp":1,"type":"Rival"},
+    {"name":"Window","description":"A window that matches the surrounding area. Within this window sometimes appears a shadowed humanoid figure","stats":"3/1/2/2/2/3","soak":4,"wounds":22,"strain":0,"defenses":"0/0","skills":"Brawl 2/Charm 3","talents":"None","abilities":"Whisper: The Window whispers within a short range. At the start of a player's turn, the player must make a contensted Cool check versus the Window's Charm check. On a fail, the player is staggered and must use thier free maneuver to move towards the Window. For the next 3 turns, that player is unaffected by this ability","actions":"Grab(Attack): Brawl; Damage 7; Critical 5; Range [Engaged]; Stun Damage","equipment":"None","drops":"1 Plank of Wood","difficulty":1,"spawnLocations":"Indoors","xp":1,"type":"Rival"},
+    {"name":"Deathmoth","description":"A giant moth. Male Deathmoths are docile unless attacked while female Deathmoths are aggressive","stats":"2/3/1/2/2/3","soak":4,"wounds":20,"strain":0,"defenses":"0/1","skills":"Brawl 3/Ranged 2","talents":"Quick Strike 2: Add two boost dice to any target who has not taken thier turn yet in the current encounter.","abilities":"Darkvision: When making skill checks, The Deathmoth removes up to two setback dice imposed due to darkness.","actions":"Charge(Attack): Brawl; Damage 7; Range [Engaged]/Dissolve: The Deathmoth attempts to dissolve a metal or wooden object held or worn; Range [Engaged]/Spit(Attack)[Female]: Ranged; Damage 7; Range [Medium]","equipment":"None","drops":"2 Moth Wings(Male)/1 Vial of Acid(Female)","difficulty":1,"spawnLocations":"All","xp":1,"type":"Rival"}]
+
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
       setDoc(doc(db, 'Entities', data[i].name), {
@@ -29,7 +31,9 @@ export default function Entities() {
         equipment: data[i].equipment,
         drops: data[i].drops,
         difficulty: data[i].difficulty,
-        spawnLocations: data[i].spawnLocations
+        spawnLocations: data[i].spawnLocations,
+        xp: data[i].xp,
+        type: data[i].type
       })
     }
   }
@@ -50,16 +54,72 @@ export default function Entities() {
     }
   }
 
+  const DisplayTable = () => {
+    const columns = [
+      {
+        field: 'name',
+        headerName: 'Entity Name',
+        flex: 1,
+        editable: false,
+        renderCell: (params) => <Button onClick={() => setCurrEntity(params.row.name)}>{params.row.name}</Button>
+      },
+      { 
+        field: 'difficulty',
+        headerName: 'Difficulty',
+        flex: 1,
+      },
+      {
+        field: 'drops',
+        headerName: 'Drops',
+        flex: 1,
+        editable: false,
+      }
+    ];
+
+    const rows = [];
+
+    for(let i = 0; i < entities.length; i++) {
+      rows.push({
+        id: i,
+        name: entities[i].name,
+        difficulty: entities[i].difficulty,
+        drops: entities[i].drops
+      })
+    }
+
+    return (
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: {
+              pageSize: 5,
+            },
+          },
+        }}
+        pageSizeOptions={[5]}
+        disableRowSelectionOnClick
+      />
+    )
+  }
+
+  const DisplayEntity = () => {
+    for(let i = 0; i < entities.length; i++) {
+      if(entities[i].name === currEntity) return <EntityItem entity={entities[i]}/>
+    }
+  }
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
       <Box>
       <Button onClick={addData}>Add</Button>
-        {entities.length > 0 ? 
-          <Stack direction='row' flexWrap='wrap' gap={1}>
-            {entities.map((item) => {
-              return <EntityItem entity={item}/>
-            })}
-          </Stack>
+        {entities.length > 0 ?
+          <Box>
+            <DisplayTable />
+            <br />
+            <DisplayEntity />
+          </Box>
         :
           getFromDB()
         }

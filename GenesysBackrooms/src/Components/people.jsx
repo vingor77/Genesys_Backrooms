@@ -1,6 +1,14 @@
 import { Box, Button, Card, Chip, Divider, Modal, Stack, Typography } from "@mui/material";
+import db from '../Components/firebase';
+import { doc, updateDoc } from "firebase/firestore";
 
 export default function People(props) {
+  const flipHidden = () => {
+    updateDoc(doc(db, 'PeopleOfInterest', props.currPerson.name), {
+      hidden: props.currPerson.hidden === 'Yes' ? 'No' : 'Yes'
+    })
+  }
+
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '500px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '500px'}}>
       <Box sx={{ p: 2 }}>
@@ -14,6 +22,7 @@ export default function People(props) {
         <Divider />
         <br />
         <Typography textAlign='left'><b>Personality:</b> {props.currPerson.personality}</Typography>
+        {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ? props.currPerson.hidden === 'Yes' ? <Button onClick={flipHidden} variant="outlined">Show Person</Button> : <Button onClick={flipHidden} variant="outlined">Hide Person</Button> : ""}
       </Box>
     </Card>
   )

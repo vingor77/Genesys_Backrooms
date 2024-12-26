@@ -8,7 +8,6 @@ export default function PhenomenonItem(props) {
             <Typography variant="h4">{props.currPhenomenon.name}</Typography>
             <Chip label={"Type: " + props.currPhenomenon.type} />
         </Stack>
-
         <Typography>{props.currPhenomenon.description}</Typography>
         <br />
         <Divider />

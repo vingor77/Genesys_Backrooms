@@ -1,15 +1,15 @@
-import { Box, Button, Card, Divider, Drawer, MenuItem, Select, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Card, Divider, MenuItem, Select, Stack, Typography } from "@mui/material";
 import NotLoggedIn from "../Components/notLoggedIn";
 import { useState } from "react";
-import { collection, doc, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import QuestItem from '../Components/questItem';
+import { DataGrid } from '@mui/x-data-grid';
 
 export default function Outposts() {
   const [outposts, setOutposts] = useState([]);
   const [quests, setQuests] = useState([]);
   const [tabValue, setTabValue] = useState('Alpha');
-  const [selectedGroup, setSelectedGroup] = useState('None');
 
   const data = [{"name":"A1","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
     {"name":"A2","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
@@ -109,7 +109,7 @@ export default function Outposts() {
         {outposts.map((outpost, index) => {
           if(outpost.name === tabValue) {
             return (
-              <Box>
+              <Box key={index}>
                 <Typography variant="h4">{outpost.name}</Typography>
                 <Typography>Description</Typography>
                 <br />
@@ -138,64 +138,54 @@ export default function Outposts() {
     )
   }
 
-  const SearchOptions = () => {
-    const groups = [];
-
-    for(let i = 0; i < outposts.length; i++) {
-      if(!groups.includes(outposts[i].group)) groups.push(outposts[i].group);
-    }
-    
-    return (
-      <Box padding={2}>
-        <Box>
-          <Select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}>
-            <MenuItem value={'None'}>None</MenuItem>
-            {groups.map((group, index) => {
-              return <MenuItem value={group} key={index}>{group}</MenuItem>
-            })}
-          </Select>
-        </Box>
-      </Box>
-    )
-  }
-
   const DisplayTable = () => {
+    const columns = [
+      {
+        field: 'name',
+        headerName: 'Outpost Name',
+        flex: 1,
+        editable: false,
+        renderCell: (params) => <Button onClick={() => setTabValue(params.row.name)}>{params.row.name}</Button>
+      },
+      { 
+        field: 'level',
+        headerName: 'Level',
+        flex: 1,
+      },
+      {
+        field: 'group',
+        headerName: 'Group',
+        flex: 1,
+        editable: false,
+      }
+    ];
+
     const rows = [];
 
     for(let i = 0; i < outposts.length; i++) {
-      if(outposts[i].group === selectedGroup || selectedGroup === "None") {
-        rows.push({
-          name: outposts[i].name,
-          level: outposts[i].level,
-          group: outposts[i].group
-        })
-      }
+      rows.push({
+        id: i,
+        name: outposts[i].name,
+        level: outposts[i].level,
+        group: outposts[i].group
+      })
     }
 
     return (
-      <TableContainer sx={{maxHeight: '500px'}}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Outpost Name</TableCell>
-              <TableCell align="right">Level</TableCell>
-              <TableCell align="right">Group</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.name}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row" onClick={() => setTabValue(row.name)}>{row.name}</TableCell>
-                <TableCell align="right">{row.level}</TableCell>
-                <TableCell align="right">{row.group}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: {
+              pageSize: 5,
+            },
+          },
+        }}
+        pageSizeOptions={[5]}
+        disableRowSelectionOnClick
+        sx={{minWidth: '50%'}}
+      />
     )
   }
 
@@ -205,7 +195,6 @@ export default function Outposts() {
         <Button onClick={addData}>Add</Button>
         {outposts.length > 0 ? 
           <Box>
-            <SearchOptions />
             <DisplayTable />
             <br />
             <DisplayOutpost />

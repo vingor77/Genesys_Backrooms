@@ -10,7 +10,7 @@ export default function Room(props) {
   let equipment = '';
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '480px', padding: 1}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '550px', padding: 1}}>
       <Stack justifyContent="space-between" alignItems="center">
         <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType}</Typography>
         <Stack direction='row' justifyContent="space-between" alignItems="center">
@@ -23,6 +23,9 @@ export default function Room(props) {
       <Typography><b>Light levels:</b></Typography>
       <Typography>Apparatus Active: {props.data.lightsOn !== undefined ? props.data.lightsOn : 5}</Typography>
       <Typography>Apparatus Inactive: {props.data.lightsOff !== undefined ? props.data.lightsOff : 5}</Typography>
+      <br />
+      <Typography><b>Toxicity:</b></Typography>
+      <Typography>{props.data.toxicity}</Typography>
       {props.data.scraps.length !== 0 ? 
         <Box>
           <br />

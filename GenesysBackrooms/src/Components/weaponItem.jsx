@@ -1,10 +1,17 @@
 import { Box, Button, Card, Chip, Modal, Stack, Typography } from "@mui/material";
+import { doc, updateDoc } from "firebase/firestore";
 import { useState } from "react";
+import db from '../Components/firebase';
 
 export default function WeaponItem(props) {
   const [anomalousDisplayed, setAnomalousDisplayed] = useState(false);
-
   const specials = props.currWeapon.specials.split("/").join(", ");
+
+  const flipHidden = () => {
+    updateDoc(doc(db, 'Weapons', props.currWeapon.name), {
+      hidden: props.currWeapon.hidden === 'Yes' ? 'No' : 'Yes'
+    })
+  }
 
   const DisplayAnomalousProperty = () => {
     return (
@@ -44,11 +51,12 @@ export default function WeaponItem(props) {
           <Typography>Set bonus: {props.currWeapon.setBonus}</Typography>
         </Box>
         {props.currWeapon.anomalousEffect !== "None" ?
-          <Button size="small" onClick={() => setAnomalousDisplayed(true)}>Display Anomalous Effect</Button>
+          <Button size="small" onClick={() => setAnomalousDisplayed(true)} variant="outlined">Display Anomalous Effect</Button>
         :
           ""
         }
         <DisplayAnomalousProperty />
+        {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ? props.currWeapon.hidden === 'Yes' ? <Button onClick={flipHidden} variant="outlined">Show Weapon</Button> : <Button onClick={flipHidden} variant="outlined">Hide Weapon</Button> : ""}
       </Box>
     </Card>
   )

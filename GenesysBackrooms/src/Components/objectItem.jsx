@@ -97,13 +97,10 @@ export default function ObjectItem(props) {
           :
             ""
           }
-          {props.mainPage ?
-            props.currObject.shownToPlayer ?
-              <Button size="small" onClick={changeVisibility}>Hide from player</Button>
-            :
-              <Button size="small" onClick={changeVisibility}>Show to player</Button>
+          {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' && props.currObject.shownToPlayer ?
+            <Button size="small" onClick={changeVisibility} variant="outlined">Hide Object</Button>
           :
-            ""
+            <Button size="small" onClick={changeVisibility} variant="outlined">Show Object</Button>
           }
         </Stack>
         <ShowTable />

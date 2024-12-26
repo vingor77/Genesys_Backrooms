@@ -6,6 +6,7 @@ import { useState } from "react";
 export default function Information() {
   const [generalValue, setGeneralValue] = useState(0);
   const [effectValue, setEffectValue] = useState(0);
+  const [lethalValue, setLethalValue] = useState(0);
 
   const handleGeneralChange = (event, val) => {
     setGeneralValue(val);
@@ -59,7 +60,7 @@ export default function Information() {
             <Typography>Soak: 10</Typography>
             <Typography>Wounds: 150</Typography>
             <Typography>Strain: 150</Typography>
-            <Typography>Characteristics: 6 (5 in character creation)</Typography>
+            <Typography>Characteristics: 6 (4 in character creation)</Typography>
             <Typography>Skills: Rank 6 (2 while during character creation)</Typography>
           </Box>
         )
@@ -139,6 +140,7 @@ export default function Information() {
                     <Typography>4. Do something vital</Typography>
                     <Typography>5. On initiative, perform a free maneuver</Typography>
                     <Typography>6. Inflict a critical injury</Typography>
+                    <Typography>7. Damage the target's armor or weapon</Typography>
                   </Box>
                   <Box>
                     <Typography variant="h5">Requires 2:</Typography>
@@ -212,6 +214,7 @@ export default function Information() {
                     <Typography>1. Anything requiring threats</Typography>
                     <Typography>2. The active player's next check is 1 difficulty higher</Typography>
                     <Typography>3. Damage the active player's weapon. If dual-wielding, damage the first weapon</Typography>
+                    <Typography>4. Damage the active player's armor</Typography>
                   </Box>
                 </Stack>
                 <br />
@@ -483,6 +486,37 @@ export default function Information() {
             <Typography>Survival Difficulty 5: 15 minutes</Typography>
           </Box>
         )
+      case 8:
+        return (
+          <Box>
+            <Divider>Weapon Durability</Divider>
+            <Typography>At maximum durability there are no effects.</Typography>
+            <Typography>Losing 1 durability gives a setback dice to all checks made using the weapon.</Typography>
+            <Typography>Losing 2 durability increases the difficulty by 1 when using the weapon.</Typography>
+            <Typography>Losing 3 durability upgrades a difficulty dice when using the weapon.</Typography>
+            <Typography>Losing 4 durability causes the weapon to be unwieldy and you treat the skill used for this weapon as though it were tier 0 when using the weapon.</Typography>
+            <Typography>Losing 5 durability causes the weapon to break and it loses all effects and bonuses.</Typography>
+            <Typography>All weapons replace thier durability effect with breaking if it hits 0.</Typography>
+            <br />
+            <Divider>Armor Durability</Divider>
+            <br />
+            <Typography>At maximum durability there are no effects.</Typography>
+            <Typography>Losing 1 durability: Add a setback dice to all Brawn and Agility based checks while worn</Typography>
+            <Typography>Losing 2 durability: Lose 1 defense and 1 soak</Typography>
+            <Typography>Losing 3 durability: Increase the difficulty of all Brawn and Agility based checks while worn</Typography>
+            <Typography>Losing 4 durability: Upgrade a difficulty dice to all Brawn and Agility based checks while worn</Typography>
+            <Typography>Losing 5 durability: The armor breaks and loses all effects</Typography>
+            <Typography>All armor replace thier durability effect with breaking if it hits 0.</Typography>
+            <br />
+            <Divider>Repairing</Divider>
+            <br />
+            <Typography>Repairing is done with Tinkerer Tools. You must succeed on a Mechanics or Computers check of difficulty equal to the durability lost.</Typography>
+            <Typography>The difficulty is increased by 1 if you do not have Tinkerer Tools.</Typography>
+            <Typography>The difficulty is increased by 1 if you attempt to fix it in half the time.</Typography>
+            <Typography>Repairing takes 1 hour per difficulty to fix as a standard rate.</Typography>
+            <Typography>It costs 20% of the original item's value per difficulty to fix. For each advantage during the roll, reduce this price by 10%. Round the price down.</Typography>
+          </Box>
+        )
     }
   }
 
@@ -570,13 +604,14 @@ export default function Information() {
       case 3:
         return (
           <Box padding={1} maxHeight='750px' overflow='auto'>
-            <Divider>Length of rests based on danger</Divider>
+            <Divider>Length of rests</Divider>
             <Typography>Danger level 0: You may rest for any amount of time</Typography>
-            <Typography>Danger level 1: You may rest for 24 hours</Typography>
-            <Typography>Danger level 2: You may rest for 8 hours</Typography>
-            <Typography>Danger level 3: You may rest an hour</Typography>
+            <Typography>Danger level 1: You may rest for 72 hours</Typography>
+            <Typography>Danger level 2: You may rest for 24 hours</Typography>
+            <Typography>Danger level 3: You may rest for 3 hours</Typography>
             <Typography>Danger Level 4-5: You may not rest</Typography>
             <Typography>If you attempt to rest over the time alloted, you will be forced into combat with some kind of threat</Typography>
+            <Typography>These values are across your entire time on the level</Typography>
             <br />
             <Divider>Effects of resting</Divider>
             <br />
@@ -634,6 +669,124 @@ export default function Information() {
     }
   }
 
+  const DisplayLethalTab = () => {
+    switch(lethalValue) {
+      case 0:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>You may use your scanner as an incidental on your turn</Typography>
+            <Typography>Previously explored rooms are traversed at double the speed</Typography>
+            <Typography>Should you die, you may remove 1 critical injury at random. Sometimes the injury is chosen if it makes sense</Typography>
+            <Typography>All rooms except for the factory, locker, and Storage rooms are considered medium distance from door to door. These are considered long.</Typography>
+          </Box>
+        )
+      case 1:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>Your Encumbrance is 20 times your brawn plus 10</Typography>
+            <Typography>For every 20 weight over, recieve 1 setback dice to all agility and brawn based checks</Typography>
+            <Typography>While encumbered past your threshold plus 20 times your brawn, you lose your free maneuver per turn.</Typography>
+            <Typography>While holding a 2-handed object, your action may be spent on a maneuver only.</Typography>
+          </Box>
+        )
+      case 2:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography><b>Clear:</b> No Effect</Typography>
+            <Typography><b>Rainy:</b> Every turn, there is a 1/6 chance you walk into a puddle. A difficulty 2 agility or coordination check is then made. On a fail, you sink further in and must repeat the save again at 1 higher difficulty. After 3 fails, you die</Typography>
+            <Typography><b>Stormy:</b> Every turn, there is a x/4 chance of lightning striking you where x is the amount of conductive items in your inventory. The difficulty is set at 1 + x</Typography>
+            <Typography><b>Foggy:</b> Every turn, the fog shifts in or out and makes seeing harder or easier. The difficulty is based on the fog level</Typography>
+            <Typography><b>Flooded:</b> The planet slowly floods. This value is kept hidden.</Typography>
+            <Typography><b>Eclipsed:</b> An extra entity is spawned inside immediately. Outside entities spawn quickly. All entities have 5 more wounds than normal and deal 1 more damage per attack</Typography>
+          </Box>
+        )
+      case 3:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Divider>Actions</Divider>
+            <Typography>Scan room: You may view a room adjacent to a player, whether it has a direct entrance or not. Movement will not be observed using this method.</Typography>
+            <Typography>Seek Entity: You may determine if an Entity is within two rooms of a player. This does not work diagonally.</Typography>
+            <Typography>Activate Teleporter: You may use either teleporter. This may be used as an out-of-turn incidental.</Typography>
+            <br />
+            <Divider>Maneuvers</Divider>
+            <Typography>Toggle Trap: You may activate or deactivate any trap within the facility. A maximum of 3 may be activated at once. One must be re-enabled before disabling a 4th.</Typography>
+            <Typography>Send Message: You may send a message no more than 10 characters long to all players.</Typography>
+            <Typography>Planetary Scan: You may scan the outdoors as though it were a normal scanner.</Typography>
+            <br />
+            <Divider>Incidentals</Divider>
+            <Typography>Check Time: You may move outside to check the time. If crouching, this will take two Incidentals.</Typography>
+            <Typography>Use Walkie-Talkie: Out-of-turn, you may use the Walkie Talkie to assist a player in a non-physical skill check. The difficulty of the check is reduced by 1 and both you and the player make the check. If either one passes, the check is considered passed.</Typography>
+            <Typography>Operate Door: You may open or close the ship door.</Typography>
+          </Box>
+        )
+      case 4:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Divider>Alterations</Divider>
+            <Typography>You may carry a single one-handed item with a weight less than or equal to 30. If you have Bulked Load, you may carry a two-handed item and the weight maximum becomes 40.</Typography>
+            <Typography>You may use either an Action or a Maneuver each turn, instead of both. Strain may not be used to perform an extra Maneuver.</Typography>
+            <Typography>You may not speak or use any items such as Walkie-Talkies and Flashlights.</Typography>
+            <Typography>You can not be seen or heard by players who are alive, but can see any items you are carrying.</Typography>
+            <br />
+            <Divider>Actions</Divider>
+            <Typography>Possess: You may attempt to possess an entity by rolling a Coercion check. The difficulty is based on the health of the entity. With no wounds, the difficulty is 5. At half or lower, the difficulty is 4. At over half, the difficulty is 3. While you are possessing an entity, you may use its free maneuver each turn. Also, the entity may not spend strain on a maneuver</Typography>
+            <Typography>Assist: You may prepare to assist a player with a physical skill check. The difficulty is reduced by 1 for that player. You may also make this skill check but at 1 difficulty higher instead of 1 lower. If either succeeds, the check is considered passed.</Typography>
+            <br />
+            <Divider>Incidentals</Divider>
+            <Typography>Flicker: Out-of-turn you may cause a flashlight to flicker to alert a player of danger. The player gains two boost dice to the next check that player makes.</Typography>
+          </Box>
+        )
+      case 5:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>Flashlights have a power of 4 and last for 13 rounds</Typography>
+            <Typography>Pro-Flashlights have a power of 7 and last for 28 rounds</Typography>
+            <Typography>Flashlights lose power if on at the beginning of your turn. You may spend a maneuver to turn it off before the power is lost</Typography>
+          </Box>
+        )
+      case 6:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Divider>Items</Divider>
+            <Typography>Painkillers. Costs 200 credits to buy. Weight 5. Has 5 uses. </Typography>
+            <Typography>Medkits. Costs 50 credits to buy. Weight 12. Has 5 uses.</Typography>
+            <Typography>Shotgun shells. Costs 25 credits to buy. Weight 1.</Typography>
+            <Typography>20 Experience Points. Costs 1000 credits to buy.</Typography>
+            <Typography>Flare. Costs 110 credits to buy. Weight 3. Has 1 use. It may be used to prevent all navigation checks on the current planet to be higher than two difficulty.</Typography>
+            <Typography>Signal Upgrader: Costs 400 credits to buy. Upgrades the Signal Translator to allow for 30 characters instead of 10 and the message is sent instantly.</Typography>
+            <Typography>Teleporter upgrade: Costs 1400 credits to buy. Upgrades the teleporter to become instant and items are not dropped upon teleport.</Typography>
+            <br />
+            <Divider>Talents</Divider>
+            <Typography>Stronger Scanner. Tier: 1. Add a boost dice to scans.</Typography>
+            <Typography>Stronger Scanner II. Tier: 2. Requirement: Stronger Scanner. Upgrade one ability dice for scans. If no ability dice can be upgraded, add one to the dice pool.</Typography>
+            <Typography>Stronger Scanner III. Tier: 3. Requirement: Stronger Scanner II. All obstacles are now ignored by the scanner. All adjacent rooms with an open door are scanned as well.</Typography>
+            <Typography>Bulked-Load. Tier: 2. Requirement: 4 or higher Brawn. You may carry an extra 2-handed item.</Typography>
+          </Box>
+        )
+      case 7:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>Decoy: You gain 1 soak.</Typography>
+            <Typography>Brown: You gain 1 defense.</Typography>
+            <Typography>Green: You gain 1 soak. You lower the difficulty of all stealth checks by 1.</Typography>
+            <Typography>Purple: You gain 1 soak and 1 defense.</Typography>
+            <Typography>Hazard: You gain 3 soak. You increase the difficulty of all stealth checks by 1.</Typography>
+            <Typography>Bee: You do not take any damage from bees. You add two boost dice to attacks made against the Bunker Spider, Hoarding Bug, Snare Flea, and Spore Lizard.</Typography>
+            <Typography>Bunny: You gain 2 soak and 2 defense OR you gain an extra maneuver per turn that does not count towards your limit. This is chosen when bought.</Typography>
+            <Typography>Pajama: You gain an extra action per turn and you may ignore the strain costs spent on maneuvers 3 times per day, you gain 4 defense, OR you gain 2 soak and 3 defense.</Typography>
+            <br />
+            <Divider>Wear and Tear</Divider>
+            <Typography>Suits may be broken down through enemy triumphs or own despairs. Suits have a durability of 3.</Typography>
+            <Typography>The effects are as follows:</Typography>
+            <Typography>3: No ill effects</Typography>
+            <Typography>2: Your suit cracks or rips slightly. This allows the potentially toxic atmosphere to get into your suit. It however is not broken enough to cause loss of breath</Typography>
+            <Typography>1: Your suit is too broken to absorb damage. Your suit loses its soak</Typography>
+            <Typography>0: The suit is unusable. Your suit loses its defense and you become unable to breathe while outside or in a room with outside atmosphere in it</Typography>
+          </Box>
+        )
+    }
+  }
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
       <Box>
@@ -649,18 +802,30 @@ export default function Information() {
               <Tab label='Hacking' />
               <Tab label='Healing' />
               <Tab label='Time' />
+              <Tab label='Durability and Repairs' />
             </Tabs>
             <DisplayGeneralTab />
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Custom Character Creation</AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Character Creation and Experience Points</AccordionSummary>
           <AccordionDetails>
-            <Typography maxWidth={{sm: '100%', md: '50%'}}>
-              <b>Species/Archetype:</b> You start with a 1 in all characteristics, one level in any one skill, no abilities, a wound threshold of 10 + brawn, a strain threshold of 10 + willpower, and 230 xp to spend.
-              You may spend 5 xp to gain a custom ability, up to 2 times. You may take abilities from other Species/Archetypes.
-            </Typography>
-            <Typography><b>Career:</b> You may choose 8 skills to be your career skills. Out of those 8, choose 4 to add a level in. The skill chosen with your species/archetype may be chosen here.</Typography>
+            <Typography><b>Custom Species/Archetype</b></Typography>
+            <Typography>1. All of your characteristics begin at 1.</Typography>
+            <Typography>2. You gain a level in any skill of your choosing.</Typography>
+            <Typography>3. Your wound threshold is between 8 and 12 plus your brawn. <b>Example: 9 Wounds chosen, 4 Brawn = 13 wounds.</b></Typography>
+            <Typography>4. Your strain threshold is 20 - (chosen wounds) plus your willpower. <b>Example: 20 - 9 = 11, 3 Willpower = 14 strain.</b></Typography>
+            <Typography>5. You have 230 xp to spend. Two abilities may be chosen or made. The cost of the abilities are determined by the strength of it.</Typography>
+            <Typography>6. Additionally, you gain 50 xp to spend on non-characteristics to start.</Typography>
+            <br />
+            <Typography><b>Custom Career</b> You may choose 8 skills to be your career skills. Out of those 8, choose 4 to add a level in. The skill chosen with your species/archetype may be chosen here.</Typography>
+            <Typography>1. Choose 8 skills to be a part of your career.</Typography>
+            <Typography>2. Choose 4 out of the 8 to gain a level in.</Typography>
+            <br />
+            <Typography><b>Experience per session</b></Typography>
+            <Typography>1. You gain 5 xp as a baseline.</Typography>
+            <Typography>2. For every social, combat, or hacking encounter you succeed in, you gain 1 xp to a maximum of 5.</Typography>
+            <Typography>3. Special events and achievements may award more.</Typography>
           </AccordionDetails>
         </Accordion>
         <Accordion>
@@ -704,6 +869,22 @@ export default function Information() {
             <Tab label='Falling' />
           </Tabs>
           <DisplayEffectTab />
+        </Accordion>
+        <Accordion>
+          <AccordionSummary>Lethal Company Rules</AccordionSummary>
+          <AccordionDetails>
+            <Tabs value={lethalValue} onChange={(e, val) => setLethalValue(val)} variant="scrollable">
+              <Tab label='General Rulings' />
+              <Tab label='Weight and Objects' />
+              <Tab label='Weather' />
+              <Tab label='Ship' />
+              <Tab label='Death' />
+              <Tab label='Lighting' />
+              <Tab label='Homebrew' />
+              <Tab label='Suit Effects' />
+            </Tabs>
+            <DisplayLethalTab />
+          </AccordionDetails>
         </Accordion>
       </Box>
   )

@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar } from "@mui/material";
+import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import { useState } from "react";
@@ -154,11 +154,15 @@ export default function Objects() {
       }
     }
 
+    let count = 0;
+
     return (
       <Stack direction='row' flexWrap='wrap' gap={1}>
         {filtered.map((object) => {
+          count++;
           {return <ObjectItem currObject={object} mainPage={true}/>}
         })}
+        {count === 0 ? <Typography>There are no objects that match your criteria.</Typography> : ""}
       </Stack>
     )
   };
@@ -168,7 +172,7 @@ export default function Objects() {
       (objects[i].name.toUpperCase().includes(objectName.toUpperCase()) || objectName === '') &&
       (objects[i].rarity === parseInt(rarity) || rarity === '') &&
       (parseInt(objects[i].objectNumber) === parseInt(objectNum) || objectNum === '') && 
-      (!objects[i].shownToPlayer) //Temp ! for testing.
+      (objects[i].shownToPlayer || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN')
     ) {
       if((price === '10' && objects[i].price >= 10) || ((price !== '10' && objects[i].price === parseInt(price)) || price === '')) {
         return true
