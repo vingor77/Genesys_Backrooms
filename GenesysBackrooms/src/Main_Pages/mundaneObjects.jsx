@@ -10,19 +10,20 @@ export default function MundaneObjects() {
   const [name, setName] = useState('');
   const [rarity, setRarity] = useState('-1');
 
-  const data = [{"name":"AA Battery","description":"This battery has 2,500 mAh of power to spare.","price":"2 for 4","rarity":5,"spawnLocations":"All","usedBy":"Flashlight","hidden":"Yes"},
-    {"name":"C Battery","description":"This battery has 7,800 mAh of power to spare.","price":"4 for 4","rarity":6,"spawnLocations":"All","usedBy":"None","hidden":"Yes"},
-    {"name":"D Battery","description":"This battery has 10,000 mAh of power to spare.","price":"5 for 4","rarity":7,"spawnLocations":"All","usedBy":"None","hidden":"Yes"},
-    {"name":"AAA Battery","description":"This battery has 750 mAh of power to spare.","price":"1 for 4","rarity":2,"spawnLocations":"All","usedBy":"Flashlight","hidden":"Yes"},
+  const data = [{"name":"AA Battery","description":"This battery has 2,500 mAh of power to spare.","price":"2 for 4","rarity":5,"spawnLocations":"All","usedBy":"Flashlight","hidden":"No"},
+    {"name":"C Battery","description":"This battery has 7,800 mAh of power to spare.","price":"4 for 4","rarity":6,"spawnLocations":"All","usedBy":"Lantern","hidden":"No"},
+    {"name":"D Battery","description":"This battery has 10,000 mAh of power to spare.","price":"5 for 4","rarity":7,"spawnLocations":"All","usedBy":"Lantern","hidden":"No"},
+    {"name":"AAA Battery","description":"This battery has 750 mAh of power to spare.","price":"1 for 4","rarity":2,"spawnLocations":"All","usedBy":"Flashlight","hidden":"No"},
     {"name":"Specialty Fuel","description":"A dark viscous liquid. It smells heavily of gasoline.","price":"1 for 1 liter","rarity":1,"spawnLocations":"All","usedBy":"Hyrum Lanters/Deuclidators","hidden":"Yes"},
     {"name":"Dumb Gum","description":"A hot pink piece of taffy-like gum. The surface is reflective, like glass.","price":"1 for 10","rarity":4,"spawnLocations":"All","usedBy":"None","hidden":"Yes"},
     {"name":"Specialty Beaker","description":"A gray-tinted beaker with no markings on the sides.","price":"1 for 5","rarity":1,"spawnLocations":"All","usedBy":"Liquid Silence/Liquid Pain","hidden":"Yes"},
-    {"name":"AAAA Battery","description":"This battery has 550 mAh of power to spare.","price":"1 for 4","rarity":1,"spawnLocations":"All","usedBy":"Flashlight","hidden":"Yes"},
-    {"name":"9v Battery","description":"This battery has 1,000 mAh of power to spare.","price":"2 for 4","rarity":3,"spawnLocations":"All","usedBy":"None","hidden":"Yes"},
-    {"name":"A23 Battery","description":"This battery has 55 mAh of power to spare.","price":"1 for 4","rarity":0,"spawnLocations":"All","usedBy":"Flashlight","hidden":"Yes"},
-    {"name":"N Battery","description":"This battery has 1,000 mAh of power to spare.","price":"1 for 4","rarity":4,"spawnLocations":"All","usedBy":"None","hidden":"Yes"},
-    {"name":"Flashlight","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use AA, AAA, AAAA, and A23 batteries.","price":"3 for 1","rarity":2,"spawnLocations":"All","usedBy":"None","hidden":"Yes"}]
-
+    {"name":"AAAA Battery","description":"This battery has 550 mAh of power to spare.","price":"1 for 4","rarity":1,"spawnLocations":"All","usedBy":"Flashlight","hidden":"No"},
+    {"name":"9v Battery","description":"This battery has 1,000 mAh of power to spare.","price":"2 for 4","rarity":3,"spawnLocations":"All","usedBy":"Lantern","hidden":"No"},
+    {"name":"A23 Battery","description":"This battery has 55 mAh of power to spare.","price":"1 for 4","rarity":0,"spawnLocations":"All","usedBy":"Flashlight","hidden":"No"},
+    {"name":"N Battery","description":"This battery has 1,000 mAh of power to spare.","price":"1 for 4","rarity":4,"spawnLocations":"All","usedBy":"Lantern","hidden":"No"},
+    {"name":"Flashlight","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use AA, AAA, AAAA, and A23 batteries.","price":"3 for 1","rarity":2,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Lantern","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use 9V, N, C, and D batteries.","price":"6 for 1","rarity":5,"spawnLocations":"All","usedBy":"None","hidden":"No"}]
+    
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
       setDoc(doc(db, 'MundaneObjects', data[i].name), {

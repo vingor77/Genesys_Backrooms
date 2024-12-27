@@ -22,7 +22,7 @@ export default function GroupItem(props) {
   }
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '600px'}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '615px'}}>
       <Box sx={{ p: 2 }}>
         <Typography><b>{props.currGroup.name} ({props.currGroup.shortName})</b></Typography>
         <br />

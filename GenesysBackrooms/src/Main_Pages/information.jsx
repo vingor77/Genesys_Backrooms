@@ -262,6 +262,16 @@ export default function Information() {
               <ListItem disablePadding>
                 <ListItemText>Between Short and Medium range</ListItemText>
               </ListItem>
+              <Divider>Range Lengths</Divider>
+              <ListItem disablePadding>
+                <ListItemText>Engaged: 0 to 3 feet</ListItemText>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemText>Short: 4 to 33 feet</ListItemText>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemText>Medium: 34 to 144 feet</ListItemText>
+              </ListItem>
             </List>
             <Divider orientation="vertical" variant="middle" flexItem/>
             <List>
@@ -273,6 +283,13 @@ export default function Information() {
               </ListItem>
               <ListItem disablePadding>
                 <ListItemText>Between Long and Extreme range</ListItemText>
+              </ListItem>
+              <Divider>Range Lengths</Divider>
+              <ListItem disablePadding>
+                <ListItemText>Long: 145 to 500 feet</ListItemText>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemText>Extreme: 501+ feet</ListItemText>
               </ListItem>
             </List>
             <Divider orientation="vertical" variant="middle" flexItem/>
@@ -469,6 +486,7 @@ export default function Information() {
             <Typography>Time passing is modified by two things: time dilation and actions.</Typography>
             <Typography>For each action performed within a room, 1 minute is added to the time spent there.</Typography>
             <Typography>The time dilation is based upon the level or area you reside in and could range from going twice as fast to twice as slow.</Typography>
+            <Typography>For every round in combat, 1 minute passes regardless.</Typography>
             <br />
             <Typography><b>For example:</b></Typography>
             <Typography>A small room takes 1 minute. You find an object and examine it. This adds 1 minute. You also decide to search the room for secrets. This adds another minute.</Typography>
