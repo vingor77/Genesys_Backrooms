@@ -1,38 +1,57 @@
-import { Box, Button, Card, Chip, Divider, Modal, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box, Card, Checkbox, Chip, Divider, Stack, Typography } from "@mui/material";
 
 export default function Room(props) {
-  const [statBlockOpen, setStatBlockOpen] = useState(false);
-  const stats = ['Brawn', 'Agility', 'Intellect', 'Cunning', 'Willpower', 'Presence'];
   let connections = '';
-  let skills = '';
-  let talents = '';
-  let equipment = '';
+  const traps = !props.data.landmine && !props.data.spikeTrap && !props.data.turret && !props.data.lockedDoor;
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '550px', padding: 1}}>
-      <Stack justifyContent="space-between" alignItems="center">
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '500px', padding: 1}}>
+      <Stack direction='row' justifyContent="space-around">
         <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType}</Typography>
-        <Stack direction='row' justifyContent="space-between" alignItems="center">
-          <Chip label={'Room: ' + props.data.roomNum} />
-          {props.data.fireExit ? <Chip label={"Fire Exit"} /> : ""}
-        </Stack>
+        <Chip label={'Room: ' + props.data.roomNum} />
+        {props.data.fireExit ? <Chip label={'Fire Exit'} /> : ""}
       </Stack>
       <br />
-      <Divider />
-      <Typography><b>Light levels:</b></Typography>
-      <Typography>Apparatus Active: {props.data.lightsOn !== undefined ? props.data.lightsOn : 5}</Typography>
-      <Typography>Apparatus Inactive: {props.data.lightsOff !== undefined ? props.data.lightsOff : 5}</Typography>
-      <br />
-      <Typography><b>Toxicity:</b></Typography>
-      <Typography>{props.data.toxicity}</Typography>
+      <Stack direction='row' justifyContent='space-around'>
+        <Box width='50%'>
+          <Divider>Lights</Divider>
+          <Typography>Apparatus Active: {props.data.lightsOn !== undefined ? props.data.lightsOn : 5}</Typography>
+          <Typography>Apparatus Inactive: {props.data.lightsOff !== undefined ? props.data.lightsOff : 5}</Typography>
+        </Box>
+        <Box width='50%'>
+          <Divider>Corrosion</Divider>
+          <Typography>{props.data.toxicity}</Typography>
+        </Box>
+      </Stack>
+
       {props.data.scraps.length !== 0 ? 
         <Box>
           <br />
-          <Divider />
-          <Typography sx={{fontWeight: 'bold'}}>Scrap in this room:</Typography>
+          <Divider>Scraps</Divider>
           {props.data.scraps.map((scrap, index) => {
-            return <Typography>{index + 1}: {scrap.name} valued at {scrap.value} and weighs {scrap.weight}</Typography>
+            return (
+              <Box>
+                <Typography><b>{scrap.name}</b></Typography>
+                <Stack direction='row' key={index} justifyContent='space-between'>
+                  <Box>
+                    <Typography>Value</Typography>
+                    <Typography>{scrap.value}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography>Weight</Typography>
+                    <Typography>{scrap.weight}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography>Two-Handed</Typography>
+                    <Typography>{scrap.twoHanded ? 'Yes' : 'No'}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography>Conductive</Typography>
+                    <Typography>{scrap.conductive ? 'Yes' : 'No'}</Typography>
+                  </Box>
+                </Stack>
+              </Box>
+            )
           })}
         </Box>
       :
@@ -43,132 +62,25 @@ export default function Room(props) {
         </Box>
       }
       <br />
-      <Divider />
-      <Typography sx={{fontWeight: 'bold'}}>Room variants:</Typography>
-      {props.data.landmine ? <Typography>Landmine</Typography> : <Typography>No Landmine</Typography>}
-      {props.data.spikeTrap ? <Typography>Spike Trap</Typography> : <Typography>No Spike Trap</Typography>}
-      {props.data.turret ? <Typography>Turret</Typography> : <Typography>No Turret</Typography>}
+      <Divider>Traps</Divider>
+      {traps ? <Typography>None</Typography> :
+        <Stack direction='row' justifyContent='space-around'>
+          <Box>
+            <Typography>Landmine: {props.data.landmine ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
+            <Typography>Spike Trap: {props.data.spikeTrap ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
+          </Box>
+          <Box>
+            <Typography>Turret: {props.data.turret ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
+            <Typography>{props.data.doorType}: {props.data.lockedDoor ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
+          </Box>
+        </Stack>
+      }
       <br />
-      <Divider />
       {props.data.connections.sort((a,b) => a-b).map(() => {
         connections = props.data.connections.join(', ');
       })}
-      <Typography><b>Connection(s):</b> {connections}</Typography>
-
-      {Object.keys(props.data.entity).length !== 0 ?
-        <Box textAlign='center'>
-          <br />
-          <Divider />
-          <Typography sx={{fontWeight: 'bold'}}>Entity: </Typography>
-          <Button onClick={() => setStatBlockOpen(true)} variant="outlined">{props.data.entity.name}</Button>
-          <Modal
-            open={statBlockOpen}
-            onClose={() => setStatBlockOpen(false)}
-            aria-labelledby="statBlock"
-            aria-describedby="statBlockDescription"
-          >
-            <Box sx={{position: "absolute", top: '50%', left: '50%', width: 550, bgcolor: 'background.paper', padding: 1, transform: 'translate(-50%, -50%)'}}>
-              <Typography variant="h5" textAlign='center'>{props.data.entity.name} ({props.data.entity.type})</Typography>
-              <Typography textAlign='center'>{props.data.entity.description}</Typography>
-              <br />
-              <Divider />
-              <Typography sx={{fontWeight: 'bold'}} textAlign='center'>Characteristics</Typography>
-              <Stack direction='row' gap={1} justifyContent="space-between" alignItems="center" textAlign='center'>
-                {props.data.entity.stats.map((stat, index) => {
-                  return (
-                    <Stack>
-                      <Typography>{stats[index]}</Typography>
-                      <Typography>{stat}</Typography>
-                    </Stack>
-                  )
-                })}
-              </Stack>
-              <Divider />
-              <br />
-              <Stack direction='row' gap={1} justifyContent="space-between" alignItems="center" textAlign='center'>
-                <Typography>Soak: {props.data.entity.soak}</Typography>
-                <Typography>Wounds: {props.data.entity.wounds}</Typography>
-                <Typography>M/R defense: {props.data.entity.defenses[0]}/{props.data.entity.defenses[1]}</Typography>
-                <Typography>Stun Multiplier: {props.data.entity.stunMulti}</Typography>
-              </Stack>
-
-              <br />
-              <Divider />
-              <br />
-              {props.data.entity.skills.length === 0 ? 
-                <Typography><b>Skills:</b> None</Typography>
-              :
-                <Box>
-                  {props.data.entity.skills.map(() => {
-                    skills = props.data.entity.skills.join(" ");
-                  })}
-                  <Typography><b>Skills:</b> {skills}</Typography>
-                </Box>
-              }
-
-              <br />
-              <Divider />
-              <br />
-              {props.data.entity.talents.length === 0 ? 
-                <Typography><b>Talents:</b> None</Typography>
-              :
-                <Box>
-                  {props.data.entity.talents.map(() => {
-                    talents = props.data.entity.talents.join(" ");
-                  })}
-                  <Typography><b>Talents:</b> {talents}</Typography>
-                </Box>
-              }
-
-              <br />
-              <Divider />
-              <br />
-              {props.data.entity.abilities.length === 0 ? 
-                <Typography><b>Abilities:</b> None</Typography>
-              :
-                <Stack gap={1}>
-                  <Typography sx={{fontWeight: 'bold'}} textAlign='center'>Abilities</Typography>
-                  {props.data.entity.abilities.map((ability) => {
-                    const separated = ability.split(":");
-                    return <Typography><b>{separated[0]}:</b> {separated[1]}</Typography>
-                  })}
-                </Stack>
-              }
-
-              <br />
-              <Divider />
-              <br />
-              {props.data.entity.equipment.length === 0 ? 
-                <Typography><b>Equipment:</b> None</Typography>
-              :
-                <Box>
-                  {props.data.entity.equipment.map(() => {
-                    equipment = props.data.entity.equipment.join(", ");
-                  })}
-                  <Typography><b>Equipment:</b> {equipment}</Typography>
-                </Box>
-              }
-
-              <br />
-              <Divider />
-              <br />
-              {props.data.entity.weapons.length === 0 ? 
-                <Typography><b>Weapons:</b> None</Typography>
-              :
-                <Box>
-                  <Typography sx={{fontWeight: 'bold'}} textAlign='center'>Weapons</Typography>
-                  {props.data.entity.weapons.map((weapon) => {
-                    const separated = weapon.split(":");
-                    return <Typography><b>{separated[0]}:</b> {separated[1]}</Typography>
-                  })}
-                </Box>
-              }
-            </Box>
-          </Modal>
-        </Box>
-      :
-        ""
-      }
+      <Divider>Connections</Divider>
+      <Typography>{connections}</Typography>
     </Card>
   )
 }

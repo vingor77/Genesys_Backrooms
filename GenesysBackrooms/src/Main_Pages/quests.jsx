@@ -1,4 +1,4 @@
-import { Box, Button, Input, Stack, Typography } from "@mui/material";
+import { Box, Button, FormControl, Input, InputLabel, Menu, MenuItem, Select, Stack, Typography } from "@mui/material";
 import NotLoggedIn from "../Components/notLoggedIn";
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import { useState } from "react";
@@ -10,8 +10,10 @@ export default function Quests() {
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [acquisition, setAcquisition] = useState('');
+  const [questLine, setQuestLine] = useState('None');
 
-  const data = [{"name":"Introduction","questGiver":"None","turnInLocation":"Trader's Keep","description":"Arrive at the Trader's Keep and speak with The Keeper","rewards":"4 Weapons/4 Armor/4 Gray Almond Water/A compass","completed":"No","hidden":"No","acquisition":"None"}]
+  const data = [{"name":"Introduction","questGiver":"None","turnInLocation":"Trader's Keep","description":"Arrive at the Trader's Keep and speak with The Keeper","rewards":"4 Weapons/4 Armor/4 Gray Almond Water/A compass","completed":"No","hidden":"No","acquisition":"None","questLine":"Starter"},
+    {"name":"Introduction2","questGiver":"None","turnInLocation":"Trader's Keep","description":"Arrive at the Trader's Keep and speak with The Keeper","rewards":"4 Weapons/4 Armor/4 Gray Almond Water/A compass","completed":"No","hidden":"No","acquisition":"None","questLine":"Starter 2"}]
 
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
@@ -23,13 +25,14 @@ export default function Quests() {
         rewards: data[i].rewards,
         completed: data[i].completed,
         hidden: data[i].hidden,
-        acquisition: data[i].acquisition
+        acquisition: data[i].acquisition,
+        questLine: data[i].questLine
       })
     }
   }
 
   const getFromDB = () => {
-    const q = query(collection(db, 'Quests'), orderBy("name", "asc"));
+    const q = query(collection(db, 'Quests'), orderBy("questLine", "asc"));
 
     const unsub = onSnapshot(q, (querySnapshot) => {
       const queryData = [];
@@ -54,7 +57,8 @@ export default function Quests() {
             (item.hidden === 'No' || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN') &&
             (item.name.toUpperCase().includes(name.toUpperCase()) || name === '') &&
             (item.turnInLocation.toUpperCase().includes(location.toUpperCase()) || location === '') &&
-            (item.acquisition.toUpperCase().includes(acquisition.toUpperCase()) || acquisition === '')
+            (item.acquisition.toUpperCase().includes(acquisition.toUpperCase()) || acquisition === '') &&
+            (item.questLine === questLine || questLine === 'None')
           ) {
             empty = false;
             return <QuestItem currQuest={item}/>
@@ -63,6 +67,30 @@ export default function Quests() {
         {empty ? <Typography>There are no quests that match your criteria.</Typography> : ""}
       </Stack>
     )
+  }
+
+  const getQuestLines = () => {
+    const questLines = new Map();
+
+    for(let i = 0; i < quests.length; i++) {
+      let addNew = 0;
+      questLines.forEach((_, key) => {
+        if(quests[i].questLine === key) {
+          questLines.set(key, '')
+        } 
+        addNew++;
+      })
+      if(addNew === questLines.size) questLines.set(quests[i].questLine, '');
+      addNew = 0;
+    }
+
+    const keys = [];
+
+    questLines.forEach((_, key) => {
+      keys.push(key);
+    })
+
+    return keys;
   }
 
   return (
@@ -81,6 +109,20 @@ export default function Quests() {
               <Box>
                 <Input value={acquisition} onChange={e => setAcquisition(e.target.value)} placeholder='Enter Acquisition Location'></Input>
               </Box>
+              <FormControl sx={{minWidth: 150}}>
+                <InputLabel id="questLine">Select Quest Line</InputLabel>
+                <Select
+                  labelId='questLine'
+                  label={"Select Quest Line"}
+                  onChange={e => setQuestLine(e.target.value)}
+                  value={questLine}
+                >
+                  <MenuItem value='None'>Any</MenuItem>
+                  {getQuestLines().map((qLine, index) => {
+                    return <MenuItem value={qLine} key={index}>{qLine}</MenuItem>
+                  })}
+                </Select>
+              </FormControl>
             </Stack>
             <br />
             <DisplayItems />

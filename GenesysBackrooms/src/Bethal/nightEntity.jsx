@@ -1,73 +1,77 @@
-import { Box, Button, Divider, Modal, Stack, Typography } from "@mui/material";
+import { Box, Button, Chip, Dialog, Divider, Modal, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 
 export default function NightEntity(props) {
   const [open, setOpen] = useState(false);
-  const stats = ['Brawn', 'Agility', 'Intellect', 'Cunning', 'Willpower', 'Presence'];
-  let skills = '';
+  let statNames = ["Brawn", "Agility", "Intellect", "Cunning", "Willpower", "Presence"];
+  const stats = props.data.stats.split("/"); //Don't join so the stat name can go with it.
+  const defenses = props.data.defenses.split("/").join(", ");
+  const skills = props.data.skills.split("/").join(", ");
+  const talents = props.data.talents.split("/");
+  const abilities = props.data.abilities.split("/");
+  const actions = props.data.actions.split("/");
 
   return (
     <Box>
       <Button onClick={() => setOpen(true)}>{props.data.name}</Button>
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        aria-labelledby="statBlock"
-        aria-describedby="statBlockDescription"
-      >
-        <Box sx={{position: "absolute", top: '50%', left: '50%', width: 550, bgcolor: 'background.paper', padding: 1, transform: 'translate(-50%, -50%)'}}>
-          <Typography variant="h5" textAlign='center'>{props.data.name} (Nemesis)</Typography>
-          <Typography textAlign='center'>{props.data.description}</Typography>
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+        >
+        <Box padding={2}>
+          <Stack direction='row' justifyContent='space-around' alignItems='center'>
+            <Typography variant="h4">{props.data.name}</Typography>
+            <Chip label={'Type: ' + props.data.type} />
+            <Chip label={'Difficulty: ' + props.data.difficulty} />
+          </Stack>
           <br />
-          <Divider />
-          <Typography sx={{fontWeight: 'bold'}} textAlign='center'>Characteristics</Typography>
-          <Stack direction='row' gap={1} justifyContent="space-between" alignItems="center" textAlign='center'>
-            {props.data.stats.map((stat, index) => {
+          <Typography>{props.data.description}</Typography>
+          <br />
+          <Stack direction='row' justifyContent="space-between" alignItems="center">
+            {stats.map((stat, index) => {
               return (
-                <Stack>
-                  <Typography>{stats[index]}</Typography>
-                  <Typography>{stat}</Typography>
-                </Stack>
+                <>
+                  <Chip label={statNames[index] + ": " + stat} />
+                  {index === stats.length - 1 ? "" : <Divider orientation="vertical" variant="middle" flexItem/>}
+                </>
               )
             })}
           </Stack>
-          <Divider />
           <br />
-          <Stack direction='row' gap={1} justifyContent="space-between" alignItems="center" textAlign='center'>
-            <Typography>Soak: {props.data.soak}</Typography>
-            <Typography>Wounds: {props.data.wounds}</Typography>
-            <Typography>M/R defense: {props.data.defenses[0]}/{props.data.defenses[1]}</Typography>
-            <Typography>Stun Multiplier: {props.data.stunMulti}</Typography>
+          <Stack direction='row' justifyContent='space-around'>
+            <Chip label={"Soak: " + props.data.soak}/>
+            <Chip label={"Wounds: " + props.data.wounds} />
+            {props.data.strain === 0 ? <Chip label={"Strain: N/A"} /> : <Chip label={"Strain: " + props.data.strain} />}
+            <Chip label={"M/R Defenses: " + defenses} />
+            <Chip label={'Stun Multiplier: ' + props.data.stunMulti} />
           </Stack>
           <br />
           <Divider />
           <br />
-          {props.data.skills.length === 0 ? 
-            <Typography><b>Skills:</b> None</Typography>
-          :
-            <Box>
-              {props.data.skills.map(() => {
-                skills = props.data.skills.join(" ");
-              })}
-              <Typography><b>Skills:</b> {skills}</Typography>
-            </Box>
-          }
+          <Typography textAlign='left'><b>Fear:</b> {Math.round(parseInt(props.data.difficulty) / 2)}</Typography>
           <br />
-          <Divider />
+          <Typography><b>Special Mechanic:</b> {props.data.specialMechanics}</Typography>
           <br />
-          {props.data.weapons.length === 0 ? 
-            <Typography><b>Weapons:</b> None</Typography>
-          :
-            <Box>
-              <Typography sx={{fontWeight: 'bold'}} textAlign='center'>Weapons</Typography>
-              {props.data.weapons.map((weapon) => {
-                const separated = weapon.split(":");
-                return <Typography><b>{separated[0]}:</b> {separated[1]}</Typography>
-              })}
-            </Box>
-          }
+          <Typography><b>Sound Queue:</b> {String(props.data.soundQueue).split('/')[0]} and can be heard {String(props.data.soundQueue).split('/')[1]} range band(s) away.</Typography>
+          <br />
+          <Typography textAlign='left'><b>Skills:</b> {skills}</Typography>
+          <br />
+          <Typography textAlign='left'><b>Talents:</b></Typography>
+          {talents.map((talent, index) => {
+            return <Typography textAlign='left'>{index + 1}. {talent}</Typography>
+          })}
+          <br />
+          <Typography textAlign='left'><b>Abilities:</b></Typography>
+          {abilities.map((ability, index) => {
+            return <Typography textAlign='left'>{index + 1}. {ability}</Typography>
+          })}
+          <br />
+          <Typography textAlign='left'><b>Actions:</b></Typography>
+          {actions.map((action, index) => {
+            return <Typography textAlign='left'>{index + 1}. {action}</Typography>
+          })}
         </Box>
-      </Modal>
+      </Dialog>
     </Box>
   )
 }

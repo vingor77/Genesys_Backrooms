@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import ObjectItem from '../Components/objectItem';
 import WeaponItem from '../Components/weaponItem';
 import ArmorItem from '../Components/armorItem';
@@ -6,9 +6,11 @@ import MundaneItem from '../Components/mundaneItem';
 import People from '../Components/people';
 import PhenomenonItem from '../Components/phenomenonItem';
 import EntityItem from '../Components/entityItem';
-
+import { useState } from "react";
 
 export default function LevelItem(props) {
+  const [refresh, setRefresh] = useState(false);
+
   const level = props.data.level;
   const lightLevel = Math.floor(Math.random() * (parseInt(level.lightLevels.split('/')[1]) - parseInt(level.lightLevels.split('/')[0]) + 1)) + parseInt(level.lightLevels.split('/')[0]);
   const corrosion = Math.floor(Math.random() * 100) <= level.chanceOfCorrosion ? Math.floor(Math.random() * (level.corrosiveAtmosphere + 1)) : 0;
@@ -381,12 +383,10 @@ export default function LevelItem(props) {
         if(selectedType === 'SOCIAL') {
           const filtered = [];
           for(let i = 0; i < props.data.interest.length; i++) {
-            if(props.data.interest[i].spawnType === 'Random') {
-              for(let j = 0; j < props.data.interest[i].spawnLocations.split('/').length; j++) {
-                if(props.data.interest[i].spawnLocations.split('/')[j] === level.level || props.data.interest[i].spawnLocations.split('/')[j] === level.name || props.data.interest[i].spawnLocations.split('/')[j] === 'All' || level.tags.includes(props.data.interest[i].spawnLocations.split('/')[j])) {
-                  filtered.push(props.data.interest[i]);
-                  break;
-                }
+            for(let j = 0; j < props.data.interest[i].spawnLocations.split('/').length; j++) {
+              if(props.data.interest[i].spawnLocations.split('/')[j] === level.level || props.data.interest[i].spawnLocations.split('/')[j] === level.name || props.data.interest[i].spawnLocations.split('/')[j] === 'All' || level.tags.includes(props.data.interest[i].spawnLocations.split('/')[j])) {
+                filtered.push(props.data.interest[i]);
+                break;
               }
             }
           }
@@ -422,6 +422,7 @@ export default function LevelItem(props) {
       <br />
       {level.finite === 'Yes' ? <FiniteRoom /> :
         <Box>
+          <Button variant="outlined" onClick={() => setRefresh(!refresh)}>Next Room</Button>
           <Box sx={{ p: 2, my: 2 }}>
             <Typography>Room Size: {width} feet by {length} feet by {level.roomHeight} feet</Typography>
             <Typography>Light Level: {lightLevel}</Typography>

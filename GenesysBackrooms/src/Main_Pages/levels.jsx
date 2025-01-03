@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import { collection, doc, onSnapshot, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import NotLoggedIn from "../Components/notLoggedIn";
 import { DataGrid } from '@mui/x-data-grid';
 import LevelItem from "../Components/levelItem";
@@ -17,7 +17,7 @@ export default function Levels() {
   const [phenomena, setPhenomena] = useState([]);
   const [currLevel, setCurrLevel] = useState('Tutorial Level');
 
-  const data = [{"name":"Tutorial Level","description":"Level 0 is a non-linear space, resembling the back rooms of a retail outlet. Similar to its previous form, all rooms in Level 0 appear uniform and share superficial features such as a yellowish wallpaper, damp carpet, and inconsistently placed fluorescent lighting. However, no two rooms within the level are identical.","level":0,"sdClass":1,"time":"x1","lightLevels":"0/8","chanceOfCorrosion":10,"corrosiveAtmosphere":5,"heat":"4/8","effectCount":1,"effects":"Light Mist/Medium Mist/Heavy Mist/Light Fog/Medium Fog/Heavy Fog/Hallucinations of other people/Scratching sounds/Intense humming/Voices of people in a non-coherent tongue/Insect sounds","roomSize":"20!100/20!100","roomHeight":8,"exitCount":5,"exitTypes":"Stairs going up/Stairs going down/A small hole in the wall/An open vent/A locked door/An unlocked door/A slide/A massive hole in the floor","exitFromLevelChance":5,"exitFromLevel":"Zenith Station/Remodeled Mess/Manila Room/Red Rooms/Habitable Zone","defectCount":2,"defects":"A lone dark oak chair/A torn bed/An L shaped couch cemented to the floor/A colored carpet patch/A broken helmet/1d6 small bullets/Neat papers/Scattered papers/A tinkerer hammer/An empty toolbox/A severed left arm/A mutilated human corpse/A large splot of dry blood","tags":"Indoors/Dark/Light/Damp/Daytime","spawnChances":"50/25/0/0/5","finite":"No","roomCount":3,"useAtmosphere":"Yes/Yes/No","sizeOfRooms":"50!40/50!30/50!50","exitsPerRoom":"5/2/3","exitTypesPerRoom":"Door!Door!Vent!Vent!Stairs going up/Door!Locked door/Locked door!Locked door!Door","lightLevelPerRoom":"4/7/9","heatPerRoom":"4/4/4","effectPerRoom":"Effect 1!Effect 4/Effect 2/Effect 3","spawnPerRoom":"Object!Phenomena!Window/Entity/Gray Almond Water!Entity","defectsPerRoom":"Defect 1/Defect 2/Defect 3!Defect 4"}]
+  const data = [{"name":"Tutorial Level","description":"Level 0 is a non-linear space, resembling the back rooms of a retail outlet. Similar to its previous form, all rooms in Level 0 appear uniform and share superficial features such as a yellowish wallpaper, damp carpet, and inconsistently placed fluorescent lighting. However, no two rooms within the level are identical.","level":0,"sdClass":1,"time":"x1","lightLevels":"0/8","chanceOfCorrosion":10,"corrosiveAtmosphere":5,"heat":"4/8","effectCount":1,"effects":"Light Mist/Medium Mist/Heavy Mist/Light Fog/Medium Fog/Heavy Fog/Hallucinations of other people/Scratching sounds/Intense humming/Voices of people in a non-coherent tongue/Insect sounds","roomSize":"20!100/20!100","roomHeight":8,"exitCount":5,"exitTypes":"Stairs going up/Stairs going down/A small hole in the wall/An open vent/A locked door/An unlocked door/A slide/A massive hole in the floor","exitFromLevelChance":5,"exitFromLevel":"Zenith Station/Remodeled Mess/Manila Room/Red Rooms/Habitable Zone","defectCount":2,"defects":"A lone dark oak chair/A torn bed/An L shaped couch cemented to the floor/A colored carpet patch/A broken helmet/1d6 small bullets/Neat papers/Scattered papers/A tinkerer hammer/An empty toolbox/A severed left arm/A mutilated human corpse/A large splot of dry blood","tags":"Indoors/Dark/Light/Damp/Daytime","spawnChances":"50/25/0/0/5","finite":"No","roomCount":3,"useAtmosphere":"Yes/Yes/No","sizeOfRooms":"50!40/50!30/50!50","exitsPerRoom":"5/2/3","exitTypesPerRoom":"Door!Door!Vent!Vent!Stairs going up/Door!Locked door/Locked door!Locked door!Door","lightLevelPerRoom":"4/7/9","heatPerRoom":"4/4/4","effectPerRoom":"Effect 1!Effect 4/Effect 2/Effect 3","spawnPerRoom":"Object!Phenomena!Window/Entity/Entity","defectsPerRoom":"Defect 1/Defect 2/Defect 3!Defect 4"}]
 
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
@@ -89,7 +89,7 @@ export default function Levels() {
     }
   }
 
-  const DisplayTable = () => {
+  const displayTable = () => {
     const columns = [
       {
         field: 'name',
@@ -147,14 +147,15 @@ export default function Levels() {
     )
   }
 
+  const table = useMemo(() => displayTable(), [entities]);
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
       <Box>
         <Button onClick={addData}>Add data</Button>
         {levels.length > 0 ? 
           <Box>
-
-            <DisplayTable />
+            {table}
             {levels.map((level) => {
               if(level.name === currLevel) {
                 return <LevelItem data={{entities, objects, mundane, armor, weapons, interest, phenomena, level}}/>

@@ -1,21 +1,14 @@
-import { Box, Button, Card, Chip, Modal, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { doc, setDoc } from "firebase/firestore";
+import { Box, Button, Card, Chip, Divider, Modal, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import { useState } from "react";
 
 export default function ObjectItem(props) {
   const [tableShown, setTableShown] = useState(false);
+  const spawns = props.currObject.spawnLocations.join(', ');
 
   const changeVisibility = () => {
-    setDoc(doc(db, 'Objects', props.currObject.name), {
-      description: props.currObject.description,
-      encumbrance: props.currObject.encumbrance,
-      name: props.currObject.name,
-      objectNumber: props.currObject.objectNumber,
-      price: props.currObject.price,
-      rarity: props.currObject.rarity,
-      spawnLocations: props.currObject.spawnLocations,
-      table: props.currObject.table,
+    updateDoc(doc(db, 'Objects', props.currObject.name), {
       shownToPlayer: !props.currObject.shownToPlayer
     })
   }
@@ -71,7 +64,7 @@ export default function ObjectItem(props) {
   }
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '350px'}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '450px'}}>
       <Box sx={{ p: 2 }}>
         <Typography gutterBottom variant="h5">{props.currObject.name}</Typography>
         <Box>
@@ -79,24 +72,17 @@ export default function ObjectItem(props) {
           <Chip label={'Rarity: ' + props.currObject.rarity}/>
           <Chip label={'Price: ' + props.currObject.price}/>
           <Chip label={'Encumbrance: ' + props.currObject.encumbrance}/>
+          <br /><br />
+          <Divider />
+          <br />
           <Typography variant="body2" textAlign='justify' marginLeft={1}>{props.currObject.description}</Typography>
         </Box>
-
-        <Stack direction='row'>
-          <Typography>Spawn locations:</Typography>
-          {props.currObject.spawnLocations.map((location) => {
-            return (
-              <Chip label={location}/>
-            )
-          })}
-        </Stack>
-
-        <Stack direction='row' justifyContent="space-between" alignItems="center">
-          {props.currObject.table !== 'No' ?
-            <Button size="small" onClick={() => setTableShown(true)}>Show table</Button>
-          :
-            ""
-          }
+        <br />
+        <Divider />
+        <br />
+        <Typography textAlign='left'>Spawn locations: {spawns}</Typography>
+        <Stack direction='row' justifyContent="space-around">
+          {props.currObject.table !== 'No' ? <Button size="small" onClick={() => setTableShown(true)} variant="outlined">Show table</Button> : ""}
           {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' && props.currObject.shownToPlayer ?
             <Button size="small" onClick={changeVisibility} variant="outlined">Hide Object</Button>
           :

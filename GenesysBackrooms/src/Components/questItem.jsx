@@ -1,41 +1,30 @@
 import { Box, Button, Card, Chip, Divider, Modal, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import db from '../Components/firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
 
 export default function QuestItem(props) {
   const rewards = props.currQuest.rewards.split("/").join(", ");
 
   const flipComplete = () => {
-    setDoc(doc(db, 'Quests', props.currQuest.name), {
-      name: props.currQuest.name,
-      questGiver: props.currQuest.questGiver,
-      turnInLocation: props.currQuest.turnInLocation,
-      description: props.currQuest.description,
-      rewards: props.currQuest.rewards,
-      completed: props.currQuest.completed === 'Yes' ? 'No' : 'Yes',
-      hidden: props.currQuest.hidden,
-      acquisition: props.currQuest.acquisition
+    updateDoc(doc(db, 'Quests', props.currQuest.name), {
+      completed: props.currQuest.completed === 'Yes' ? 'No' : 'Yes'
     })
   }
 
   const flipHidden = () => {
-    setDoc(doc(db, 'Quests', props.currQuest.name), {
-      name: props.currQuest.name,
-      questGiver: props.currQuest.questGiver,
-      turnInLocation: props.currQuest.turnInLocation,
-      description: props.currQuest.description,
-      rewards: props.currQuest.rewards,
-      completed: props.currQuest.completed,
-      hidden: props.currQuest.hidden === 'Yes' ? "No" : "Yes",
-      acquisition: props.currQuest.acquisition
+    updateDoc(doc(db, 'Quests', props.currQuest.name), {
+      hidden: props.currQuest.hidden === 'Yes' ? "No" : "Yes"
     })
   }
 
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '400px'}, textAlign: 'center', border: props.currQuest.completed === 'Yes' ? "2px solid green" : "2px solid red", overflow: 'auto', height: '400px'}}>
       <Box sx={{ p: 2 }}>
-        <Typography variant="h4">{props.currQuest.name}</Typography>
+        <Stack direction='row' justifyContent='space-between'>
+          <Typography variant="h4">{props.currQuest.name}</Typography>
+          <Chip label={props.currQuest.questLine} />
+        </Stack>
         <Typography textAlign='left'>{props.currQuest.description}</Typography>
         <br />
         <Divider />

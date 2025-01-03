@@ -1,10 +1,11 @@
-import { Box, Button, Card, Checkbox, Divider, Drawer, Input, List, ListItem, ListItemButton, ListItemText, Stack, Table, TableBody, TableCell, TableRow, Toolbar, Typography } from "@mui/material";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { Box, Button, Card, Checkbox, Dialog, Divider, Drawer, Stack, Table, TableBody, TableCell, TableRow, TextField, Typography } from "@mui/material";
+import { collection, doc, onSnapshot, query, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import db from '../Components/firebase';
 import Room from "./room";
 import Shop from "./shop";
 import NightEntity from "./nightEntity";
+import InsideEntity from "./insideEntity";
 
 export default function Bethal() {
   //Data from DB
@@ -15,7 +16,7 @@ export default function Bethal() {
   const [rooms, setRooms] = useState([]);
 
   //Processed Data.
-  const [currMoon, setCurrMoon] = useState("");
+  const [currMoon, setCurrMoon] = useState("Adamance");
   const [prevMoon, setPrevMoon] = useState("");
   const [weather, setWeather] = useState([]);
   const [roomData, setRoomData] = useState([]);
@@ -33,6 +34,8 @@ export default function Bethal() {
   const [floodLevel, setFloodLevel] = useState(0);
   const [moonList, setMoonList] = useState(false);
   const [toxicLevels, setToxicLevels] = useState(-1);
+  const [updatingRoom, setUpdatingRoom] = useState([]);
+  const [open, setOpen] = useState([]);
 
   const mapSizes = [21, 18, 32, 18, 36, 23, 32, 40, 21];
   const quotas = [130, 236, 361, 517, 717, 973, 1300, 1700, 2205, 2811, 3536, 4392, 5392, 5392, 6548, 7873, 9380];
@@ -91,44 +94,37 @@ export default function Bethal() {
     setWeather(temp);
   }
 
-  const determineTraps = (currTraps, roomList, moon) => {
-    let data = {};
+  const determineTraps = (currTraps, roomList, moon, index) => {
+    let trapCount = 0; //Set a max trap count per room.
 
-    for(let i = 0; i < 3; i++) {
-      const rand = Math.floor(Math.random() * 5);
-      if(rand === 1) {
+    for(let i = 0; i < 4; i++) {
+      const rand = Math.floor(Math.random() * 6);
+      if(rand <= 2 && trapCount < 2) {
         if(i === 0 && currTraps[i] < moon.maxLandmines) {
-          data.landmine = true;
+          roomList[index].landmine = true;
           currTraps[0]++;
-        }
-        else {
-          data.landmine = false;
+          trapCount++;
         }
 
         if(i === 1 && currTraps[i] < moon.maxTurrets) {
-          data.turret = true;
+          roomList[index].turret = true;
           currTraps[1]++;
-        }
-        else {
-          data.turret = false;
+          trapCount++;
         }
 
         if(i === 2 && currTraps[i] < moon.maxSpikeTraps) {
-          data.spikeTrap = true;
+          roomList[index].spikeTrap = true;
           currTraps[2]++;
+          trapCount++;
         }
-        else {
-          data.spikeTrap = false;
+
+        if(i === 3 && currTraps[i] < moon.maxLockedDoors) {
+          roomList[index].lockedDoor = true;
+          currTraps[3]++;
+          trapCount++;
         }
-      }
-      else {
-        if(i === 0) data.landmine = false;
-        if(i === 1) data.turret = false;
-        if(i === 2) data.spikeTrap = false;
       }
     }
-
-    roomList.push(data);
   }
 
   const determineScrap = (currScrap, maxScrap, roomList, moon, index) => {
@@ -203,7 +199,7 @@ export default function Bethal() {
             }
           }
         }
-        else if(temp > moon.insideEntities[i - 1].roll && temp <= moon.insideEntities[i].roll) {
+        else if(temp <= moon.insideEntities[i].roll) {
           for(let j = 0; j < insideEntities.length; j++) {
             if(insideEntities[j].name === moon.insideEntities[i].name) {
               if(currentlySpawned[insideEntities[j].name] === insideEntities[j].maxSpawned) {
@@ -311,6 +307,7 @@ export default function Bethal() {
         scraps: [],
         spikeTrap: false,
         turret: false,
+        lockedDoor: false,
         placed: false,
         connections: [],
         lightsOn: 5,
@@ -325,7 +322,7 @@ export default function Bethal() {
     const dayEntityList = [];
     const nightEntityList = [];
 
-    let currTraps = [0, 0, 0];
+    let currTraps = [0, 0, 0, 0];
     let currScrap = 0;
     let currEntityPower = 0;
 
@@ -338,7 +335,23 @@ export default function Bethal() {
     }
 
     for(let i = 1; i < roomCount; i++) {
-      determineTraps(currTraps, roomList, moon); //DONE
+      roomList[i] = {
+        entity: {},
+        landmine: false,
+        roomNum: 0,
+        roomType: 'Main Entrance',
+        scraps: [],
+        spikeTrap: false,
+        turret: false,
+        lockedDoor: false,
+        doorType: 'Locked Door',
+        placed: false,
+        connections: [],
+        lightsOn: 5,
+        lightsOff: 5,
+        toxicity: 0
+      }
+      determineTraps(currTraps, roomList, moon, i); //DONE
       currScrap = determineScrap(currScrap, maxScrap, roomList, moon, i); //DONE
       currEntityPower = determineInsideEntity(currEntityPower, maxEntityPower, roomList, moon, i, currentlyInsideSpawned); //DONE
       determineRoomType(roomList, currentlySpawnedRooms, i);
@@ -353,16 +366,48 @@ export default function Bethal() {
       else if(toxicChance > 85 && toxicChance <= 90) roomList[i].toxicity = Math.floor(Math.random() * 3) + 1;
       else if(toxicChance > 90 && toxicChance <= 95) roomList[i].toxicity = Math.floor(Math.random() * 3) + 4;
       else if(toxicChance > 95 && toxicChance <= 99) roomList[i].toxicity = Math.floor(Math.random() * 3) + 7;
-      else roomList[i].toxicity = 10
+      else roomList[i].toxicity = 10;
+
+      if(Math.floor(Math.random() * 101) <= 20) {
+        if(Math.floor(Math.random() * 101) <= 50) {
+          roomList[i].doorType = 'Closed Secure Door';
+        }
+        else {
+          roomList[i].doorType = 'Open Secure Door';
+        }
+      }
+      else {
+        roomList[i].doorType = 'Locked Door';
+      }
+
+      if(Math.floor(Math.random() * 101) <= 5) roomList[i].scraps.push(
+        {
+          name: 'Key',
+          conductive: true,
+          twoHanded: false,
+          value: 3,
+          weight: 0
+        }
+      );
     }
 
     determineOutsideEntities(moon, dayEntityList, nightEntityList);
 
-    if(weather[index] === 'Eclipsed') {
-      const insideEclipsed = Math.floor(Math.random() * moon.insideEntities.length);
-      for(let i = 0; i < insideEntities.length; i++) {
-        if(moon.insideEntities[insideEclipsed].name === insideEntities[i].name) {
-          roomList[roomList.length - 1].entity = insideEntities[i];
+    let count = 1;
+    for(let i = 0; i < roomList.length; i++) {
+      if(Object.keys(roomList[i].entity).length > 0) count++;
+    }
+    if(weather[index] === 'Eclipsed' || weather[index] === 'Eclipsed?') {
+      const eclipseEntityCount = Math.floor(Math.random() * 3) + 1;
+      for(let i = 0; i < eclipseEntityCount; i++) {
+        const insideEclipsed = Math.floor(Math.random() * moon.insideEntities.length);
+        for(let j = 0; j < insideEntities.length; j++) {
+          if(moon.insideEntities[insideEclipsed].name === insideEntities[j].name) {
+            roomList[count].entity = JSON.parse(JSON.stringify(insideEntities[j])); //Deep copy, break references.
+            roomList[count].entity.spawned = true;
+            count++;
+            break;
+          }
         }
       }
     }
@@ -411,7 +456,7 @@ export default function Bethal() {
     setToxicLevels(Math.floor(Math.random() * 11));
   }
 
-  const handleRoundChange = (index) => {
+  const handleRoundChange = (index, moon) => {
     let currMin = time.minute;
     let currHour = time.hour;
 
@@ -429,24 +474,17 @@ export default function Bethal() {
       currMin += 15;
     }
 
-    setTime({
-      minute: currMin,
-      hour: currHour
-    });
-
-    //Flooded
-    setFloodLevel(currHour - 8);
-
     //Entities
     const currRound = round + 1;
+    const tempArr = [...entityLocations];
 
     for(let i = 0; i < entityLocations.length - 4; i++) {
       if(entityLocations[i].spawned) {
         if(currRound % entityLocations[i].moves === 0) {
           for(let j = 0; j < roomData.length; j++) {
-            if(roomData[j].roomNum === entityLocations[i].roomNum) {
+            if(roomData[j].roomNum === parseInt(entityLocations[i].roomNum)) {
               const direction = Math.floor(Math.random() * roomData[j].connections.length);
-              entityLocations[i].roomNum = roomData[j].connections[direction];
+              tempArr[i].roomNum = roomData[j].connections[direction];
               break;
             }
           }
@@ -460,35 +498,22 @@ export default function Bethal() {
         if(entityLocations[i].spawned) spawnCount++;
       }
 
-      if(spawnCount < entityLocations.length - 4) {
-        let spawnTarget = Math.floor(Math.random() * entityLocations.length);
+      if(spawnCount < (entityLocations.length - 4)) {
+        let spawnTarget = Math.floor(Math.random() * (entityLocations.length - 4));
         while(entityLocations[spawnTarget].spawned) {
-          spawnTarget = Math.floor(Math.random() * entityLocations.length);
+          spawnTarget = Math.floor(Math.random() * (entityLocations.length - 4));
         }
-
-        entityLocations[spawnTarget].spawned = true;
-      }
-    }
-
-    setRound(currRound);
-
-    let moon = {};
-    for(let i = 0; i < moons.length; i++) {
-      if(moons[i].name === currMoon) {
-        moon = moons[i];
+        tempArr[spawnTarget].spawned = true;
       }
     }
 
     let showCount = 0;
-
     for(let i = 0; i < nightSpawned.length; i++) {
       if(nightSpawned[i]) showCount++;
     }
 
-    console.log(nightSpawned);
-
     if(showCount < nightSpawned.length) {
-      if(weather[index] === 'Eclipsed' && currMin === 0) {
+      if((weather[index] === 'Eclipsed' || weather[index] === 'Eclipsed?') && currMin === 0) {
         let spawn = Math.floor(Math.random() * nightSpawned.length);
         while(nightSpawned[spawn]) {
           spawn = Math.floor(Math.random() * nightSpawned.length);
@@ -496,7 +521,7 @@ export default function Bethal() {
         nightSpawned[spawn] = true;
       }
       else {
-        if(currHour >= moon.nightTime && currHour < 18 && currMin === 0) {
+        if(currHour >= moon.nightTime && currHour < 17 && currMin === 0) {
           let spawn = Math.floor(Math.random() * nightSpawned.length);
           while(nightSpawned[spawn]) {
             spawn = Math.floor(Math.random() * nightSpawned.length);
@@ -516,10 +541,20 @@ export default function Bethal() {
         }
       }
     }
+
+    setRound(currRound);
+    setTime({
+      minute: currMin,
+      hour: currHour
+    });
+    //Flooded
+    setFloodLevel(currHour - 8);
+    setEntityLocations(tempArr);
   }
 
   const generateEntityLocations = () => {
     const temp = [];
+    const roomsToUpdate = [];
 
     for(let i = 0; i < roomData.length; i++) {
       if(Object.keys(roomData[i].entity).length > 0) {
@@ -528,8 +563,11 @@ export default function Bethal() {
           spawned: roomData[i].entity.spawned,
           moves: roomData[i].entity.moves,
           roomNum: roomData[i].roomNum,
-          player: false
+          player: false,
+          alive: true
         });
+
+        roomsToUpdate.push(roomData[i].roomNum);
       }
     }
 
@@ -537,10 +575,14 @@ export default function Bethal() {
       temp.push({
         name: "Player " + (i + 1),
         roomNum: 0,
-        player: true
+        player: true,
+        alive: true
       })
+
+      roomsToUpdate.push(0);
     }
 
+    setUpdatingRoom(roomsToUpdate);
     setEntityLocations(temp);
   }
 
@@ -820,18 +862,52 @@ export default function Bethal() {
     }
   }
 
+  const handleEntityDeath = (index) => {
+    const newLocations = [...entityLocations];
+    newLocations[index].alive = newLocations[index].alive ? false : true;
+    setEntityLocations(newLocations);
+  }
+
+  const handleRoomUpdate = (e, index) => {
+    const tempArr = [...updatingRoom];
+    tempArr[index] = e.target.value;
+    
+    setUpdatingRoom(tempArr);
+  }
+
+  const updateRoomNumber = (index, roomCount) => {
+    if(updatingRoom[index] < 0 || updatingRoom[index] > roomCount) {
+      alert('Cannot be less than 0 or more than the amount of rooms on the map.');
+      return;
+    }
+
+    const tempArr = [...entityLocations];
+    tempArr[index].roomNum = updatingRoom[index];
+    setEntityLocations(tempArr);
+  }
+
+  const handleOpen = (index) => {
+    const tempArr = [...open];
+    tempArr[index] = true;
+    setOpen(tempArr);
+  }
+
+  const handleClose = (index) => {
+    const tempArr = [...open];
+    tempArr[index] = false;
+    setOpen(tempArr);
+  }
+
   const Moon = () => {
     return (
-      <Box display='flex'>
-        {weather.length === 0 ? getWeather() : ""}
-
+      <Box>
         <Drawer open={moonList} onClick={() => setMoonList(false)} anchor="top" sx={{width: {xs: '20%', md: '12%'}}}>
           <Box>
             <Button variant="contained" onClick={handleDayChange}>Advance Day</Button>
             <Divider />
             <Stack direction='row' flexWrap='wrap' spacing={2}>
               {moons.map((moon, index) => (
-                <Button onClick={() => handleMoonChange(moon.name, "n")} sx={{color: 'black'}}>{moon.name + " (" + weather[index] + ") [" + moon.cost + "]"}</Button>
+                <Button onClick={() => handleMoonChange(moon.name, "n")} sx={{color: 'black'}} key={index}>{moon.name + " (" + weather[index] + ") [" + moon.cost + "]"}</Button>
               ))}
             </Stack>
           </Box>
@@ -842,20 +918,31 @@ export default function Bethal() {
             return (
               moon.name === currMoon ?
                 <Box>
-                  <Button variant="contained" onClick={() => setMoonList(true)}>Show moons</Button>
-                  {shop.length === 0 ? getShopData() : <DisplayShop />}
-                  <Typography variant="h2">{moon.name} ({weather[index]})</Typography>
-                  {time.hour ? 
-                    <Typography variant="h5">Current time: {time.hour > 12 ? time.hour - 12 : time.hour}:{time.minute === 0 ? "00" : time.minute} {time.hour >= 12 && time.hour < 24 ? "PM" : "AM"}</Typography>
-                  :
-                    ""
-                  }
-                  {day % 3 === 0 ? <Typography variant="h5">Day: {day} (Quota Deadline)</Typography> : <Typography variant="h5">Day: {day < 0 ? 0 : day}</Typography>}
-                  <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
-                  <Typography>Toxicity level: {toxicLevels}</Typography>
-                  {weather[index] === 'Flooded' ? <DisplayFloodLevel /> : ""}
-                  {weather[index] === 'Foggy' ? <DisplayFogLevel /> : ""}
-                  <Button variant="contained" onClick={() => handleRoundChange(index)}>Advance Round</Button>
+                  <Stack direction='row' spacing={2}>
+                    <Box>
+                      <Button variant="contained" onClick={() => setMoonList(true)}>Show moons</Button>
+                      {shop.length === 0 ? getShopData() : <DisplayShop />}
+                      <Typography variant="h2">{moon.name}</Typography>
+                      <Typography variant="h2">({weather[index]})</Typography>
+                      {time.hour ? 
+                        <Typography variant="h5">Current time: {time.hour > 12 ? time.hour - 12 : time.hour}:{time.minute === 0 ? "00" : time.minute} {time.hour >= 12 && time.hour < 24 ? "PM" : "AM"}</Typography>
+                      :
+                        ""
+                      }
+                      {day % 3 === 0 ? <Typography variant="h5">Day: {day} (Quota Deadline)</Typography> : <Typography variant="h5">Day: {day < 0 ? 0 : day}</Typography>}
+                      <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
+                      <Typography>Corrosion level: {toxicLevels}</Typography>
+                      {weather[index] === 'Flooded' ? <DisplayFloodLevel /> : ""}
+                      {weather[index] === 'Foggy' ? <DisplayFogLevel /> : ""}
+                      <Button variant="contained" onClick={() => handleRoundChange(index, moon)}>Advance Round</Button>
+                    </Box>
+                    <Box width='33%'>
+                      <Divider>Outside Entities</Divider>
+                      <br />
+                      <DisplayOutsideEntities />
+                    </Box>
+                    {mapGenerated ? <DisplayMap /> : grid.length !== 0 ? finishMap(moon, index) : ""}
+                  </Stack>
                   
                   {insideEntities.length === 0 ? 
                     <>
@@ -873,25 +960,43 @@ export default function Bethal() {
                       :
                         <Box>
                           {grid.length === 0 ? populateGrid() : ""}
-                          <Stack>
                             <Box overflow='auto'>
                               {entityLocations.length === 0 ? generateEntityLocations() :
                                 <Box>
-                                  <Typography variant="h5" textAlign='center'>Entity Locations</Typography>
-                                  <Divider />
+                                  <br />
+                                  <Divider>Entity Locations</Divider>
                                   <br />
                                   <Stack direction='row' gap={1} flexWrap='wrap'>
-                                    {entityLocations.map((loc) => {
+                                    {entityLocations.map((loc, index) => {
                                       return (
-                                        <Box>
+                                        <Box key={index}>
                                           {loc.player ? 
-                                            ""
+                                            <Box>
+                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '220px', padding: 2}}>
+                                                <Typography><b>{loc.name}</b></Typography>
+                                                <br />
+                                                <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
+                                                <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
+                                                <Stack direction='row'>
+                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
+                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size - 1)}>Update</Button>
+                                                </Stack>
+                                              </Card>
+                                            </Box>
                                           :
                                             <Box>
-                                              <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
-                                                <Typography textAlign='center' sx={{fontWeight: 'bold'}}>{loc.name}</Typography>
+                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '220px', padding: 2}}>
+                                                <Button onClick={() => handleOpen(index)}>{roomData[index + 1].entity.name}</Button>
+                                                <Dialog open={open[index]} onClose={() => handleClose(index)}>
+                                                  <InsideEntity data={roomData[index + 1]}/>
+                                                </Dialog>
                                                 <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
-                                                {loc.spawned ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}
+                                                <Typography>Spawned:{loc.spawned ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
+                                                <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
+                                                <Stack direction='row'>
+                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
+                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size - 1)}>Update</Button>
+                                                </Stack>
                                               </Card>
                                             </Box>
                                           }
@@ -902,15 +1007,7 @@ export default function Bethal() {
                                 </Box>
                               }
                             </Box>
-                            <Box overflow='auto'>
-                              <Typography variant="h5" textAlign='center'>Outside Entities</Typography>
-                              <Divider />
-                              <br />
-                              <DisplayOutsideEntities />
-                            </Box>
-                          </Stack>
                           <br />
-                          {mapGenerated ? <DisplayMap /> : grid.length !== 0 ? finishMap(moon, index) : ""}
                           <Stack direction='row' flexWrap='wrap' gap={1}>
                             {roomData.map((data) => {
                               return <Room data={data}/>
@@ -977,7 +1074,7 @@ export default function Bethal() {
                   {piece.map((p) => {
                     return (
                       p === -1 ? 
-                        <TableCell sx={{background: 'black', color: 'black', border: '1px solid white', width: '25px', height: '25px'}}></TableCell> 
+                        <TableCell sx={{background: 'black', color: 'black', border: '1px solid white', width: '25px', height: '25px'}}></TableCell>
                       :
                         p === 0 ?
                           <TableCell sx={{background: 'green', color: 'white', border: '1px solid black', width: '25px', height: '25px'}}>{p}</TableCell>
@@ -1039,16 +1136,17 @@ export default function Bethal() {
   }
 
   return (
-    <Box>
+    <>
       {moons.length === 0 ? 
         getData('Moons')
       :
         <>
+          {weather.length === 0 ? getWeather() : ""}
           {retrieveLocalStorage()}
           <Moon />
         </>
       }
       {updateLocalStorage()}
-    </Box>
+    </>
   )
 }

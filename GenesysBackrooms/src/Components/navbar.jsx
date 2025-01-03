@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Menu, Button, Box, IconButton, Divider, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import { Menu, Button, Box, IconButton, Divider, Drawer, List, ListItem, ListItemButton, ListItemText, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
@@ -11,6 +11,7 @@ import { auth } from './firebase';
 export default function Navbar() {
   const [desktopTab, setDesktopTab] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [anchor, setAnchor] = useState(null);
 
   const generalInfoMenu = ['Crafting', 'Interest', 'Quests', 'Phenomenons'];
   const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
@@ -96,49 +97,25 @@ export default function Navbar() {
         <Button href='/information' startIcon={<ReceiptLongIcon />} variant='outlined'>Rules</Button>
         <Button href='/functions' startIcon={<TimerIcon />} variant='outlined'>Player Functions</Button>
 
-        <Button onClick={() => setDesktopTab('General')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>General</Button>
-        <Menu open={desktopTab === 'General'} onClose={() => setDesktopTab(null)}>
-        <List>
-            {generalInfoMenu.map((text) => {
-              return (
-                <ListItem dense>
-                  <ListItemButton href={'/' + text}>
-                    <ListItemText>{text}</ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              )
-            })}
-          </List>
+        <Button onClick={(event) => {setDesktopTab('General'); setAnchor(event.currentTarget)}} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>General</Button>
+        <Menu open={desktopTab === 'General'} onClose={() => setDesktopTab(null)} anchorEl={anchor}>
+          {generalInfoMenu.map((text, index) => {
+            return <MenuItem onClick={() => window.location.assign('/' + text)} key={index}>{text}</MenuItem>
+          })}
         </Menu>
 
-        <Button onClick={() => setDesktopTab('Objects')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>objects</Button>
-        <Menu open={desktopTab === 'Objects'} onClose={() => setDesktopTab(null)}>
-          <List>
-            {objectMenu.map((text) => {
-              return (
-                <ListItem dense>
-                  <ListItemButton href={'/' + text}>
-                    <ListItemText>{text}</ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              )
-            })}
-          </List>
+        <Button onClick={(event) => {setDesktopTab('Objects'); setAnchor(event.currentTarget)}} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>Objects</Button>
+        <Menu open={desktopTab === 'Objects'} onClose={() => setDesktopTab(null)} anchorEl={anchor}>
+          {objectMenu.map((text, index) => {
+            return <MenuItem onClick={() => window.location.assign('/' + text)} key={index}>{text}</MenuItem>
+          })}
         </Menu>
 
-        <Button onClick={() => setDesktopTab('DM')} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>Dungeon Master</Button>
-        <Menu open={desktopTab === 'DM'} onClose={() => setDesktopTab(null)}>
-        <List>
-            {DMInfoMenu.map((text) => {
-              return (
-                <ListItem dense>
-                  <ListItemButton href={'/' + text}>
-                    <ListItemText>{text}</ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              )
-            })}
-          </List>
+        <Button onClick={(event) => {setDesktopTab('DM'); setAnchor(event.currentTarget)}} endIcon={<KeyboardArrowDownIcon />} variant='outlined'>Dungeon Master</Button>
+        <Menu open={desktopTab === 'DM'} onClose={() => setDesktopTab(null)} anchorEl={anchor}>
+          {DMInfoMenu.map((text, index) => {
+            return <MenuItem onClick={() => window.location.assign('/' + text)} key={index}>{text}</MenuItem>
+          })}
         </Menu>
       </Box>
     </Box>

@@ -1,5 +1,5 @@
 import { Box, Button, Card, Chip, Modal, Stack, Typography } from "@mui/material";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import db from '../Components/firebase';
 
@@ -28,20 +28,7 @@ export default function ArmorItem(props) {
   }
 
   const flipArmor = () => {
-    setDoc(doc(db, 'Armor', props.currArmor.name), {
-      name: props.currArmor.name,
-      defense: props.currArmor.defense,
-      soak: props.currArmor.soak,
-      encumbrance: props.currArmor.encumbrance,
-      price: props.currArmor.price,
-      rarity: props.currArmor.rarity,
-      specials: props.currArmor.specials,
-      setBonus: props.currArmor.setBonus,
-      spawnLocations: props.currArmor.spawnLocations,
-      durability: props.currArmor.durability,
-      description: props.currArmor.description,
-      anomalousEffect: props.currArmor.anomalousEffect,
-      equippedTo: props.currArmor.equippedTo,
+    updateDoc(doc(db, 'Armor', props.currArmor.name), {
       hidden: props.currArmor.hidden === 'Yes' ? 'No' : 'Yes'
     })
   }

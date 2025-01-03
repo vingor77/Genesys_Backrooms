@@ -10,7 +10,7 @@ export default function EntityItem(props) {
   const talents = props.entity.talents.split("/");
   const abilities = props.entity.abilities.split("/");
   const actions = props.entity.actions.split("/");
-  const equipment = props.entity.equipment.split("/");
+  const equipment = props.entity.equipment.split("/").join(', ');
 
   return (
     <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '700px', padding: 1}}>

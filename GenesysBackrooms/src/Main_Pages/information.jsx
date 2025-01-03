@@ -60,7 +60,7 @@ export default function Information() {
             <Typography>Soak: 10</Typography>
             <Typography>Wounds: 150</Typography>
             <Typography>Strain: 150</Typography>
-            <Typography>Characteristics: 6 (4 in character creation)</Typography>
+            <Typography>Characteristics: 6 (5 in character creation)</Typography>
             <Typography>Skills: Rank 6 (2 while during character creation)</Typography>
           </Box>
         )
@@ -247,6 +247,9 @@ export default function Information() {
             <Typography><b>Gravity:</b> Stronger gravity adds 1-3 setback dice to all brawn and coordination checks, excluding resilience. Weaker gravity adds boost dice instead.</Typography>
             <Typography><b>Holding your breath:</b> You can hold your breath for brawn rounds.</Typography>
             <Typography><b>Suffocating:</b> You recieve 3 strain damage each round. If you exceed your strain threshold, you recieve a critical injury every round until you either stop suffocating or die.</Typography>
+            <Typography><b>Grapple:</b> The target must succeed on a contested Brawl check to resist being grabbed. While grappled, you are immobilized. At the end of each of your turns, you may perform another contested Brawl check to escape.</Typography>
+            <Typography><b>Blind:</b> You add 3 difficulty to Perception and Vigilance checks and 2 to all other checks.</Typography>
+            <Typography><b>Deaf:</b> You add 3 difficulty to Perception checks based on sound.</Typography>
           </Box>
         )
       case 4:
@@ -528,8 +531,8 @@ export default function Information() {
             <br />
             <Divider>Repairing</Divider>
             <br />
-            <Typography>Repairing is done with Tinkerer Tools. You must succeed on a Mechanics or Computers check of difficulty equal to the durability lost.</Typography>
-            <Typography>The difficulty is increased by 1 if you do not have Tinkerer Tools.</Typography>
+            <Typography>You must succeed on a Metalworking, Leatherworking, or Crafting[General] check of difficulty equal to the durability lost in order to repair the gear.</Typography>
+            <Typography>The difficulty is increased by 1 if you do not have tools.</Typography>
             <Typography>The difficulty is increased by 1 if you attempt to fix it in half the time.</Typography>
             <Typography>Repairing takes 1 hour per difficulty to fix as a standard rate.</Typography>
             <Typography>It costs 20% of the original item's value per difficulty to fix. For each advantage during the roll, reduce this price by 10%. Round the price down.</Typography>
@@ -623,13 +626,13 @@ export default function Information() {
         return (
           <Box padding={1} maxHeight='750px' overflow='auto'>
             <Divider>Length of rests</Divider>
+            <Typography>You are alloted a certain amount of hours to rest while on the level based off the danger level.</Typography>
             <Typography>Danger level 0: You may rest for any amount of time</Typography>
             <Typography>Danger level 1: You may rest for 72 hours</Typography>
             <Typography>Danger level 2: You may rest for 24 hours</Typography>
             <Typography>Danger level 3: You may rest for 3 hours</Typography>
             <Typography>Danger Level 4-5: You may not rest</Typography>
-            <Typography>If you attempt to rest over the time alloted, you will be forced into combat with some kind of threat</Typography>
-            <Typography>These values are across your entire time on the level</Typography>
+            <Typography>If you attempt to rest over the time alloted, there is a high chance a threat will appear.</Typography>
             <br />
             <Divider>Effects of resting</Divider>
             <br />
@@ -692,10 +695,10 @@ export default function Information() {
       case 0:
         return (
           <Box maxHeight='750px' overflow='auto'>
-            <Typography>You may use your scanner as an incidental on your turn</Typography>
-            <Typography>Previously explored rooms are traversed at double the speed</Typography>
-            <Typography>Should you die, you may remove 1 critical injury at random. Sometimes the injury is chosen if it makes sense</Typography>
-            <Typography>All rooms except for the factory, locker, and Storage rooms are considered medium distance from door to door. These are considered long.</Typography>
+            <Typography>1. You may use your scanner as an incidental on your turn</Typography>
+            <Typography>2. Previously explored rooms are traversed at double the speed</Typography>
+            <Typography>3. Should you die, you may remove 1 critical injury at random. Sometimes the injury is chosen if it makes sense</Typography>
+            <Typography>4. All rooms except for the factory, locker, and Storage rooms are considered medium distance from door to door. These are considered long.</Typography>
           </Box>
         )
       case 1:
@@ -711,30 +714,39 @@ export default function Information() {
         return (
           <Box maxHeight='750px' overflow='auto'>
             <Typography><b>Clear:</b> No Effect</Typography>
-            <Typography><b>Rainy:</b> Every turn, there is a 1/6 chance you walk into a puddle. A difficulty 2 agility or coordination check is then made. On a fail, you sink further in and must repeat the save again at 1 higher difficulty. After 3 fails, you die</Typography>
+            <Typography><b>Rainy:</b> Every turn, there is a 1/6 chance you walk into a puddle. A difficulty 2 athletics or coordination check is then made. On a fail, you sink further in and must repeat the save again at 1 higher difficulty. After 3 fails, you die</Typography>
             <Typography><b>Stormy:</b> Every turn, there is a x/4 chance of lightning striking you where x is the amount of conductive items in your inventory. The difficulty is set at 1 + x</Typography>
             <Typography><b>Foggy:</b> Every turn, the fog shifts in or out and makes seeing harder or easier. The difficulty is based on the fog level</Typography>
             <Typography><b>Flooded:</b> The planet slowly floods. This value is kept hidden.</Typography>
-            <Typography><b>Eclipsed:</b> An extra entity is spawned inside immediately. Outside entities spawn quickly. All entities have 5 more wounds than normal and deal 1 more damage per attack</Typography>
+            <Typography><b>Eclipsed:</b> An extra, unknown, amount of entities begin spawned within the facility. Also, night entities begin spawning immediately.</Typography>
           </Box>
         )
       case 3:
         return (
           <Box maxHeight='750px' overflow='auto'>
+            <Typography>The ship door may be opened or closed, but it can only remain closed for so long.</Typography>
+            <Typography>While the door is open, the atmosphere may enter into the ship. After the door is closed, it takes 1 extra round for it to be filtered out.</Typography>
+            <Typography>Once the ship door is closed, it spends 1 power per round. The door has 6 power.</Typography>
+            <Typography>While the door is open, each round it regains 2 power.</Typography>
+            <br />
             <Divider>Actions</Divider>
-            <Typography>Scan room: You may view a room adjacent to a player, whether it has a direct entrance or not. Movement will not be observed using this method.</Typography>
-            <Typography>Seek Entity: You may determine if an Entity is within two rooms of a player. This does not work diagonally.</Typography>
-            <Typography>Activate Teleporter: You may use either teleporter. This may be used as an out-of-turn incidental.</Typography>
+            <Typography><b>Scan Room:</b> You may view a room adjacent to a player, whether it has a direct entrance or not. Movement will not be observed using this method.</Typography>
+            <Typography><b>Seek Entity:</b> You may determine if an Entity is within two rooms of a player. This does not work diagonally.</Typography>
+            <Typography><b>Activate Teleporter:</b> You may use either teleporter. This may be used as an out-of-turn incidental.</Typography>
+            <Typography><b>Access system:</b> You may make an Access Systems check to gain access to a trap within the facility. The difficulty varies based on the trap. This uses the Computers skill and initiates a hacking encounter.</Typography>
+            <Typography><b>Override Security Program:</b> You may make a difficulty 2 Computers check to override a security program within the system after succeeding on an Access System action. You must get at least as many successes as the program's strength to succeed. Failure may result in some negative effect.</Typography>
             <br />
             <Divider>Maneuvers</Divider>
-            <Typography>Toggle Trap: You may activate or deactivate any trap within the facility. A maximum of 3 may be activated at once. One must be re-enabled before disabling a 4th.</Typography>
-            <Typography>Send Message: You may send a message no more than 10 characters long to all players.</Typography>
-            <Typography>Planetary Scan: You may scan the outdoors as though it were a normal scanner.</Typography>
+            <Typography><b>Toggle Trap [NOT USED. ARCHIVE.]</b> You may activate or deactivate any trap within the facility. A maximum of 3 may be activated at once. One must be re-enabled before disabling a 4th.</Typography>
+            <Typography><b>Send Message:</b> You may send a message no more than 10 characters long to all players.</Typography>
+            <Typography><b>Planetary Scan:</b> You may scan the outdoors as though it were a normal scanner.</Typography>
+            <Typography><b>Enact Command:</b> While you have access to a system, you may cause the system to do a command, so long as you have access to that part of the system.</Typography>
+            <Typography><b>Activate Programs:</b> You may activate some kind of security program. As a hacker, this can be done to introduce an unknown roadblock for the defender.</Typography>
             <br />
             <Divider>Incidentals</Divider>
-            <Typography>Check Time: You may move outside to check the time. If crouching, this will take two Incidentals.</Typography>
-            <Typography>Use Walkie-Talkie: Out-of-turn, you may use the Walkie Talkie to assist a player in a non-physical skill check. The difficulty of the check is reduced by 1 and both you and the player make the check. If either one passes, the check is considered passed.</Typography>
-            <Typography>Operate Door: You may open or close the ship door.</Typography>
+            <Typography><b>Check Time:</b> You may move outside to check the time. If crouching, this will take two Incidentals.</Typography>
+            <Typography><b>Use Walkie-Talkie:</b> Out-of-turn, you may use the Walkie Talkie to assist a player in a non-physical skill check. The difficulty of the check is reduced by 1 and both you and the player make the check. If either one passes, the check is considered passed.</Typography>
+            <Typography><b>Operate Ship Door:</b> You may open or close the ship door.</Typography>
           </Box>
         )
       case 4:
@@ -747,11 +759,11 @@ export default function Information() {
             <Typography>You can not be seen or heard by players who are alive, but can see any items you are carrying.</Typography>
             <br />
             <Divider>Actions</Divider>
-            <Typography>Possess: You may attempt to possess an entity by rolling a Coercion check. The difficulty is based on the health of the entity. With no wounds, the difficulty is 5. At half or lower, the difficulty is 4. At over half, the difficulty is 3. While you are possessing an entity, you may use its free maneuver each turn. Also, the entity may not spend strain on a maneuver</Typography>
-            <Typography>Assist: You may prepare to assist a player with a physical skill check. The difficulty is reduced by 1 for that player. You may also make this skill check but at 1 difficulty higher instead of 1 lower. If either succeeds, the check is considered passed.</Typography>
+            <Typography><b>Possess:</b> You may attempt to possess an entity by rolling a Coercion check. The difficulty is based on the health of the entity. With no wounds, the difficulty is 5. At half or lower, the difficulty is 4. At over half, the difficulty is 3. While you are possessing an entity, you may use its free maneuver each turn. Also, the entity may not spend strain on a maneuver</Typography>
+            <Typography><b>Assist:</b> You may prepare to assist a player with a physical skill check. The difficulty is reduced by 1 for that player. You may also make this skill check but at 1 difficulty higher instead of 1 lower. If either succeeds, the check is considered passed.</Typography>
             <br />
             <Divider>Incidentals</Divider>
-            <Typography>Flicker: Out-of-turn you may cause a flashlight to flicker to alert a player of danger. The player gains two boost dice to the next check that player makes.</Typography>
+            <Typography><b>Flicker:</b> Out-of-turn you may cause a flashlight to flicker to alert a player of danger. The player gains two boost dice to the next check that player makes.</Typography>
           </Box>
         )
       case 5:
@@ -766,40 +778,86 @@ export default function Information() {
         return (
           <Box maxHeight='750px' overflow='auto'>
             <Divider>Items</Divider>
-            <Typography>Painkillers. Costs 200 credits to buy. Weight 5. Has 5 uses. </Typography>
-            <Typography>Medkits. Costs 50 credits to buy. Weight 12. Has 5 uses.</Typography>
-            <Typography>Shotgun shells. Costs 25 credits to buy. Weight 1.</Typography>
-            <Typography>20 Experience Points. Costs 1000 credits to buy.</Typography>
-            <Typography>Flare. Costs 110 credits to buy. Weight 3. Has 1 use. It may be used to prevent all navigation checks on the current planet to be higher than two difficulty.</Typography>
-            <Typography>Signal Upgrader: Costs 400 credits to buy. Upgrades the Signal Translator to allow for 30 characters instead of 10 and the message is sent instantly.</Typography>
-            <Typography>Teleporter upgrade: Costs 1400 credits to buy. Upgrades the teleporter to become instant and items are not dropped upon teleport.</Typography>
+            <Typography><b>Painkillers:</b> Costs 200 credits to buy. Weight 5. Has 5 uses. </Typography>
+            <Typography><b>Medkits:</b> Costs 50 credits to buy. Weight 12. Has 5 uses.</Typography>
+            <Typography><b>20 Experience Points:</b> Costs 1000 credits to buy.</Typography>
+            <Typography><b>Flare:</b> Costs 110 credits to buy. Weight 3. Has 1 use. It may be used to prevent all navigation checks on the current planet to be higher than two difficulty.</Typography>
+            <Typography><b>Signal Upgrader:</b> Costs 400 credits to buy. Upgrades the Signal Translator to allow for 30 characters instead of 10 and the message is sent instantly.</Typography>
+            <Typography><b>Teleporter Upgrade:</b> Costs 1400 credits to buy. Upgrades the teleporter to become instant and items are not dropped upon teleport.</Typography>
+            <Typography><b>Brass Knuckles:</b> Costs 150 credits to buy.</Typography>
+            <Typography><b>Shotgun Shell:</b> Costs 25 credits to buy. Weight 0. May stack 2 per inventory slot.</Typography>
+            <Typography><b>Revolver Bullet:</b> Costs 15 credits to buy. Weight 0. May stack 6 per inventory slot.</Typography>
+            <Typography><b>Assault Rifle Clip (30):</b> Costs 300 credits to buy. Weight 5.</Typography>
             <br />
             <Divider>Talents</Divider>
-            <Typography>Stronger Scanner. Tier: 1. Add a boost dice to scans.</Typography>
-            <Typography>Stronger Scanner II. Tier: 2. Requirement: Stronger Scanner. Upgrade one ability dice for scans. If no ability dice can be upgraded, add one to the dice pool.</Typography>
-            <Typography>Stronger Scanner III. Tier: 3. Requirement: Stronger Scanner II. All obstacles are now ignored by the scanner. All adjacent rooms with an open door are scanned as well.</Typography>
-            <Typography>Bulked-Load. Tier: 2. Requirement: 4 or higher Brawn. You may carry an extra 2-handed item.</Typography>
+            <Typography><b>Stronger Scanner:</b> Tier: 1. Activation: Passive. Add a boost dice to scans.</Typography>
+            <Typography><b>Stronger Scanner II:</b> Tier: 2. Activation: Passive. Requirement: Stronger Scanner. Upgrade one ability dice for scans. If no ability dice can be upgraded, add one to the dice pool.</Typography>
+            <Typography><b>Stronger Scanner III:</b> Tier: 3. Activation: Passive. Requirement: Stronger Scanner II. All obstacles are now ignored by the scanner. All adjacent rooms with an open door are scanned as well.</Typography>
+            <Typography><b>Bulked-Load:</b> Tier: 2. Activation: Passive. Requirement: 4 or higher Brawn. You may carry an extra 2-handed item.</Typography>
+            <Typography><b>Expanded Inventory:</b> Tier: 5. Activation: Passive. Ranked: Yes. You may now carry an additional item in your inventory. You may not exceed 8 slots.</Typography>
           </Box>
         )
       case 7:
         return (
           <Box maxHeight='750px' overflow='auto'>
-            <Typography>Decoy: You gain 1 soak.</Typography>
-            <Typography>Brown: You gain 1 defense.</Typography>
-            <Typography>Green: You gain 1 soak. You lower the difficulty of all stealth checks by 1.</Typography>
-            <Typography>Purple: You gain 1 soak and 1 defense.</Typography>
-            <Typography>Hazard: You gain 3 soak. You increase the difficulty of all stealth checks by 1.</Typography>
-            <Typography>Bee: You do not take any damage from bees. You add two boost dice to attacks made against the Bunker Spider, Hoarding Bug, Snare Flea, and Spore Lizard.</Typography>
-            <Typography>Bunny: You gain 2 soak and 2 defense OR you gain an extra maneuver per turn that does not count towards your limit. This is chosen when bought.</Typography>
-            <Typography>Pajama: You gain an extra action per turn and you may ignore the strain costs spent on maneuvers 3 times per day, you gain 4 defense, OR you gain 2 soak and 3 defense.</Typography>
+            <Typography>When buying a suit, you recieve a singular suit rather than for the entire group.</Typography>
+            <Typography>Suits may be swapped between while in orbit at will.</Typography>
+            <Typography>Suits that have a choice of effect may be swapped while in orbit at will.</Typography>
             <br />
-            <Divider>Wear and Tear</Divider>
+            <Divider>Suit Effects</Divider>
+            <br />
+            <Typography><b>Decoy:</b> Soak: 1. Defense: 0.</Typography>
+            <Typography><b>Brown:</b> Soak: 0. Defense: 1.</Typography>
+            <Typography><b>Green:</b> Soak: 2. Defense: 0. You add two boost dice to all stealth checks.</Typography>
+            <Typography><b>Purple:</b> Soak: 0. Defense: 2.</Typography>
+            <Typography><b>Hazard:</b> Soak: 3. Defense: 0. You add two setback dice to all stealth checks.</Typography>
+            <Typography><b>Bee:</b> Soak: 1. Defense: 0. You do not take any damage from bees. You add two boost dice to attacks made against the Bunker Spider, Hoarding Bug, Snare Flea, and Spore Lizard.</Typography>
+            <Typography><b>Bunny:</b></Typography>
+            <Typography>Option 1: Soak: 1. Defense: 2.</Typography>
+            <Typography>Option 2: Soak: 0. Defense: 0. You gain an extra free maneuver per turn. You may now take 3 maneuvers per turn.</Typography>
+            <Typography><b>Pajama:</b></Typography>
+            <Typography>Option 1: Soak: 0. Defense: 0. You gain an extra action per turn and you may ignore the strain costs spent on maneuvers 3 times per day.</Typography>
+            <Typography>Option 2: Soak: 0. Defense: 3.</Typography>
+            <Typography>Option 3: Soak: 2. Defense: 2.</Typography>
+          </Box>
+        )
+      case 8:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>Some additional rules, taken from the above rules and altered slightly, are as follows:</Typography>
+            <Typography>1. Hacking system is added to the ship actions.</Typography>
+            <Typography>2. Sanity is added. Every 8 rounds, or 2 hours, a sanity roll is made.</Typography>
+            <Typography>3. Fear is added. Each entity will have a fear rating and will be enacted on when encountering the entity.</Typography>
+            <Typography>4. Exhaustion, specifically the portion about healing it and gaining a level in exchange for a critical injury.</Typography>
+            <Typography>5. Durability for weapons and armor. The weapon durability effects are described in "General Rules" under "Durability and Repairs".</Typography>
+            <br />
+            <Divider>System structures</Divider>
+            <Typography>Normally, the structure is kept hidden but due to this being testing material, the structure is shown for all.</Typography>
+            <br />
+            <Typography>A door trap has a difficulty of 1 to access the system. The door has no security programs.</Typography>
+            <Typography>A landmine trap has a difficulty of 2 to access the system. The landmine has a Firewall defending shutdown.</Typography>
+            <Typography>A spike trap has a difficulty of 4 to access the system. The spike trap has a Firewall defending shutdown and a Sentry defending sensors. Shutdown is only accessible when Sensors has been overridden.</Typography>
+            <Typography>A turret has a difficulty of 4 to access the system. The turret has a Firewall defending shutdown, a Sentry defending sensors, and a Gate defending the firing section. Shutdown is only accessible when Sensors and Firing has been overridden.</Typography>
+            <br />
+            <Divider>Armor Durability</Divider>
+            <br />
             <Typography>Suits may be broken down through enemy triumphs or own despairs. Suits have a durability of 3.</Typography>
             <Typography>The effects are as follows:</Typography>
-            <Typography>3: No ill effects</Typography>
+            <Typography>3: No effects</Typography>
             <Typography>2: Your suit cracks or rips slightly. This allows the potentially toxic atmosphere to get into your suit. It however is not broken enough to cause loss of breath</Typography>
-            <Typography>1: Your suit is too broken to absorb damage. Your suit loses its soak</Typography>
+            <Typography>1: Your suit is too broken to absorb damage. Your suit loses its soak.</Typography>
             <Typography>0: The suit is unusable. Your suit loses its defense and you become unable to breathe while outside or in a room with outside atmosphere in it</Typography>
+          </Box>
+        )
+      case 9:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography><b>Shotgun:</b> Ranged; Damage 10; Critical 3; Range [Short]</Typography>
+            <Typography><b>Shovel:</b> Melee; Damage +4; Critical 3; Range [Engaged]; Cumbersome 3; Pierce 2; Vicious 1. Weight is 16.</Typography>
+            <Typography><b>Sign:</b> Melee; Damage +4; Critical 2; Range [Engaged]; Defensive 1; Pierce 1; Unwieldy 3. Weight is 14.</Typography>
+            <Typography><b>Brass Knuckles:</b> Brawl; Damage +1; Critical 4; Range [Engaged]; Disorient 3. Weight is 4.</Typography>
+            <Typography><b>Revolver:</b> Ranged; Damage 6; Critical 4; Range [Medium]; Accurate 1. Weight is 8.</Typography>
+            <Typography><b>Assault Rifle</b> Ranged; Damage 8; Critical 3; Range [Long]; Auto-fire. Weight is 24.</Typography>
           </Box>
         )
     }
@@ -847,32 +905,43 @@ export default function Information() {
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Custom Skills</AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Skills</AccordionSummary>
           <AccordionDetails>
+            <Typography>Tier 6 skills can only be acquired by having the skill at tier 5 and having a skill upgrade point. These points are awarded for quests and achievements.</Typography>
+            <Typography>The Alchemy skill has been removed from the game.</Typography>
+            <br />
+            <Divider>Custom Skills</Divider>
+            <br />
             <Typography><b>Sanity(Willpower):</b> Used to prevent yourself from going insane.</Typography>
-            <Typography><b>Knowledge[General](Intelligence):</b> Used to determine non-specific knowledge on a subject.</Typography>
-            <Typography><b>Knowledge[Mechanics](Intelligence):</b> Used to determine how a piece of machinery or technology operates.</Typography>
-            <Typography><b>Knowledge[Lore](Intelligence):</b> Used to understand or determine things about how the Backrooms came to be and about the levels and entities.</Typography>
-            <Typography><b>Knowledge[Objects](Intelligence):</b> Used to determine how an object works or should be interacted with.</Typography>
+            <Typography><b>Knowledge[General](Intellect):</b> Used to determine non-specific knowledge on a subject.</Typography>
+            <Typography><b>Knowledge[Mechanics](Intellect):</b> Used to determine how a piece of machinery or technology operates.</Typography>
+            <Typography><b>Knowledge[Lore](Intellect):</b> Used to understand or determine things about how the Backrooms came to be and about the levels and entities.</Typography>
+            <Typography><b>Knowledge[Objects](Intellect):</b> Used to determine how an object works or should be interacted with.</Typography>
+            <Typography><b>Metalworking(Brawn):</b> Used to craft things using the Armorer, Blacksmith, or Goldsmith tools.</Typography>
+            <Typography><b>Leatherworking(Agility):</b> Used to craft things using the Leatherworker and Weaver tools.</Typography>
+            <Typography><b>Crafting[General](Intellect):</b> Used to craft things using the Alchemist, Carpenter, and Culinarian tools.</Typography>
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Custom Talents</AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Talents</AccordionSummary>
           <AccordionDetails>
+            <Divider>Custom Talents</Divider>
             <Typography><b>Healer:</b> Tier: 1. Activation: Active (Action). Ranked: Yes. You may spend an action to perform a medicine check. This may be done equal to the amount of times this talent has been purchased per day.</Typography>
             <Typography><b>Lightning Striker:</b> Tier: 1. Activation: Passive. Ranked: No. Weapons that use brawl have the reactive equipment trait.</Typography>
             <Typography><b>Bulked Load:</b> Tier: 2. Activation: Passive. Ranked: Yes. Your encumbrance threshold is now one higher.</Typography>
-            <Typography><b>Adjust Eyes(Dark):</b> Tier: 3. Activation: Active (Action). Ranked: No. You may ignore all difficulties due to darkness.</Typography>
-            <Typography><b>Adjust Eyes(Light):</b> Tier: 3. Activation: Active (Action). Ranked: No. You may ignore all difficulties due to light.</Typography>
+            <Typography><b>Adjust Eyes(Dark):</b> Tier: 3. Activation: Active (Action). Ranked: No. You may ignore all difficulties due to darkness for the next 5 rounds.</Typography>
+            <Typography><b>Adjust Eyes(Light):</b> Tier: 3. Activation: Active (Action). Ranked: No. You may ignore all difficulties due to light for the next 5 rounds.</Typography>
+            <Typography><b>Savage Attacker:</b>Tier: 4. Activation: Active (Incidental). Ranked: No. When you inflict a critical injury, you may spend 2 strain and an incidental to activate this talent. You may select the critical injury inflicted that is within the same severity as the one rolled.</Typography>
             <Typography><b>Unshakable Will:</b> Tier: 5. Activation: Passive. Ranked: No. You recieve 5 points. These points may be spent to reduce one strain damage each. These points replenish at the beginning of your turn.</Typography>
             <Typography><b>Unwavering Resilience:</b> Tier: 5. Activation: Passive. Ranked: No. Requires: Toughened 4. Your wound threshold increases by 10.</Typography>
             <Typography><b>Unbreakable Fortitude:</b> Tier: 5. Activation: Passive. Ranked: No. Requires: Grit 4. Your strain threshold increases by 5.</Typography>
           </AccordionDetails>
         </Accordion>
         <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Custom Equipment Traits</AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Equipment Traits</AccordionSummary>
           <AccordionDetails>
-            <Typography><b>Auto-hit:</b> The weapon automatically hits the target. The dice pool is always two ability and one proficiency dice.</Typography>
+            <Divider>Custom Equipment Traits</Divider>
+            <Typography><b>AutoHit:</b> The weapon automatically hits the target. The dice pool is always two ability and one proficiency dice.</Typography>
             <Typography><b>Reactive:</b> A weapon with the reactive trait allows and attack to be made as an out-of-turn incidental when an enemy leaves engaged range. This attack may not be dual-wielded.</Typography>
           </AccordionDetails>
         </Accordion>
@@ -889,7 +958,7 @@ export default function Information() {
           <DisplayEffectTab />
         </Accordion>
         <Accordion>
-          <AccordionSummary>Lethal Company Rules</AccordionSummary>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>Lethal Company Rules</AccordionSummary>
           <AccordionDetails>
             <Tabs value={lethalValue} onChange={(e, val) => setLethalValue(val)} variant="scrollable">
               <Tab label='General Rulings' />
@@ -900,6 +969,8 @@ export default function Information() {
               <Tab label='Lighting' />
               <Tab label='Homebrew' />
               <Tab label='Suit Effects' />
+              <Tab label='Additional Rules' />
+              <Tab label='Weapon Statistics' />
             </Tabs>
             <DisplayLethalTab />
           </AccordionDetails>

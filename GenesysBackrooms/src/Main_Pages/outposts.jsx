@@ -1,6 +1,6 @@
 import { Box, Button, Card, Divider, MenuItem, Select, Stack, Typography } from "@mui/material";
 import NotLoggedIn from "../Components/notLoggedIn";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import QuestItem from '../Components/questItem';
@@ -10,7 +10,7 @@ export default function Outposts() {
   const [outposts, setOutposts] = useState([]);
   const [quests, setQuests] = useState([]);
   const [tabValue, setTabValue] = useState('Alpha');
-
+  
   const data = [{"name":"A1","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
     {"name":"A2","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
     {"name":"Skyscraper","description":null,"level":522,"group":"Backrooms Robotics","amenities":null},
@@ -138,7 +138,7 @@ export default function Outposts() {
     )
   }
 
-  const DisplayTable = () => {
+  const displayTable = () => {
     const columns = [
       {
         field: 'name',
@@ -188,6 +188,7 @@ export default function Outposts() {
       />
     )
   }
+  const table = useMemo(() => displayTable(), [outposts]);
 
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
@@ -195,7 +196,7 @@ export default function Outposts() {
         <Button onClick={addData}>Add</Button>
         {outposts.length > 0 ? 
           <Box>
-            <DisplayTable />
+            {table}
             <br />
             <DisplayOutpost />
           </Box>

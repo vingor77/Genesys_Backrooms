@@ -22,7 +22,17 @@ export default function MundaneObjects() {
     {"name":"A23 Battery","description":"This battery has 55 mAh of power to spare.","price":"1 for 4","rarity":0,"spawnLocations":"All","usedBy":"Flashlight","hidden":"No"},
     {"name":"N Battery","description":"This battery has 1,000 mAh of power to spare.","price":"1 for 4","rarity":4,"spawnLocations":"All","usedBy":"Lantern","hidden":"No"},
     {"name":"Flashlight","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use AA, AAA, AAAA, and A23 batteries.","price":"3 for 1","rarity":2,"spawnLocations":"All","usedBy":"None","hidden":"No"},
-    {"name":"Lantern","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use 9V, N, C, and D batteries.","price":"6 for 1","rarity":5,"spawnLocations":"All","usedBy":"None","hidden":"No"}]
+    {"name":"Lantern","description":"A hand-held device that lights up an area. The battery type, power, and range are variable and decided when found. This device can use 9V, N, C, and D batteries.","price":"6 for 1","rarity":5,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Armorer's Tools","description":"Tools used to craft armor and other metal objects that aren't weapons or jewelry","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Blacksmith Tools","description":"Tools used to craft weapons","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Goldsmith Tools","description":"Tools used to craft jewelry and anything with gems","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Leatherworker's Tools","description":"Tools used to craft anything to do with leather","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Weaver's Tools","description":"Tools used to craft anything to do with cloth or fibers","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Alchemist Tools","description":"Tools used to craft concoctions and potions","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Carpenter Tools","description":"Tools used to craft anything involving wood as the primary substance","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Culinarian Tools","description":"Tools used to cook","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Miner tools","description":"Tools used to gather rock, ore, and water deposits","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"},
+    {"name":"Botanist tools","description":"Tools used to gather natural resources","price":"1 for 1","rarity":1,"spawnLocations":"All","usedBy":"None","hidden":"No"}]
     
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
@@ -115,3 +125,26 @@ export default function MundaneObjects() {
       </Box>
   )
 }
+
+/*
+  New skills and tools. Tools just stop the difficulty of crafting from rising. The tools can however be upgraded by crafting them. The material required in the recipe determines the effect.
+
+  Metalworkers:
+  - Armorer
+  - Blacksmith
+  - Goldsmith
+
+  Leatherworkers:
+  - Leatherworker
+  - Weaver
+
+  General Crafting:
+  - Alchemist 
+  - Carpenter
+  - Culinarian
+
+  Gathering:
+  - Miner
+  - Botanist
+  - Fisher
+*/
