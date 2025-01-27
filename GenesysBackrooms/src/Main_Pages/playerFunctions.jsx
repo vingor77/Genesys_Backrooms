@@ -454,7 +454,7 @@ export default function PlayerFunctions() {
                   <Stack direction={{sm: 'column', md: 'row'}} flexWrap='wrap' gap={1} padding={2}>
                     {timers.length === 0 ? "" : timers.map((item) => {
                       return (
-                        <Card variant="outlined" sx={{width: {xs: '100%', md: '200px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
+                        <Card variant="outlined" sx={{width: {xs: '100%', md: '300px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
                           <Box sx={{ p: 2 }}>
                             <Tooltip title={item.description}>
                               <Typography variant="h4">{item.name}</Typography>
@@ -472,7 +472,7 @@ export default function PlayerFunctions() {
                   <Stack direction='row' flexWrap='wrap' gap={1} padding={2}>
                     {globalTimers.length === 0 ? "" : globalTimers.map((item) => {
                       return (
-                        <Card variant="outlined" sx={{width: {xs: '100%', md: '200px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
+                        <Card variant="outlined" sx={{width: {xs: '100%', md: '300px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
                           <Box sx={{ p: 2 }}>
                             <Tooltip title={item.description}>
                               <Typography variant="h4">{item.name.split('://:')[0]}</Typography>

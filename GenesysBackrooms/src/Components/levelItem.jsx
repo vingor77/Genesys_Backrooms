@@ -133,7 +133,7 @@ export default function LevelItem(props) {
       values.push(parseFloat(spawnChances[i]) / runningTotal * 100 + values[i - 1]);
     }
   
-    const value = Math.floor(Math.random() * 100) + 1;
+    const value = ((Math.random() * 100) + 1);
     const spawnTypes = ['NOTHING', 'OBJECT', 'ENTITY', 'SOCIAL', 'PHENOMENA'];
     let selectedType = spawnTypes[0]; // Default to NOTHING
   
@@ -290,7 +290,7 @@ export default function LevelItem(props) {
             }
 
             const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.armor.length) : Math.floor(Math.random() * filtered.length);
-            let chosen = props.data.armor[random];
+            let chosen = filtered.length === 0 ? props.data.armor[random] : filtered[random];
 
             return <ArmorItem currArmor={chosen}/>
           }
@@ -309,7 +309,7 @@ export default function LevelItem(props) {
             }
 
             const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.weapons.length) : Math.floor(Math.random() * filtered.length);
-            let chosen = props.data.weapons[random];
+            let chosen = filtered.length === 0 ? props.data.weapons[random] : filtered[random];
 
             return <WeaponItem currWeapon={chosen}/>
           }
@@ -328,7 +328,7 @@ export default function LevelItem(props) {
             }
 
             const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.objects.length) : Math.floor(Math.random() * filtered.length);
-            let chosen = props.data.objects[random];
+            let chosen = filtered.length === 0 ? props.data.objects[random] : filtered[random];
             return <ObjectItem currObject={chosen}/>
           }
           else {
@@ -345,8 +345,8 @@ export default function LevelItem(props) {
               }
             }
 
-            const randomMundane = filtered.length === 0 ? Math.floor(Math.random() * props.data.mundane.length) : Math.floor(Math.random() * filtered.length);
-            let chosen = props.data.mundane[randomMundane];
+            const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.mundane.length) : Math.floor(Math.random() * filtered.length);
+            let chosen = filtered.length === 0 ? props.data.mundane[random] : filtered[random];
 
             if(chosen.name === 'Flashlight') {
               const batteryType = Math.floor(Math.random() * 4);
@@ -376,7 +376,7 @@ export default function LevelItem(props) {
           }
 
           const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.entities.length) : Math.floor(Math.random() * filtered.length);
-          let chosen = props.data.entities[random];
+          let chosen = filtered.length === 0 ? props.data.entities[random] : filtered[random];
 
           return <EntityItem entity={chosen} />
         }
@@ -394,7 +394,7 @@ export default function LevelItem(props) {
           const extraSocials = level.socialEncounters.split('/');
 
           const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.interest.length) : Math.floor(Math.random() * filtered.length);
-          let chosen = props.data.interest[random];
+          let chosen = filtered.length === 0 ? props.data.interest[random] : filtered[random];
 
           if(Math.floor(Math.random() * 101) <= 15 || extraSocials[0] === 'None') return <People currPerson={chosen}/>
           return <Typography>{extraSocials[Math.floor(Math.random() * extraSocials.length)]}</Typography>
@@ -402,11 +402,11 @@ export default function LevelItem(props) {
         if(selectedType === 'PHENOMENA') {
           const filtered = [];
           for(let i = 0; i < props.data.phenomena.length; i++) {
-            if(props.data.phenomena[i].type === 'Environmental') filtered.push(props.data.phenomena[i]);
+            if(props.data.phenomena[i].type === 'Environmental' && props.data.phenomena[i].howOccur.split('/').includes('Random')) filtered.push(props.data.phenomena[i]);
           }
 
           const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.phenomena.length) : Math.floor(Math.random() * filtered.length);
-          let chosen = props.data.phenomena[random];
+          let chosen = filtered.length === 0 ? props.data.phenomena[random] : filtered[random];
 
           return <PhenomenonItem currPhenomenon={chosen}/>
         }

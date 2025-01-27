@@ -458,7 +458,7 @@ export default function Information() {
         )
       case 6:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Divider>Medicine uses</Divider>
             <Typography>Medicine checks may be used to heal wounds, strain, critical injuries, and exhaustion.</Typography>
             <Typography>Each day, you may attempt a medicine check. This resets at dawn.</Typography>
@@ -481,7 +481,7 @@ export default function Information() {
         )
       case 7:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Divider>The passage of time</Divider>
             <Typography>Time passes on a room to room basis with a minimum but no maximum.</Typography>
             <Typography>Each room is considered to be 1 minute of time passing while traversing through and small or medium sized room.</Typography>
@@ -509,7 +509,7 @@ export default function Information() {
         )
       case 8:
         return (
-          <Box>
+          <Box maxHeight='750px' overflow='auto'>
             <Divider>Weapon Durability</Divider>
             <Typography>At maximum durability there are no effects.</Typography>
             <Typography>Losing 1 durability gives a setback dice to all checks made using the weapon.</Typography>
@@ -536,6 +536,26 @@ export default function Information() {
             <Typography>The difficulty is increased by 1 if you attempt to fix it in half the time.</Typography>
             <Typography>Repairing takes 1 hour per difficulty to fix as a standard rate.</Typography>
             <Typography>It costs 20% of the original item's value per difficulty to fix. For each advantage during the roll, reduce this price by 10%. Round the price down.</Typography>
+          </Box>
+        )
+      case 9:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Divider>The Wretched Cycle</Divider>
+            <Typography>The Wretched cycle is a potentially terminal disease that originates from Wretches. It causes you to lose your humanity and slowly transforms you into a Wretch yourself. Any time you would recieve a Wretched cycle stage while already at stage 3, add 1 difficulty to the next check made to resist turning into a Wretch.</Typography>
+            <br />
+            <Typography>Stage 1: You begin to itch and develop a rash similar to when touching poison ivy. Also, the disease will attempt to alter your mental state. Immediately roll a difficulty 4 sanity check. On a fail, you recieve a permanent level of sanity until cleansed of this disease.</Typography>
+            <Typography>Stage 2: You lose your ability to speak clearly and you begin to lose your strength. While on Stage 2, you add 2 setback dice to all social checks and you treat your brawn and agility characteristics as though they were 1 lower.</Typography>
+            <Typography>Stage 3: The final stage. You decay to a point where you can no longer speak, rest, eat or drink on your own. You ooze brown sludge from all orifices that burn anybody it touches for 5 damage. Immediately when reaching this stage and every 24 hours afterwards, you must succeed on a difficulty 1 + previous successes resilience check or fully transform into a Wretch.</Typography>
+            <br />
+            <Divider>The Disease</Divider>
+            <br />
+            <Typography>The Disease is the hardest to treat disease within the Backrooms. It creates blood clots within your body, causing necrosis in limbs and hemorrhaging. The Disease spreads through breathing in contaminated air or contact with contaminated blood. There are 4 stages of The Disease.</Typography>
+            <br />
+            <Typography>Stage 1: Symptoms are non-existant at this stage.</Typography>
+            <Typography>Stage 2: One of your limbs slows down as the blood vessels become more restricted from blood clots. While at this stage or above, you have a critical injury with a rating of 96.</Typography>
+            <Typography>Stage 3: Your blood vessels are now compromised to a severe degree and you begin to bleed from your orifices. You lose your free maneuver per turn, may only take either an action or maneuver per turn, and you gain 1 (unsoakable) wound per action taken.</Typography>
+            <Typography>Stage 4+: Your body can no longer keep up and you lose access to your limbs. Upon reaching this stage, one of your limbs becomes necrotic and you cannot use it. For each stage gained passed 4, another limb becomes necrotic. If all 4 major limbs (arms and legs) are necrotic and you would gain another level of this disease, you die.</Typography>
           </Box>
         )
     }
@@ -699,6 +719,7 @@ export default function Information() {
             <Typography>2. Previously explored rooms are traversed at double the speed</Typography>
             <Typography>3. Should you die, you may remove 1 critical injury at random. Sometimes the injury is chosen if it makes sense</Typography>
             <Typography>4. All rooms except for the factory, locker, and Storage rooms are considered medium distance from door to door. These are considered long.</Typography>
+            <Typography>5. You no longer recieve 20 xp per session. Instead, you recieve 10 xp per day completed.</Typography>
           </Box>
         )
       case 1:
@@ -879,6 +900,7 @@ export default function Information() {
               <Tab label='Healing' />
               <Tab label='Time' />
               <Tab label='Durability and Repairs' />
+              <Tab label='Diseases' />
             </Tabs>
             <DisplayGeneralTab />
           </AccordionDetails>

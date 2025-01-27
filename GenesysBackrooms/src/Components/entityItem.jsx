@@ -13,11 +13,12 @@ export default function EntityItem(props) {
   const equipment = props.entity.equipment.split("/").join(', ');
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '700px', padding: 1}}>
+    <Card variant="outlined" sx={{width: {xs: '100%', md: '600px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', padding: 1}}>
       <Stack direction='row' justifyContent='space-around' alignItems='center'>
         <Typography variant="h4">{props.entity.name}</Typography>
         <Chip label={'Type: ' + props.entity.type} />
         <Chip label={'Difficulty: ' + props.entity.difficulty} />
+        <Chip label={props.entity.fear === -1 ? 'Fear: ' + Math.ceil(props.entity.difficulty / 2) : 'Fear: ' + props.entity.fear} />
       </Stack>
       <br />
       <Typography>{props.entity.description}</Typography>
@@ -39,6 +40,8 @@ export default function EntityItem(props) {
       <Chip label={"M/R Defenses: " + defenses} sx={{width: '25%'}} />
       <br /><br />
       <Divider />
+      <br />
+      <Typography textAlign='left'><b>Behavior: </b> {props.entity.behavior}</Typography>
       <br />
       <Typography textAlign='left'><b>Skills:</b> {skills}</Typography>
       <br />

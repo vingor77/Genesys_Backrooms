@@ -13,7 +13,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState(null);
 
-  const generalInfoMenu = ['Crafting', 'Interest', 'Quests', 'Phenomenons'];
+  const generalInfoMenu = ['Crafting', 'Interest', 'Quests', 'Phenomena'];
   const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
   const DMInfoMenu = ['Entities', 'Groups', 'Levels', 'Outposts', 'Bethal'];
 

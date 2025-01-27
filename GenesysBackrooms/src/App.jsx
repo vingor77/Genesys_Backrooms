@@ -40,7 +40,7 @@ function App() {
           <Route path='/mundane' element={<MundaneObjects />} />
           <Route path='/armor' element={<Armor />} />
           <Route path='/weapons' element={<Weapons />} />
-          <Route path='/phenomenons' element={<Phenomenons />} />
+          <Route path='/phenomena' element={<Phenomenons />} />
           <Route path='/functions' element={<PlayerFunctions />} />
           <Route path='/login' element={<Login />} />
           <Route path='/notLoggedIn' element={<NotLoggedIn />} />
