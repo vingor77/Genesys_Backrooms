@@ -44,7 +44,6 @@ export default function LevelItem(props) {
       const width = roomSizes[roomIndex].split('!')[0];
       const length = roomSizes[roomIndex].split('!')[1];
       const corrosion = level.useAtmopshere.split('/')[roomIndex] === 'Yes' ? (Math.floor(Math.random() * level.corrosiveAtmosphere) + 1) : 0;
-      const levelExits = level.exitFromLevel.split('/');
       const exitFromLevelCount = Math.floor(Math.random() * 100) <= parseInt(level.exitFromLevelChance) ? 1: 0;
 
       return (

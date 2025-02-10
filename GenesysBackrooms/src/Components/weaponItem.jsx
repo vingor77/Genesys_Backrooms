@@ -40,15 +40,17 @@ export default function WeaponItem(props) {
           <Chip label={"Price: " + props.currWeapon.price}></Chip>
         </Stack>
         <Typography>{props.currWeapon.description}</Typography>
+        <br />
         <Box textAlign='left'>
+          <Typography>Repair skill: {props.currWeapon.repairSkill}</Typography>
           <Typography>Durability: {props.currWeapon.durability}</Typography>
           <Typography>Skill: {props.currWeapon.skill}</Typography>
-          <Typography>Damage: {props.currWeapon.damage}</Typography>
+          <Typography>Damage: {props.currWeapon.skill === 'Melee' ? "+" : ""}{props.currWeapon.damage}</Typography>
           <Typography>Crit: {props.currWeapon.crit}</Typography>
           <Typography>Range: {props.currWeapon.range}</Typography>
           <Typography>Encumbrance: {props.currWeapon.encumbrance}</Typography>
           <Typography>Specials: {specials}</Typography>
-          <Typography>Set bonus: {props.currWeapon.setBonus}</Typography>
+          <Typography>Part of: <b>{props.currWeapon.setBonus}</b></Typography>
         </Box>
         {props.currWeapon.anomalousEffect !== "None" ?
           <Button size="small" onClick={() => setAnomalousDisplayed(true)} variant="outlined">Display Anomalous Effect</Button>

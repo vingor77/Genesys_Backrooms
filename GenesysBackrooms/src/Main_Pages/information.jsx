@@ -809,6 +809,8 @@ export default function Information() {
             <Typography><b>Shotgun Shell:</b> Costs 25 credits to buy. Weight 0. May stack 2 per inventory slot.</Typography>
             <Typography><b>Revolver Bullet:</b> Costs 15 credits to buy. Weight 0. May stack 6 per inventory slot.</Typography>
             <Typography><b>Assault Rifle Clip (30):</b> Costs 300 credits to buy. Weight 5.</Typography>
+            <Typography><b>Assault Rifle:</b> Costs 800 credits to buy.</Typography>
+            <Typography><b>Revolver:</b> Costs 400 credits to buy.</Typography>
             <br />
             <Divider>Talents</Divider>
             <Typography><b>Stronger Scanner:</b> Tier: 1. Activation: Passive. Add a boost dice to scans.</Typography>
@@ -876,7 +878,7 @@ export default function Information() {
             <Typography><b>Shotgun:</b> Ranged; Damage 10; Critical 3; Range [Short]</Typography>
             <Typography><b>Shovel:</b> Melee; Damage +4; Critical 3; Range [Engaged]; Cumbersome 3; Pierce 2; Vicious 1. Weight is 16.</Typography>
             <Typography><b>Sign:</b> Melee; Damage +4; Critical 2; Range [Engaged]; Defensive 1; Pierce 1; Unwieldy 3. Weight is 14.</Typography>
-            <Typography><b>Brass Knuckles:</b> Brawl; Damage +1; Critical 4; Range [Engaged]; Disorient 3. Weight is 4.</Typography>
+            <Typography><b>Brass Knuckles:</b> Brawl; Damage +1; Critical 4; Range [Engaged]; Disorient 3; Flurry 2. Weight is 4.</Typography>
             <Typography><b>Revolver:</b> Ranged; Damage 6; Critical 4; Range [Medium]; Accurate 1. Weight is 8.</Typography>
             <Typography><b>Assault Rifle</b> Ranged; Damage 8; Critical 3; Range [Long]; Auto-fire. Weight is 24.</Typography>
           </Box>
@@ -965,6 +967,9 @@ export default function Information() {
             <Divider>Custom Equipment Traits</Divider>
             <Typography><b>AutoHit:</b> The weapon automatically hits the target. The dice pool is always two ability and one proficiency dice.</Typography>
             <Typography><b>Reactive:</b> A weapon with the reactive trait allows and attack to be made as an out-of-turn incidental when an enemy leaves engaged range. This attack may not be dual-wielded.</Typography>
+            <Typography><b>Reach:</b> A weapon with reach may be used one range further than its maximum range.</Typography>
+            <Typography><b>Breaking:</b> Each time this weapon is used, it reduces its durability by 1.</Typography>
+            <Typography><b>Flurry:</b> After a successful hit, you may spend 1 advantage to hit with this weapon again.This can be done x times where x is the rank of this trait.</Typography>
           </AccordionDetails>
         </Accordion>
         <Accordion>

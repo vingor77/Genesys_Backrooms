@@ -19,6 +19,7 @@ import PlayerFunctions from './Main_Pages/playerFunctions'
 import Login from './Components/login'
 import NotLoggedIn from './Components/notLoggedIn'
 import SignUp from './Components/signUp'
+import SetBonuses from './Main_Pages/setBonuses'
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/notLoggedIn' element={<NotLoggedIn />} />
           <Route path='/signUp' element={<SignUp />} />
+          <Route path='/sets' element={<SetBonuses />} />
         </Routes>
       </Router>
     </>

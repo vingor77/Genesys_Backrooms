@@ -43,14 +43,16 @@ export default function ArmorItem(props) {
           <Chip label={"Price: " + props.currArmor.price}></Chip>
         </Stack>
         <Typography>{props.currArmor.description}</Typography>
+        <br />
         <Box textAlign='left'>
+          <Typography>Repair skill: {props.currArmor.repairSkill}</Typography>
           <Typography>Durability: {props.currArmor.durability}</Typography>
           <Typography>Melee defense: {defenses[0]}</Typography>
           <Typography>Ranged defense: {defenses[1]}</Typography>
           <Typography>Soak: {props.currArmor.soak}</Typography>
           <Typography>Encumbrance: {props.currArmor.encumbrance}</Typography>
           <Typography>Specials: {specials}</Typography>
-          <Typography>Set bonus: {props.currArmor.setBonus}</Typography>
+          <Typography>Set bonus: <b>{props.currArmor.setBonus}</b></Typography>
         </Box>
         {props.currArmor.anomalousEffect !== "None" ?
           <Button size="small" onClick={() => setAnomalousDisplayed(true)} variant="outlined">Display Anomalous Effect</Button>

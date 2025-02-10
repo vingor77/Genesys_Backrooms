@@ -14,7 +14,7 @@ export default function Navbar() {
   const [anchor, setAnchor] = useState(null);
 
   const generalInfoMenu = ['Crafting', 'Interest', 'Quests', 'Phenomena'];
-  const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons"];
+  const objectMenu = ['Armor', 'Mundane', "Objects", "Weapons", "Sets"];
   const DMInfoMenu = ['Entities', 'Groups', 'Levels', 'Outposts', 'Bethal'];
 
   const signOut = async () => {

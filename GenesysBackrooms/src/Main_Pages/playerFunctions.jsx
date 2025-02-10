@@ -25,6 +25,7 @@ export default function PlayerFunctions() {
     description: ""
   })
   const [tick, setTick] = useState(0);
+  const [effects, setEffects] = useState(null);
 
   const getFromDB = () => {
     const q = query(collection(db, 'Timers'), orderBy("time", "desc"));
@@ -124,6 +125,7 @@ export default function PlayerFunctions() {
       let empty = true;
       querySnapshot.forEach((doc) => {
         setPage(doc.data());
+        setEffects(doc.data().effects);
         empty = false;
       })
       if(empty) {
@@ -131,7 +133,8 @@ export default function PlayerFunctions() {
           playerName: localStorage.getItem('loggedIn'),
           gear: {head: "", chest: "", arms: "", legs: "", feet: ""},
           jewelry: {earrings: "", choker: "", bracelet: "", leftRing: "", rightRing: ""},
-          resources: [{name: "", remaining: "", maximum: ""}]
+          resources: [{name: "", remaining: "", maximum: ""}],
+          effects: {exhaustion: '0', sanity: '0', encumbrance: '0', disease: '0', wretchedCycle: '0', brawn: '0'}
         })
       }
     })
@@ -166,7 +169,8 @@ export default function PlayerFunctions() {
           leftRing: page.jewelry.leftRing,
           rightRing: page.jewelry.rightRing
         },
-        resources: resources
+        resources: resources,
+        effects: page.effects
       }
     });
 
@@ -187,7 +191,8 @@ export default function PlayerFunctions() {
         playerName: localStorage.getItem('loggedIn'),
         gear: gear,
         jewelry: page.jewelry,
-        resources: page.resources
+        resources: page.resources,
+        effects: page.effects
       })
     }
 
@@ -203,7 +208,8 @@ export default function PlayerFunctions() {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: jewelry,
-        resources: page.resources
+        resources: page.resources,
+        effects: page.effects
       })
     }
 
@@ -270,7 +276,8 @@ export default function PlayerFunctions() {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: page.jewelry,
-        resources: resources
+        resources: resources,
+        effects: page.effects
       })
     }
 
@@ -288,7 +295,8 @@ export default function PlayerFunctions() {
         playerName: localStorage.getItem('loggedIn'),
         gear: page.gear,
         jewelry: page.jewelry,
-        resources: resources
+        resources: resources,
+        effects: page.effects
       })
     }
 
@@ -324,9 +332,9 @@ export default function PlayerFunctions() {
                 <TextFieldElement fullWidth control={control} name="gear.feet" label='Feet' onChange={(event) => gearChange(event, "feet")} />
               </Stack>
               <Stack gap={1} width={{sm: '100%', md: '50%'}}>
-                <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Earrings' onChange={(event) => jewelryChange(event, "earrings")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Choker' onChange={(event) => jewelryChange(event, "choker")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Bracelet' onChange={(event) => jewelryChange(event, "bracelet")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Ears' onChange={(event) => jewelryChange(event, "earrings")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Neck' onChange={(event) => jewelryChange(event, "choker")} />
+                <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Wrist' onChange={(event) => jewelryChange(event, "bracelet")} />
                 <TextFieldElement fullWidth control={control} name="jewelry.leftRing" label='Left Ring' onChange={(event) => jewelryChange(event, "leftRing")} />
                 <TextFieldElement fullWidth control={control} name="jewelry.rightRing" label='Right Ring' onChange={(event) => jewelryChange(event, "rightRing")} />
               </Stack>
@@ -420,6 +428,148 @@ export default function PlayerFunctions() {
     }
   }
 
+  const updateEffects = () => {
+    setDoc(doc(db, 'Equipped', localStorage.getItem('loggedIn').toUpperCase()), {
+      playerName: localStorage.getItem('loggedIn'),
+      gear: page.gear,
+      jewelry: page.jewelry,
+      resources: page.resources,
+      effects: effects
+    })
+  }
+
+  const DisplayExhaustion = () => {
+    const exhaustionEffects = [
+      'No Effect', 
+      'Add two setback dice to all physical checks.', 
+      'Your maximum maneuvers per turn is reduced to one.', 
+      'Add one difficulty to all physical checks.',
+      'Your wound threshold is halved.',
+      'You are immobilized.',
+      'You are dead.'
+    ];
+
+    return (
+      <Box>
+        {exhaustionEffects.map((effect, index) => {
+          if(index <= effects.exhaustion) {
+            return <Typography>{index + 1}: {effect}</Typography>
+          }
+        })}
+      </Box>
+    )
+  }
+
+  const DisplayDisease = () => {
+    const diseaseEffects = [
+      'No Effect', 
+      'Symptoms are non-existent.', 
+      'One of your limbs slows down as the blood vessels become more restricted from blood clots. While at this stage or above, you have a critical injury with a rating of 96.', 
+      'Your blood vessels are now compromised to a severe degree and you begin to bleed from your orifices. You lose your free maneuver per turn, may only take either an action or maneuver per turn, and you gain 1 (unsoakable) wound per action taken.',
+      'Your body can no longer keep up and you lose access to your limbs. Upon reaching this stage, one of your limbs becomes necrotic and you cannot use it. For each stage gained passed 4, another limb becomes necrotic. If all 4 major limbs (arms and legs) are necrotic and you would gain another level of this disease, you die.'
+    ];
+
+    return (
+      <Box>
+        {diseaseEffects.map((effect, index) => {
+          if(index <= effects.disease) {
+            return <Typography>{index + 1}:  {effect}</Typography>
+          }
+        })}
+      </Box>
+    )
+  }
+
+  const DisplayWretched = () => {
+    const wretchedEffects = [
+      'No Effect', 
+      'You begin to itch and develop a rash similar to when touching poison ivy. Also, the disease will attempt to alter your mental state. Immediately roll a difficulty 4 sanity check. On a fail, you recieve a permanent level of sanity until cleansed of this disease.', 
+      'You lose your ability to speak clearly and you begin to lose your strength. While on Stage 2, you add 2 setback dice to all social checks and you treat your brawn and agility characteristics as though they were 1 lower.', 
+      'The final stage. You decay to a point where you can no longer speak, rest, eat or drink on your own. You ooze brown sludge from all orifices that burn anybody it touches for 5 damage. Immediately when reaching this stage and every 24 hours afterwards, you must succeed on a difficulty 1 + previous successes resilience check or fully transform into a Wretch.',
+    ];
+
+    return (
+      <Box>
+        {wretchedEffects.map((effect, index) => {
+          if(index <= effects.wretchedCycle) {
+            return <Typography>{index + 1}:  {effect}</Typography>
+          }
+        })}
+      </Box>
+    )
+  }
+
+  const DisplaySanity = () => {
+    let count = 0;
+
+    const sanityEffects = [
+      'No Effect', 
+      'You recieve a setback dice to all social skills',
+      'None',
+      'You recieve a difficulty dice to all social skills',
+      'None',
+      'You recieve a setback dice to all non-social skills',
+      'None',
+      'You recieve a difficulty dice to all non-social skills',
+      'Whenever you would recieve strain damage, you recieve an additional 1',
+      'Your strain threshold is halved',
+      'You treat all skills as though they were tier 0'
+    ];
+
+    return (
+      <Box>
+        {sanityEffects.map((effect, index) => {
+          if(index <= effects.sanity && sanityEffects[index] !== 'None') {
+            count++;
+            return <Typography>{count}:  {effect}</Typography>
+          }
+        })}
+      </Box>
+    )
+  }
+
+  const DisplayEncumbrance = () => {
+    const encumbrance = parseInt(effects.encumbrance);
+    const brawn = parseInt(effects.brawn);
+    const maxEncumbrance = parseInt(5 + brawn);
+
+    if(encumbrance <= maxEncumbrance) return <Typography>No detriment</Typography>
+    else if(encumbrance > maxEncumbrance && encumbrance < (maxEncumbrance + brawn)) return <Typography>You add {encumbrance - maxEncumbrance} setback dice to all brawn and agility checks.</Typography>
+    else return <Typography>You add {encumbrance - maxEncumbrance} setback dice to all brawn and agility checks and all maneuvers now cost strain.</Typography>
+  }
+
+  const DisplayEffects = () => {
+    return (
+      <Box>
+        <Button onClick={updateEffects} variant="outlined">Confirm</Button>
+        <Stack gap={1} padding={2}>
+          <TextField type="number" label='Exhaustion Level' value={effects.exhaustion} variant="outlined" onChange={(e) => setEffects({...effects, exhaustion: e.target.value})} sx={{width: '300px'}}/>
+          <DisplayExhaustion />
+        </Stack>
+        <Stack gap={1} padding={2}>
+          <TextField type="number" label='The Disease Level' value={effects.disease} variant="outlined" onChange={(e) => setEffects({...effects, disease: e.target.value})} sx={{width: '300px'}} />
+          <DisplayDisease />
+        </Stack>
+        <Stack gap={1} padding={2}>
+          <TextField type="number" label='The Wretched Cycle Level' value={effects.wretchedCycle} variant="outlined" onChange={(e) => setEffects({...effects, wretchedCycle: e.target.value})} sx={{width: '300px'}} />
+          <DisplayWretched />
+        </Stack>
+        <Stack gap={1} padding={2}>
+          <TextField type="number" label='Sanity Level' value={effects.sanity} variant="outlined" onChange={(e) => setEffects({...effects, sanity: e.target.value})} sx={{width: '300px'}} />
+          <DisplaySanity />
+        </Stack>
+        <Stack gap={1} padding={2}>
+          <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
+            <TextField type="number" label='Encumbrance' value={effects.encumbrance} variant="outlined" onChange={(e) => setEffects({...effects, encumbrance: e.target.value})} sx={{width: '300px'}} />
+            <TextField type="number" label='Brawn' value={effects.brawn} variant="outlined" onChange={(e) => setEffects({...effects, brawn: e.target.value})} sx={{width: '300px'}} />
+            <TextField type="number" label='Max Encumbrance' value={parseInt(effects.brawn) + 5} variant="outlined" sx={{width: '300px'}} disabled/>
+          </Stack>
+         <DisplayEncumbrance />
+        </Stack>
+      </Box>
+    )
+  }
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
       <Box padding={2}>
@@ -427,6 +577,7 @@ export default function PlayerFunctions() {
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label='Gear and Resources'/>
           <Tab label='Timers' />
+          <Tab label='Effects' />
         </Tabs>
 
         {tabValue === 0 ?
@@ -578,6 +729,11 @@ export default function PlayerFunctions() {
           </Stack>
         </Box>
         :
+          ""
+        }
+        {tabValue === 2 ?
+          <DisplayEffects />
+        : 
           ""
         }
       </Box>
