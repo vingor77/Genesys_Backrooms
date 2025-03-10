@@ -36,6 +36,9 @@ export default function Bethal() {
   const [toxicLevels, setToxicLevels] = useState(-1);
   const [updatingRoom, setUpdatingRoom] = useState([]);
   const [open, setOpen] = useState([]);
+  const [targets, setTargets] = useState([]); //Can only ever be 1 bracken, 1 ghost girl.
+  const [attacking, setAttacking] = useState([]); //Bracken first, ghost girl second.
+  const [shipIntegrity, setShipIntegrity] = useState([]);
 
   const mapSizes = [21, 18, 32, 18, 36, 23, 32, 40, 21];
   const quotas = [130, 236, 361, 517, 717, 973, 1300, 1700, 2205, 2811, 3536, 4392, 5392, 5392, 6548, 7873, 9380];
@@ -312,7 +315,8 @@ export default function Bethal() {
         connections: [],
         lightsOn: 5,
         lightsOff: 5,
-        toxicity: 0
+        toxicity: 0,
+        explored: true
       }
     ];
     const maxScrap = Math.floor(Math.random() * (moon.maxScrap - moon.minScrap + 1) + moon.minScrap);
@@ -349,7 +353,8 @@ export default function Bethal() {
         connections: [],
         lightsOn: 5,
         lightsOff: 5,
-        toxicity: 0
+        toxicity: 0,
+        explored: false
       }
       determineTraps(currTraps, roomList, moon, i); //DONE
       currScrap = determineScrap(currScrap, maxScrap, roomList, moon, i); //DONE
@@ -434,6 +439,7 @@ export default function Bethal() {
     setNightSpawned([]);
     setFloodLevel(0);
     setToxicLevels(Math.floor(Math.random() * 11));
+    setTargets([]);
   }
 
   const handleDayChange = () => {
@@ -454,6 +460,20 @@ export default function Bethal() {
     setPrevMoon(currMoon);
     setFloodLevel(0);
     setToxicLevels(Math.floor(Math.random() * 11));
+    setTargets([]);
+
+    //Add in when day advances, there is a 30% chance each piece of the ship loses 1 integrity.
+    const tempArr = [...shipIntegrity];
+    for(let i = 0; i < tempArr.length; i++) {
+      if(tempArr[i] > 0) {
+        const degradeChance = Math.floor(Math.random() * 100) + 1;
+        if(degradeChance <= 30) {
+          tempArr[i] = tempArr[i] - 1;
+          break;
+        }
+      }
+    }
+    setShipIntegrity(tempArr);
   }
 
   const handleRoundChange = (index, moon) => {
@@ -542,6 +562,25 @@ export default function Bethal() {
       }
     }
 
+    const attackTurns = [...attacking];
+    for(let i = 0; i < entityLocations.length; i++) {
+      if(entityLocations[i].name === 'Bracken' && entityLocations[i].spawned === true && entityLocations[i].alive === true) {
+        if(attackTurns[0] - 1 < 0) {
+          attackTurns[0] = 5;
+          alert('Bracken Attacks ' + targets[0]);
+        }
+        else attackTurns[0] = (attackTurns[0] - 1);
+      }
+      if(entityLocations[i].name === 'Ghost Girl' && entityLocations[i].spawned === true && entityLocations[i].alive === true) {
+        if(attackTurns[1] - 1 < 0) {
+          attackTurns[1] = 10;
+          alert('Ghost Girl Attacks ' + targets[1]);
+        }
+        else attackTurns[1] = attackTurns[1] - 1;
+      }
+    }
+
+    setAttacking(attackTurns);
     setRound(currRound);
     setTime({
       minute: currMin,
@@ -881,8 +920,26 @@ export default function Bethal() {
       return;
     }
 
+    let movement = -1;
+    for(let i = 0; i < entityLocations.length; i++) {
+      if(entityLocations[i].name === 'Bracken' && targets[0] === entityLocations[index].name) {
+        movement = i;
+        break;
+      }
+      if(entityLocations[i].name === 'Ghost Girl' && targets[1] === entityLocations[index].name) {
+        movement = i; 
+        break;
+      }
+    }
+
     const tempArr = [...entityLocations];
     tempArr[index].roomNum = updatingRoom[index];
+    if(movement > -1) tempArr[movement].roomNum = updatingRoom[index];
+    if(tempArr[index].player) {
+      const tempRoomDataArr = [...roomData];
+      tempRoomDataArr[updatingRoom[index]].explored = true;
+      setRoomData(tempRoomDataArr);
+    }
     setEntityLocations(tempArr);
   }
 
@@ -898,7 +955,15 @@ export default function Bethal() {
     setOpen(tempArr);
   }
 
+  const handleIntegrityReset = (index) => {
+    const tempArr = [...shipIntegrity];
+    tempArr[index] = 3;
+    setShipIntegrity(tempArr);
+  }
+
   const Moon = () => {
+    const shipPieces = ['Teleporter', 'Inverse Teleporter', 'Console', 'Navigation System'];
+
     return (
       <Box>
         <Drawer open={moonList} onClick={() => setMoonList(false)} anchor="top" sx={{width: {xs: '20%', md: '12%'}}}>
@@ -918,6 +983,7 @@ export default function Bethal() {
             return (
               moon.name === currMoon ?
                 <Box>
+                  {shipIntegrity.length === 0 ? setShipIntegrity([3, 3, 3, 3]) : ''}
                   <Stack direction='row' spacing={2}>
                     <Box>
                       <Button variant="contained" onClick={() => setMoonList(true)}>Show moons</Button>
@@ -932,9 +998,20 @@ export default function Bethal() {
                       {day % 3 === 0 ? <Typography variant="h5">Day: {day} (Quota Deadline)</Typography> : <Typography variant="h5">Day: {day < 0 ? 0 : day}</Typography>}
                       <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
                       <Typography>Corrosion level: {toxicLevels}</Typography>
-                      {weather[index] === 'Flooded' ? <DisplayFloodLevel /> : ""}
-                      {weather[index] === 'Foggy' ? <DisplayFogLevel /> : ""}
+                      {weather[index] === 'Flooded' || weather[index] === 'Flooded?' ? <DisplayFloodLevel /> : ""}
+                      {weather[index] === 'Foggy' || weather[index] === 'Foggy?' ? <DisplayFogLevel /> : ""}
                       <Button variant="contained" onClick={() => handleRoundChange(index, moon)}>Advance Round</Button>
+                      <br />
+                      <br />
+                      <Divider>Ship Integrity</Divider>
+                      {shipIntegrity.map((part, index) => {
+                        return (
+                          <Stack direction='row' key={index} justifyContent='space-between'>
+                            <Typography key={index}>{shipPieces[index]}: {part}</Typography>
+                            <Button onClick={() => handleIntegrityReset(index)} variant="outlined" size="small">Repair</Button>
+                          </Stack>
+                        )
+                      })}
                     </Box>
                     <Box width='33%'>
                       <Divider>Outside Entities</Divider>
@@ -979,7 +1056,7 @@ export default function Bethal() {
                                                 <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
                                                 <Stack direction='row'>
                                                   <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
-                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size - 1)}>Update</Button>
+                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
                                                 </Stack>
                                               </Card>
                                             </Box>
@@ -995,8 +1072,29 @@ export default function Bethal() {
                                                 <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
                                                 <Stack direction='row'>
                                                   <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
-                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size - 1)}>Update</Button>
+                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
                                                 </Stack>
+                                                <br />
+                                                {loc.name === 'Bracken' ?
+                                                  <Stack direction='row'>
+                                                    {targets[0] === undefined ? setTargets(['Player ' + (Math.floor(Math.random() * 4) + 1).toString(), targets[1]]) : ''}
+                                                    {attacking[0] === undefined ? setAttacking([5, attacking[1]]) : ''}
+                                                    <TextField label='Current Target' onChange={(e) => setTargets(['Player ' + e.target.value, targets[1]])} value={targets[0]} key={index}></TextField>
+                                                    <Typography>Turns till attack: {attacking[0]}</Typography>
+                                                  </Stack>
+                                                :
+                                                  ''
+                                                }
+                                                {loc.name === 'Ghost Girl' ?
+                                                  <Stack direction='row'>
+                                                    {targets[1] === undefined ? setTargets([targets[0], 'Player ' + (Math.floor(Math.random() * 4) + 1).toString()]) : ''}
+                                                    {attacking[1] === undefined ? setAttacking([attacking[0], 10]) : ''}
+                                                    <TextField label='Current Target' onChange={(e) => setTargets([targets[0], 'Player ' + e.target.value])} value={targets[1]} key={index}></TextField>
+                                                    <Typography>Turns till attack: {attacking[1]}</Typography>
+                                                  </Stack>
+                                                :
+                                                  ''
+                                                }
                                               </Card>
                                             </Box>
                                           }
@@ -1109,6 +1207,9 @@ export default function Bethal() {
     localStorage.setItem("mapGenerated", mapGenerated);
     localStorage.setItem("nightSpawned", JSON.stringify(nightSpawned));
     localStorage.setItem('toxicLevels', toxicLevels);
+    localStorage.setItem('targets', JSON.stringify(targets));
+    localStorage.setItem('attacks', JSON.stringify(attacking));
+    localStorage.setItem('shipIntegrity', JSON.stringify(shipIntegrity));
   }
 
   const retrieveLocalStorage = () => {
@@ -1131,6 +1232,9 @@ export default function Bethal() {
     if(JSON.parse(localStorage.getItem("roomData")) !== null && roomData.length === 0) setRoomData(JSON.parse(localStorage.getItem("roomData")));
     if(JSON.parse(localStorage.getItem("chosenDayEntities")) !== null && chosenDayEntities.length === 0) setChosenDayEntities(JSON.parse(localStorage.getItem("chosenDayEntities")));
     if(JSON.parse(localStorage.getItem("chosenNightEntities")) !== null && chosenNightEntities.length === 0) setChosenNightEntities(JSON.parse(localStorage.getItem("chosenNightEntities")));
+    if(JSON.parse(localStorage.getItem("targets")) !== null && targets.length === 0) setTargets(JSON.parse(localStorage.getItem("targets")));
+    if(JSON.parse(localStorage.getItem("attacks")) !== null && attacking.length === 0) setAttacking(JSON.parse(localStorage.getItem("attacks")));
+    if(JSON.parse(localStorage.getItem("shipIntegrity")) !== null && shipIntegrity.length === 0) setTargets(JSON.parse(localStorage.getItem("shipIntegrity")));
 
     if(dataRetrieved === false) setDataRetrieved(true);
   }

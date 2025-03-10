@@ -47,17 +47,17 @@ export default function EntityItem(props) {
       <br />
       <Typography textAlign='left'><b>Talents:</b></Typography>
       {talents.map((talent, index) => {
-        return <Typography textAlign='left'>{index + 1}. {talent}</Typography>
+        return <Typography textAlign='left'><b>{index + 1}.</b> {talent}</Typography>
       })}
       <br />
       <Typography textAlign='left'><b>Abilities:</b></Typography>
       {abilities.map((ability, index) => {
-        return <Typography textAlign='left'>{index + 1}. {ability}</Typography>
+        return <Typography textAlign='left'><b>{index + 1}.</b> {ability}</Typography>
       })}
       <br />
       <Typography textAlign='left'><b>Actions:</b></Typography>
       {actions.map((action, index) => {
-        return <Typography textAlign='left'>{index + 1}. {action}</Typography>
+        return <Typography textAlign='left'><b>{index + 1}.</b> {action}</Typography>
       })}
       <br />
       <Typography textAlign='left'><b>Equipment:</b> {equipment}</Typography>

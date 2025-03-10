@@ -1,11 +1,13 @@
 import { Box, Card, Checkbox, Chip, Divider, Stack, Typography } from "@mui/material";
+import { useState } from "react";
 
 export default function Room(props) {
+  const explored= props.data.explored ? 'green' : 'red';
   let connections = '';
   const traps = !props.data.landmine && !props.data.spikeTrap && !props.data.turret && !props.data.lockedDoor;
 
   return (
-    <Card variant="outlined" sx={{width: {xs: '100%', md: '350px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '500px', padding: 1}}>
+    <Card variant="outlined" sx={{border: 3, borderColor: explored, width: {xs: '100%', md: '350px'}, textAlign: 'center', overflow: 'auto', height: '500px', padding: 1}}>
       <Stack direction='row' justifyContent="space-around">
         <Typography sx={{fontWeight: 'bold'}}>{props.data.roomType}</Typography>
         <Chip label={'Room: ' + props.data.roomNum} />

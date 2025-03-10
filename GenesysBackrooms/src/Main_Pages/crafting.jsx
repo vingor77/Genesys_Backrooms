@@ -10,17 +10,20 @@ export default function Crafting() {
   const [difficulty, setDifficulty] = useState('None');
   const [name, setName] = useState('');
 
-  const data = [{"name":"Worn Sack","components":"Mobile Vacuum Cleaner's Debris Container (Object 83)/A worn down bag of some kind","skills":"Crafting (General)","difficulty":"5","attempts":1,"description":"A sack with dirt and grime on it. This bag can store an infinite amount, so long as the item fits within the openening. Anything within the bag no longer factors into your total encumbrance.","hidden":"Yes","dynamicMaterial":"None"},
-    {"name":"Armorer's Tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft armor and other metal objects that aren't weapons or jewelry. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Blacksmith Tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft weapons. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Goldsmith Tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft jewelry and anything with gems. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Leatherworker's Tools","components":"Component 1/Component 2/Mystery Component","skills":"Leatherworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft anything to do with leather. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Weaver's Tools","components":"Component 1/Component 2/Mystery Component","skills":"Leatherworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft anything to do with cloth or fibers. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Alchemist Tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to craft concoctions and potions. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Carpenter Tools","components":"Component 1/Component 2/Mystery Component","skills":"Crafting (General)","difficulty":"Varies","attempts":3,"description":"Tools used to craft anything involving wood as the primary substance. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Culinarian Tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking/Leatherworking","difficulty":"Varies","attempts":3,"description":"Tools used to cook. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Miner tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to gather rock, ore, and water deposits. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"},
-    {"name":"Botanist tools","components":"Component 1/Component 2/Mystery Component","skills":"Metalworking","difficulty":"Varies","attempts":3,"description":"Tools used to gather natural resources. Each tool has an added effect based on the material used to craft it as listed below.","hidden":"Yes","dynamicMaterial":"Solid Silence!You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used.!5"}]
+  const data = [{"name":"Worn Sack","components":"Mobile Vacuum Cleaner's Debris Container (Object 83)/A worn down bag of some kind","skills":"Crafting (General)","baseDifficulty":"5","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None","difficultyModifier":"None","attemptsModifier":"None","dynamicEffect":"None"},
+    {"name":"Armorer's Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"1","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Blacksmith Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Goldsmith Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Leatherworker's Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Leatherworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Weaver's Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Leatherworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Alchemist Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Carpenter Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Crafting (General)","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Culinarian Tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking/Leatherworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Miner tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Botanist tools","components":"Component 1/Component 2/Dynamic Component","skills":"Metalworking","baseDifficulty":"Dynamic","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None/Solid Silence/Piece 2","difficultyModifier":"0/+2/+4","attemptsModifier":"0/-1/-2","dynamicEffect":"Nothing/You gain an explosive boost to anything you craft with this tool. You automatically gain 1 success per beaker used in the creation of the Solid Silence used/Effect 3"},
+    {"name":"Ring of Retries","components":"Component 1/Component 2/Component 3","skills":"Metalworking","baseDifficulty":"5","baseAttempts":2,"hidden":"Yes","dynamicMaterial":"None","difficultyModifier":"None","attemptsModifier":"None","dynamicEffect":"None"},
+    {"name":"Ring of Teleportation","components":"Component 1/Component 2/Component 3","skills":"Metalworking","baseDifficulty":"5","baseAttempts":1,"hidden":"Yes","dynamicMaterial":"None","difficultyModifier":"None","attemptsModifier":"None","dynamicEffect":"None"},
+    {"name":"Helm of Invulnerability","components":"Component 1/Component 2/Component 3","skills":"Metalworking","baseDifficulty":"3","baseAttempts":3,"hidden":"Yes","dynamicMaterial":"None","difficultyModifier":"None","attemptsModifier":"None","dynamicEffect":"None"}]
 
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
@@ -28,11 +31,13 @@ export default function Crafting() {
         name: data[i].name,
         components: data[i].components,
         skills: data[i].skills,
-        difficulty: data[i].difficulty,
-        attempts: data[i].attempts,
-        description: data[i].description,
+        baseDifficulty: data[i].baseDifficulty,
+        baseAttempts: data[i].baseAttempts,
         hidden: data[i].hidden,
-        dynamicMaterial: data[i].dynamicMaterial
+        dynamicMaterial: data[i].dynamicMaterial,
+        difficultyModifier: data[i].difficultyModifier,
+        attemptsModifier: data[i].attemptsModifier,
+        dynamicEffect: data[i].dynamicEffect
       })
     }
   }
@@ -60,7 +65,7 @@ export default function Crafting() {
       <Stack direction='row' flexWrap='wrap' gap={1}>
         {crafts.map((item) => {
           if(
-            (item.difficulty === difficulty || difficulty === 'None') &&
+            (item.baseDifficulty === difficulty || difficulty === 'None') &&
             (item.name.toUpperCase().includes(name.toUpperCase()) || name === '') &&
             (item.hidden === 'No' || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN')
           ) {
@@ -84,7 +89,7 @@ export default function Crafting() {
                 <Input value={name} onChange={e => setName(e.target.value)} placeholder='Enter Name'></Input>
               </Box>
               <Box>
-                <InputLabel id='difficulty'>Select Difficulty</InputLabel>
+                <InputLabel id='difficulty'>Select Base Difficulty</InputLabel>
                 <Select
                   id='difficulty'
                   onChange={e => setDifficulty(e.target.value)}
@@ -97,7 +102,6 @@ export default function Crafting() {
                   <MenuItem value='3'>3</MenuItem>
                   <MenuItem value='4'>4</MenuItem>
                   <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='Varies'>Varied</MenuItem>
                 </Select>
               </Box>
             </Stack>

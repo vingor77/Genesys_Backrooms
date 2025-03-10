@@ -1,4 +1,4 @@
-import { Box, Button, Card, Chip, Divider, Modal, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Card, Chip, Dialog, Divider, Modal, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import { useState } from "react";
@@ -22,43 +22,56 @@ export default function ObjectItem(props) {
 
     return (
       <Box>
-        <Modal
+        <Dialog
           open={tableShown}
           onClose={() => setTableShown(false)}
-          aria-labelledby="table"
-          aria-describedby="tableDescription"
         >
-          <Box sx={{position: "absolute", top: '50%', left: '50%', width: 550, bgcolor: 'background.paper', padding: 1, transform: 'translate(-50%, -50%)', maxHeight: '900px', overflow: 'auto'}}>
+          <Box>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
-                  {innerKeys.map((key) => {
-                    return (
-                      <TableCell>{key}</TableCell>
-                    )
-                  })}
+                  {props.currObject.name === 'Tarot Deck' ?
+                    <TableCell>Effect</TableCell>
+                  :
+                    innerKeys.map((key) => {
+                      return (
+                        <TableCell>{key}</TableCell>
+                      )
+                    })
+                  }
                 </TableRow>
               </TableHead>
               <TableBody>
-                {keys.map((key, index) => {
-                  return (
-                    <TableRow>
-                      <TableCell>{key}</TableCell>
-                      {Object.keys(tableData[keys[index]]).map((k, index2) => {
-                        return (
-                          <>
-                            <TableCell>{tableData[keys[index]][Object.keys(tableData[keys[index]])[index2]]}</TableCell>
-                          </>
-                        )
-                      })}
-                    </TableRow>
-                  )
-                })}
+                {props.currObject.name === 'Tarot Deck' ?
+                  Object.keys(tableData).map((_, index) => {
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>{keys[index]}</TableCell>
+                        <TableCell>{tableData[keys[index]]}</TableCell>
+                      </TableRow>
+                    )
+                  })
+                :
+                  keys.map((key, index) => {
+                    return (
+                      <TableRow>
+                        <TableCell>{key}</TableCell>
+                        {Object.keys(tableData[keys[index]]).map((k, index2) => {
+                          return (
+                            <>
+                              <TableCell>{tableData[keys[index]][Object.keys(tableData[keys[index]])[index2]]}</TableCell>
+                            </>
+                          )
+                        })}
+                      </TableRow>
+                    )
+                  })
+                }
               </TableBody>
             </Table>
           </Box>
-        </Modal>
+        </Dialog>
       </Box>
     )
   }
@@ -78,9 +91,6 @@ export default function ObjectItem(props) {
           <Typography variant="body2" textAlign='justify' marginLeft={1}>{props.currObject.description}</Typography>
         </Box>
         <br />
-        <Divider />
-        <br />
-        <Typography textAlign='left'>Spawn locations: {spawns}</Typography>
         <Stack direction='row' justifyContent="space-around">
           {props.currObject.table !== 'No' ? <Button size="small" onClick={() => setTableShown(true)} variant="outlined">Show table</Button> : ""}
           {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' && props.currObject.shownToPlayer ?

@@ -756,6 +756,7 @@ export default function Information() {
             <Typography><b>Activate Teleporter:</b> You may use either teleporter. This may be used as an out-of-turn incidental.</Typography>
             <Typography><b>Access system:</b> You may make an Access Systems check to gain access to a trap within the facility. The difficulty varies based on the trap. This uses the Computers skill and initiates a hacking encounter.</Typography>
             <Typography><b>Override Security Program:</b> You may make a difficulty 2 Computers check to override a security program within the system after succeeding on an Access System action. You must get at least as many successes as the program's strength to succeed. Failure may result in some negative effect.</Typography>
+            <Typography><b>Repair system:</b> You may make a repair check to any system of component of the ship.</Typography>
             <br />
             <Divider>Maneuvers</Divider>
             <Typography><b>Toggle Trap [NOT USED. ARCHIVE.]</b> You may activate or deactivate any trap within the facility. A maximum of 3 may be activated at once. One must be re-enabled before disabling a 4th.</Typography>
@@ -883,6 +884,59 @@ export default function Information() {
             <Typography><b>Assault Rifle</b> Ranged; Damage 8; Critical 3; Range [Long]; Auto-fire. Weight is 24.</Typography>
           </Box>
         )
+      case 10:
+        return (
+          <Box maxHeight='750px' overflow='auto'>
+            <Typography>As the days go on and the ship systems are used more, the components may begin to break. The ship is split into four categories: Teleporter, Inverse Teleporter, Console, and Nav System.</Typography>
+            <br />
+            <Divider>Component Responsibilities</Divider>
+            <Typography><b>Teleporter:</b> Teleports players to the ship.</Typography>
+            <Typography><b>Inverse Teleporter:</b> Teleports players inside the facility.</Typography>
+            <Typography><b>Console:</b> Planetary scanning, Entity Scanning, Hacking related things, and messages.</Typography>
+            <Typography><b>Nav System:</b> Movement from orbit to a specified moon, Weather types on the different moons, and Map view of players.</Typography>
+            <br />
+            <Divider>Integrity Loss</Divider>
+            <Typography textAlign='center'>Each component has 3 integrity, degrading as time goes on. Below are the effects on each section and are accumulative.</Typography>
+            <br />
+            <Stack direction='row'>
+              <Box width='25%'>
+                <Typography><b>Teleporter</b></Typography>
+                <Typography>3: Works as expected.</Typography>
+                <Typography>2: Has a 20% chance to not work but still places the teleporter on cooldown.</Typography>
+                <Typography>1: Has a 50% chance to teleport an unintented entity or player.</Typography>
+                <Typography>0: Does not work.</Typography>
+              </Box>
+              <Box width='25%'>
+                <Typography><b>Inverse Teleporter</b></Typography>
+                <Typography>3: Works as expected.</Typography>
+                <Typography>2: Has a 20% chance to not work but still places the teleporter on cooldown.</Typography>
+                <Typography>1: Has a 50% chance to teleport the player outside of the facility at a random location.</Typography>
+                <Typography>0: Does not work.</Typography>
+              </Box>
+              <Box width='25%'>
+                <Typography><b>Console</b></Typography>
+                <Typography>3: Works as expected.</Typography>
+                <Typography>2: Planetary scanning now may display unknown entities or false reports.</Typography>
+                <Typography>1: The difficulty of all hacking actions is increased by 1. Also, messages may now be half the size.</Typography>
+                <Typography>0: The Seek Entity and Planetary Scan maneuvers no longer work.</Typography>
+              </Box>
+              <Box>
+                <Typography><b>Nav System</b></Typography>
+                <Typography>3: Works as expected.</Typography>
+                <Typography>2: Weather types are no longer displayed.</Typography>
+                <Typography>1: The map no longer displays. The Scan Room maneuver no longer works.</Typography>
+                <Typography>0: When traveling to a different moon, it is now selected at random.</Typography>
+              </Box>
+            </Stack>
+            <br />
+            <Divider>Repairing</Divider>
+            <Typography>Components of the ship may be repaired for 50 credits per integrity. Credits or scrap may be used to repair, but any excess value within the scrap is not returned. The skill used to repair is based on the scrap used as credits.</Typography>
+            <Typography>Actual credits and glass use the Crafting [General] skill.</Typography>
+            <Typography>Metal uses the Metalworking skill.</Typography>
+            <Typography>Leather, cloth, fabric, and plastic use the Leatherworking skill.</Typography>
+            <Typography>If more than one type is present, the type donating the most credit value determines the skill used.</Typography>
+          </Box>
+        )
     }
   }
 
@@ -998,6 +1052,7 @@ export default function Information() {
               <Tab label='Suit Effects' />
               <Tab label='Additional Rules' />
               <Tab label='Weapon Statistics' />
+              <Tab label='Ship Integrity' />
             </Tabs>
             <DisplayLethalTab />
           </AccordionDetails>
