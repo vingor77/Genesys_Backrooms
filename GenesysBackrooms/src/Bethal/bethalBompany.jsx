@@ -148,18 +148,84 @@ export default function Bethal() {
           if(temp <= moon.scrapSpawns[0].roll) {
             for(let k = 0; k < scraps.length; k++) {
               if(scraps[k].name.toUpperCase() === moon.scrapSpawns[0].name.toUpperCase()) {
-                scrapToAdd = scraps[k];
+                scrapToAdd = {...scraps[k]};
                 const val = Math.floor((Math.random() * (scraps[k].maxVal - scraps[k].minVal) + scraps[k].minVal));
                 scrapToAdd.value = val;
+                scrapToAdd.grabbed = false;
+
+                const effectVal = Math.floor(Math.random() * 28);
+                switch(effectVal) {
+                  case 0:
+                    scrapToAdd.weight = scrapToAdd.weight + 20;
+                    scrapToAdd.color = '#7300ff';
+                    break;
+                  case 1:
+                    scrapToAdd.weight = scrapToAdd.weight - 20;
+                    if(scrapToAdd.weight < 0) scrapToAdd.weight = 0;
+                    scrapToAdd.color = '#ff00ae';
+                    break;
+                  case 2:
+                    scrapToAdd.color = '#ff0000';
+                    break;
+                  case 3:
+                    scrapToAdd.color = '#00e1ff';
+                    break;
+                  case 4:
+                    scrapToAdd.color = '#002aff';
+                    break;
+                  case 5:
+                    scrapToAdd.color = '#04ff00';
+                    scrapToAdd.value *= 2;
+                    break;
+                  case 6:
+                    scrapToAdd.color = '#ff9500';
+                    scrapToAdd.value /= 2;
+                    break;
+                  default:
+                    scrapToAdd.color = 'Black';
+                }
               }
             }
           }
           else if(temp > moon.scrapSpawns[j - 1].roll && temp <= moon.scrapSpawns[j].roll) {
             for(let k = 0; k < scraps.length; k++) {
               if(scraps[k].name.toUpperCase() === moon.scrapSpawns[j].name.toUpperCase()) {
-                scrapToAdd = scraps[k];
+                scrapToAdd = {...scraps[k]};
                 const val = Math.floor((Math.random() * (scraps[k].maxVal - scraps[k].minVal) + scraps[k].minVal));
                 scrapToAdd.value = val;
+                scrapToAdd.grabbed = false;
+
+                const effectVal = Math.floor(Math.random() * 28);
+                switch(effectVal) {
+                  case 0:
+                    scrapToAdd.weight = scrapToAdd.weight + 20;
+                    scrapToAdd.color = '#7300ff';
+                    break;
+                  case 1:
+                    scrapToAdd.weight = scrapToAdd.weight - 20;
+                    if(scrapToAdd.weight < 0) scrapToAdd.weight = 0;
+                    scrapToAdd.color = '#ff00ae';
+                    break;
+                  case 2:
+                    scrapToAdd.color = '#ff0000';
+                    break;
+                  case 3:
+                    scrapToAdd.color = '#00e1ff';
+                    break;
+                  case 4:
+                    scrapToAdd.color = '#002aff';
+                    break;
+                  case 5:
+                    scrapToAdd.color = '#04ff00';
+                    scrapToAdd.value *= 2;
+                    break;
+                  case 6:
+                    scrapToAdd.color = '#ff9500';
+                    scrapToAdd.value /= 2;
+                    break;
+                  default:
+                    scrapToAdd.color = 'Black';
+                }
               }
             }
           }
@@ -311,12 +377,15 @@ export default function Bethal() {
         spikeTrap: false,
         turret: false,
         lockedDoor: false,
+        doorType: [false, false, false, false], //Door, Door Open?, Secure Door, Secure Door Open?
         placed: false,
         connections: [],
         lightsOn: 5,
         lightsOff: 5,
         toxicity: 0,
-        explored: true
+        explored: true,
+        doorConnections: ["", "", "", ""],
+        doorProcessed: false
       }
     ];
     const maxScrap = Math.floor(Math.random() * (moon.maxScrap - moon.minScrap + 1) + moon.minScrap);
@@ -348,13 +417,15 @@ export default function Bethal() {
         spikeTrap: false,
         turret: false,
         lockedDoor: false,
-        doorType: 'Locked Door',
+        doorType: [false, false, false, false],
         placed: false,
         connections: [],
         lightsOn: 5,
         lightsOff: 5,
         toxicity: 0,
-        explored: false
+        explored: false,
+        doorConnections: ["", "", "", ""],
+        doorProcessed: false
       }
       determineTraps(currTraps, roomList, moon, i); //DONE
       currScrap = determineScrap(currScrap, maxScrap, roomList, moon, i); //DONE
@@ -373,27 +444,46 @@ export default function Bethal() {
       else if(toxicChance > 95 && toxicChance <= 99) roomList[i].toxicity = Math.floor(Math.random() * 3) + 7;
       else roomList[i].toxicity = 10;
 
-      if(Math.floor(Math.random() * 101) <= 20) {
-        if(Math.floor(Math.random() * 101) <= 50) {
-          roomList[i].doorType = 'Closed Secure Door';
+      if(Math.floor(Math.random() * 101) <= 10) {
+        const effectVal = Math.floor(Math.random() * 28);
+        let color = "Black";
+        switch(effectVal) {
+          case 0:
+            color = '#7300ff';
+            break;
+          case 1:
+            color = '#ff00ae';
+            break;
+          case 2:
+            color = '#ff0000';
+            break;
+          case 3:
+            color = '#00e1ff';
+            break;
+          case 4:
+            color = '#002aff';
+            break;
+          case 5:
+            color = '#04ff00';
+            break;
+          case 6:
+            color = '#ff9500';
+            break;
+          default:
+            color = 'Black';
         }
-        else {
-          roomList[i].doorType = 'Open Secure Door';
-        }
-      }
-      else {
-        roomList[i].doorType = 'Locked Door';
-      }
 
-      if(Math.floor(Math.random() * 101) <= 5) roomList[i].scraps.push(
-        {
-          name: 'Key',
-          conductive: true,
-          twoHanded: false,
-          value: 3,
-          weight: 0
-        }
-      );
+        roomList[i].scraps.push(
+          {
+            name: 'Key',
+            conductive: true,
+            twoHanded: false,
+            value: color === '#04ff00' ? 6 : color === '#ff9500' ? 1 : 3,
+            weight: color === '#7300ff' ? 20 : 0,
+            color: color
+          }
+        );
+      }
     }
 
     determineOutsideEntities(moon, dayEntityList, nightEntityList);
@@ -961,6 +1051,79 @@ export default function Bethal() {
     setShipIntegrity(tempArr);
   }
 
+  const toggleGrabbed = (scrap, index) => {
+    const temp = [...roomData];
+    for(let i = 0; i < temp[entityLocations[index].roomNum].scraps.length; i++) {
+      if(scrap.name === temp[entityLocations[index].roomNum].scraps[i].name) {
+        temp[entityLocations[index].roomNum].scraps[i].grabbed = !temp[entityLocations[index].roomNum].scraps[i].grabbed;
+      }
+    }
+    setRoomData(temp);
+  }
+
+  const toggleTrap = (trap, index) => {
+    const temp = [...roomData];
+    temp[index][trap] = !temp[index][trap];
+    setRoomData(temp);
+  }
+
+  const selectDoor = (data, index) => {
+    if(data.connections.length === 0) return;
+
+    const selection = data.connections[Math.floor(Math.random() * data.connections.length)]
+    const temp = [...roomData];
+
+    let doorType = '';
+    if(Math.floor(Math.random() * 101) <= 33) {
+      if(Math.floor(Math.random() * 101) <= 50) {
+        temp[index].doorType[2] = true;
+        doorType = 'Closed Secure';
+      }
+      else {
+        temp[index].doorType[3] = true;
+        doorType = 'Open Secure';
+      }
+    }
+    else {
+      if(Math.floor(Math.random() * 101) <= 50) {
+        temp[index].doorType[0] = true;
+        doorType = 'Locked';
+      }
+      else {
+        temp[index].doorType[1] = true;
+        doorType = 'Unlocked';
+      }
+    }
+
+    //doorType = [Locked Door, Unlocked Door, Closed Secure Door, Open Secure Door]
+    let door = 0;
+    for(let i = 0; i < 4; i++) {
+      if(temp[index].doorType[i]) {
+        if(temp[index].doorConnections[i] === '') {
+          temp[index].doorConnections[i] = doorType + '[' + selection + ']';
+        }
+        else {
+          if(!temp[selection].doorConnections[door].includes('[' + index + ']')) {
+            temp[index].doorConnections[i] += '[' + selection + ']';
+          }
+        }
+
+        door = i;
+        break;
+      }
+    }
+    temp[index].doorProcessed = true;
+
+    if(temp[selection].doorType[door] === true && !temp[selection].doorConnections[door].includes('[' + index + ']')) {
+      temp[selection].doorConnections[door] += '[' + index + ']';
+    }
+    else temp[selection].doorConnections[door] = doorType + '[' + index + ']';
+
+    temp[selection].doorType[door] = true;
+
+    setRoomData(temp);
+  }
+
   const Moon = () => {
     const shipPieces = ['Teleporter', 'Inverse Teleporter', 'Console', 'Navigation System'];
 
@@ -982,7 +1145,7 @@ export default function Bethal() {
           {moons.map((moon, index) => {
             return (
               moon.name === currMoon ?
-                <Box>
+                <Box key={index}>
                   {shipIntegrity.length === 0 ? setShipIntegrity([3, 3, 3, 3]) : ''}
                   <Stack direction='row' spacing={2}>
                     <Box>
@@ -1047,22 +1210,44 @@ export default function Bethal() {
                                     {entityLocations.map((loc, index) => {
                                       return (
                                         <Box key={index}>
-                                          {loc.player ? 
+                                          {loc.player ?
                                             <Box>
-                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '220px', padding: 2}}>
+                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '310px', padding: 2}}>
                                                 <Typography><b>{loc.name}</b></Typography>
                                                 <br />
                                                 <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
                                                 <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
                                                 <Stack direction='row'>
-                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
+                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]}></TextField>
                                                   <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
+                                                </Stack>
+                                                <br />
+                                                <Divider>Toggles</Divider>
+                                                <br />
+                                                <Stack direction='row'>
+                                                  {roomData[loc.roomNum].scraps.map((scrap) => {
+                                                    return (
+                                                      scrap.name === 'Key' ?
+                                                        "" 
+                                                      :
+                                                        <Button variant="outlined" key={index} color={scrap.grabbed ? 'success' : 'error'} onClick={() => toggleGrabbed(scrap, index)} size="small" sx={{width: '50%'}}>{scrap.name}</Button>
+                                                    )
+                                                  })}
+                                                </Stack>
+                                                <Stack direction='row'>
+                                                  <Stack width='50%'>
+                                                    <Button variant="outlined" color={roomData[loc.roomNum].landmine ? 'success' : 'error'} onClick={() => toggleTrap('landmine', loc.roomNum)} size="small">Landmine</Button>
+                                                    <Button variant="outlined" color={roomData[loc.roomNum].turret ? 'success' : 'error'} onClick={() => toggleTrap('turret', loc.roomNum)} size="small">Turret</Button>
+                                                  </Stack>
+                                                  <Stack width='50%'>
+                                                    <Button variant="outlined" color={roomData[loc.roomNum].spikeTrap ? 'success' : 'error'} onClick={() => toggleTrap('spikeTrap', loc.roomNum)} size="small">Spikes</Button>
+                                                  </Stack>
                                                 </Stack>
                                               </Card>
                                             </Box>
                                           :
                                             <Box>
-                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '220px', padding: 2}}>
+                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '310px', padding: 2}}>
                                                 <Button onClick={() => handleOpen(index)}>{roomData[index + 1].entity.name}</Button>
                                                 <Dialog open={open[index]} onClose={() => handleClose(index)}>
                                                   <InsideEntity data={roomData[index + 1]}/>
@@ -1071,7 +1256,7 @@ export default function Bethal() {
                                                 <Typography>Spawned:{loc.spawned ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
                                                 <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
                                                 <Stack direction='row'>
-                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]} key={index}></TextField>
+                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]}></TextField>
                                                   <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
                                                 </Stack>
                                                 <br />
@@ -1079,7 +1264,7 @@ export default function Bethal() {
                                                   <Stack direction='row'>
                                                     {targets[0] === undefined ? setTargets(['Player ' + (Math.floor(Math.random() * 4) + 1).toString(), targets[1]]) : ''}
                                                     {attacking[0] === undefined ? setAttacking([5, attacking[1]]) : ''}
-                                                    <TextField label='Current Target' onChange={(e) => setTargets(['Player ' + e.target.value, targets[1]])} value={targets[0]} key={index}></TextField>
+                                                    <TextField label='Current Target' onChange={(e) => setTargets(['Player ' + e.target.value, targets[1]])} value={targets[0]}></TextField>
                                                     <Typography>Turns till attack: {attacking[0]}</Typography>
                                                   </Stack>
                                                 :
@@ -1089,7 +1274,7 @@ export default function Bethal() {
                                                   <Stack direction='row'>
                                                     {targets[1] === undefined ? setTargets([targets[0], 'Player ' + (Math.floor(Math.random() * 4) + 1).toString()]) : ''}
                                                     {attacking[1] === undefined ? setAttacking([attacking[0], 10]) : ''}
-                                                    <TextField label='Current Target' onChange={(e) => setTargets([targets[0], 'Player ' + e.target.value])} value={targets[1]} key={index}></TextField>
+                                                    <TextField label='Current Target' onChange={(e) => setTargets([targets[0], 'Player ' + e.target.value])} value={targets[1]}></TextField>
                                                     <Typography>Turns till attack: {attacking[1]}</Typography>
                                                   </Stack>
                                                 :
@@ -1106,8 +1291,20 @@ export default function Bethal() {
                               }
                             </Box>
                           <br />
+                          <Box border='1px solid black' width='35%' padding={2}>
+                            <Divider>Scrap Color Key</Divider>
+                            <Typography color='#7300ff'>Increase weight by 20.</Typography>
+                            <Typography color='#ff00ae'>Reduce weight by 20.</Typography>
+                            <Typography color='#ff0000'>Take 1d6 wounds and 1d4 strain upon pickup.</Typography>
+                            <Typography color='#00e1ff'>Heal 1d6 wounds and 1d4 strain upon pickup.</Typography>
+                            <Typography color='#002aff'>The scrap has a 5% chance to explode upon pickup dealing 10 wounds and destroying the scrap.</Typography>
+                            <Typography color='#04ff00'>Double the value.</Typography>
+                            <Typography color='#ff9500'>Halve the value.</Typography>
+                          </Box>
+                          <br />
                           <Stack direction='row' flexWrap='wrap' gap={1}>
-                            {roomData.map((data) => {
+                            {roomData.map((data, index) => {
+                              {data.lockedDoor === true && data.doorProcessed === false ? selectDoor(data, index) : ''}
                               return <Room data={data}/>
                             })}
                           </Stack>
@@ -1234,7 +1431,7 @@ export default function Bethal() {
     if(JSON.parse(localStorage.getItem("chosenNightEntities")) !== null && chosenNightEntities.length === 0) setChosenNightEntities(JSON.parse(localStorage.getItem("chosenNightEntities")));
     if(JSON.parse(localStorage.getItem("targets")) !== null && targets.length === 0) setTargets(JSON.parse(localStorage.getItem("targets")));
     if(JSON.parse(localStorage.getItem("attacks")) !== null && attacking.length === 0) setAttacking(JSON.parse(localStorage.getItem("attacks")));
-    if(JSON.parse(localStorage.getItem("shipIntegrity")) !== null && shipIntegrity.length === 0) setTargets(JSON.parse(localStorage.getItem("shipIntegrity")));
+    if(JSON.parse(localStorage.getItem("shipIntegrity")) !== null && shipIntegrity.length === 0) setShipIntegrity(JSON.parse(localStorage.getItem("shipIntegrity")));
 
     if(dataRetrieved === false) setDataRetrieved(true);
   }
