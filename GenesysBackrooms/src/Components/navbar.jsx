@@ -31,7 +31,7 @@ export default function Navbar() {
     localStorage.setItem('loggedIn', 'false');
   }
 
-  const isLoggedIn = localStorage.getItem('loggedIn') !== '';
+  const isLoggedIn = localStorage.getItem('loggedIn') !== '' && localStorage.getItem('loggedIn') !== 'false';
 
   return (
     <AppBar position="static" sx={{ backgroundColor: '#1976d2', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>

@@ -1,7 +1,8 @@
-import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
+import React, { useState, useEffect } from 'react';
+import { Box,Button,Card,CardContent,CardHeader,FormControl,Grid,InputLabel,MenuItem,Paper,Select,Stack,TextField,Typography,Chip,IconButton,Collapse,Badge,Fab,Snackbar,Alert,alpha,useTheme } from '@mui/material';
+import  {Search,FilterList,Clear,Add,ExpandMore,ExpandLess,Inventory,Tune } from '@mui/icons-material';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { useState } from "react";
 import ArmorItem from "../Components/armorItem";
 import NotLoggedIn from "../Components/notLoggedIn";
 
@@ -11,8 +12,501 @@ export default function Armor() {
   const [price, setPrice] = useState('-1');
   const [rarity, setRarity] = useState('-1');
   const [setBonus, setSetBonus] = useState('-');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+  
+  const theme = useTheme();
+  const data = [];
 
-  const data = [{"name":"Chainmail","defense":"0/0","soak":2,"encumbrance":3,"price":5,"rarity":4,"specials":"None","setBonus":"None","spawnLocations":"All","durability":3,"description":"A basic set of chainmail armor","anomalousEffect":"None","equippedTo":"Chest","hidden":"No","repairSkill":"Armorer"},
+  const showToast = (message, severity = 'success') => {
+    setToast({ open: true, message, severity });
+  };
+
+  const hideToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast({ ...toast, open: false });
+  };
+
+  const addData = async () => {
+    try {
+      for(let i = 0; i < data.length; i++) {
+        await setDoc(doc(db, 'Armor', data[i].name), {
+          name: data[i].name,
+          defense: data[i].defense,
+          soak: data[i].soak,
+          encumbrance: data[i].encumbrance,
+          price: data[i].price,
+          rarity: data[i].rarity,
+          specials: data[i].specials,
+          setBonus: data[i].setBonus,
+          spawnLocations: data[i].spawnLocations,
+          durability: data[i].durability,
+          description: data[i].description,
+          anomalousEffect: data[i].anomalousEffect,
+          equippedTo: data[i].equippedTo,
+          hidden: data[i].hidden,
+          repairSkill: data[i].repairSkill
+        });
+      }
+      showToast('Armor data added successfully!');
+    } catch (error) {
+      showToast('Error adding armor data', 'error');
+      console.error(error);
+    }
+  };
+
+  const getFromDB = () => {
+    const q = query(collection(db, 'Armor'), orderBy("name", "asc"));
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const queryData = [];
+      querySnapshot.forEach((doc) => {
+        queryData.push(doc.data());
+      });
+      setArmor(queryData);
+      setLoading(false);
+    });
+
+    return () => { unsub(); };
+  };
+
+  const DisplayItems = () => {
+    let empty = true;
+    const filteredItems = [];
+
+    armor.forEach((item, index) => {
+      if(
+        (item.hidden === 'No' || localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN') &&
+        (item.price === parseInt(price) || (item.price >= 10 && parseInt(price) === 10) || price === '-1') &&
+        (item.rarity === parseInt(rarity) || rarity === '-1') &&
+        (item.name.toUpperCase().includes(name.toUpperCase()) || name === '' || item.setBonus.toUpperCase().includes(name.toUpperCase())) &&
+        (item.setBonus === setBonus || setBonus === '-')
+      ) {
+        empty = false;
+        filteredItems.push(<ArmorItem key={index} currArmor={item} />);
+      }
+    });
+
+    return (
+      <Box sx={{ mt: 3 }}>
+        {empty ? (
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center', 
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.info.main, 0.05),
+              border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`
+            }}
+          >
+            <Search sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No armor found
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Try adjusting your search criteria to find more items
+            </Typography>
+          </Paper>
+        ) : (
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Inventory color="primary" />
+              Found {filteredItems.length} armor piece{filteredItems.length !== 1 ? 's' : ''}
+            </Typography>
+            <Stack direction="row" flexWrap="wrap" gap={2}>
+              {filteredItems}
+            </Stack>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const getSetBonusList = () => {
+    const bonusList = [];
+    for(let i = 0; i < armor.length; i++) {
+      let count = 0;
+      for(let j = 0; j < bonusList.length; j++) {
+        if(armor[i].setBonus === bonusList[j]) {
+          count++;
+          break;
+        }
+      }
+      if(count === 0 && armor[i].setBonus !== 'None') bonusList.push(armor[i].setBonus);
+    }
+
+    return bonusList.map((bonus, index) => (
+      <MenuItem value={bonus} key={index}>{bonus}</MenuItem>
+    ));
+  };
+
+  const clearAllFilters = () => {
+    setName('');
+    setPrice('-1');
+    setRarity('-1');
+    setSetBonus('-');
+    showToast('All filters cleared');
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (name !== '') count++;
+    if (price !== '-1') count++;
+    if (rarity !== '-1') count++;
+    if (setBonus !== '-') count++;
+    return count;
+  };
+
+  const getFilteredCount = () => {
+    return armor.filter((item) => 
+      (item.hidden === 'No' || localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN') &&
+      (item.price === parseInt(price) || (item.price >= 10 && parseInt(price) === 10) || price === '-1') &&
+      (item.rarity === parseInt(rarity) || rarity === '-1') &&
+      (item.name.toUpperCase().includes(name.toUpperCase()) || name === '' || item.setBonus.toUpperCase().includes(name.toUpperCase())) &&
+      (item.setBonus === setBonus || setBonus === '-')
+    ).length;
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("loggedIn") !== 'false') {
+      getFromDB();
+    }
+  }, []);
+
+  if (localStorage.getItem("loggedIn") === 'false') {
+    return <NotLoggedIn />;
+  }
+
+  const FilterSection = () => (
+    <Box>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="price-label">Price Range</InputLabel>
+            <Select
+              labelId="price-label"
+              label="Price Range"
+              onChange={(e) => setPrice(e.target.value)}
+              value={price}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Price</MenuItem>
+              <MenuItem value="0">Free (0)</MenuItem>
+              <MenuItem value="1">Budget (1)</MenuItem>
+              <MenuItem value="2">Cheap (2)</MenuItem>
+              <MenuItem value="3">Affordable (3)</MenuItem>
+              <MenuItem value="4">Moderate (4)</MenuItem>
+              <MenuItem value="5">Standard (5)</MenuItem>
+              <MenuItem value="6">Premium (6)</MenuItem>
+              <MenuItem value="7">Expensive (7)</MenuItem>
+              <MenuItem value="8">Luxury (8)</MenuItem>
+              <MenuItem value="9">Elite (9)</MenuItem>
+              <MenuItem value="10">Legendary (10+)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="rarity-label">Rarity Level</InputLabel>
+            <Select
+              labelId="rarity-label"
+              label="Rarity Level"
+              onChange={(e) => setRarity(e.target.value)}
+              value={rarity}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Rarity</MenuItem>
+              <MenuItem value="0">Common (0)</MenuItem>
+              <MenuItem value="1">Uncommon (1)</MenuItem>
+              <MenuItem value="2">Rare (2)</MenuItem>
+              <MenuItem value="3">Epic (3)</MenuItem>
+              <MenuItem value="4">Legendary (4)</MenuItem>
+              <MenuItem value="5">Mythic (5)</MenuItem>
+              <MenuItem value="6">Divine (6)</MenuItem>
+              <MenuItem value="7">Cosmic (7)</MenuItem>
+              <MenuItem value="8">Transcendent (8)</MenuItem>
+              <MenuItem value="9">Omnipotent (9)</MenuItem>
+              <MenuItem value="10">Absolute (10)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="set-label">Set Bonus</InputLabel>
+            <Select
+              labelId="set-label"
+              label="Set Bonus"
+              onChange={(e) => setSetBonus(e.target.value)}
+              value={setBonus}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-">No Set Filter</MenuItem>
+              <MenuItem value="None">No Set Bonus</MenuItem>
+              {getSetBonusList()}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={clearAllFilters}
+            startIcon={<Clear />}
+            disabled={getActiveFilterCount() === 0}
+            sx={{ 
+              borderRadius: 2,
+              py: 1.5
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Grid>
+      </Grid>
+
+      {/* Active Filters Display */}
+      {getActiveFilterCount() > 0 && (
+        <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Active Filters:
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {name && (
+              <Chip
+                label={`Name: "${name}"`}
+                onDelete={() => setName('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {price !== '-1' && (
+              <Chip
+                label={`Price: ${price === '10' ? '10+' : price}`}
+                onDelete={() => setPrice('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {rarity !== '-1' && (
+              <Chip
+                label={`Rarity: ${rarity}`}
+                onDelete={() => setRarity('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {setBonus !== '-' && (
+              <Chip
+                label={`Set: ${setBonus}`}
+                onDelete={() => setSetBonus('-')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+          </Stack>
+        </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
+      {/* Header */}
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          mb: 4, 
+          borderRadius: 3, 
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white'
+        }}
+      >
+        <Box sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          p: { xs: 2, sm: 3 }
+        }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Armor Collection
+              </Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                Browse and search through available armor pieces
+              </Typography>
+            </Box>
+            {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
+              <Button 
+                onClick={addData}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  }
+                }}
+              >
+                Add Data
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 3 }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              Loading armor collection...
+            </Typography>
+          </Box>
+        ) : armor.length > 0 ? (
+          <Box>
+            {/* Search and Filter Section */}
+            <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
+              <CardHeader
+                title={
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Tune color="primary" />
+                      <Typography variant="h6" fontWeight="bold">
+                        Search & Filter
+                      </Typography>
+                      {getActiveFilterCount() > 0 && (
+                        <Chip 
+                          label={`${getActiveFilterCount()} active`} 
+                          color="primary" 
+                          size="small"
+                        />
+                      )}
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip 
+                        label={`${getFilteredCount()} items`} 
+                        color="success" 
+                        variant="outlined"
+                        size="small"
+                      />
+                      <IconButton 
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                        sx={{ 
+                          display: { xs: 'flex', md: 'none' },
+                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                        }}
+                      >
+                        <Badge badgeContent={getActiveFilterCount()} color="error">
+                          {filtersOpen ? <ExpandLess /> : <ExpandMore />}
+                        </Badge>
+                      </IconButton>
+                    </Box>
+                  </Box>
+                }
+                sx={{ pb: 1 }}
+              />
+              <CardContent>
+                {/* Search Bar - Always Visible */}
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Search by name or set bonus..."
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: name && (
+                        <IconButton size="small" onClick={() => setName('')}>
+                          <Clear />
+                        </IconButton>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
+                        },
+                        '&.Mui-focused': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+
+                {/* Filters - Collapsible on Mobile */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                  <FilterSection />
+                </Box>
+                
+                <Collapse in={filtersOpen} sx={{ display: { xs: 'block', md: 'none' } }}>
+                  <FilterSection />
+                </Collapse>
+              </CardContent>
+            </Card>
+
+            {/* Results */}
+            <DisplayItems />
+          </Box>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              No armor data available
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Mobile Filter Fab */}
+      <Fab
+        color="primary"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', md: 'none' }
+        }}
+        onClick={() => setFiltersOpen(!filtersOpen)}
+      >
+        <Badge badgeContent={getActiveFilterCount()} color="error">
+          <FilterList />
+        </Badge>
+      </Fab>
+
+      {/* Toast Notifications */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={hideToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={hideToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}
+
+/*
+[{"name":"Chainmail","defense":"0/0","soak":2,"encumbrance":3,"price":5,"rarity":4,"specials":"None","setBonus":"None","spawnLocations":"All","durability":3,"description":"A basic set of chainmail armor","anomalousEffect":"None","equippedTo":"Chest","hidden":"No","repairSkill":"Armorer"},
     {"name":"Plate Armor","defense":"1/1","soak":2,"encumbrance":4,"price":7,"rarity":6,"specials":"None","setBonus":"None","spawnLocations":"All","durability":3,"description":"A basic set of plate armor","anomalousEffect":"None","equippedTo":"Chest","hidden":"No","repairSkill":"Armorer"},
     {"name":"Leather Armor","defense":"0/0","soak":1,"encumbrance":2,"price":4,"rarity":3,"specials":"None","setBonus":"None","spawnLocations":"All","durability":3,"description":"A basic set of leather armor","anomalousEffect":"None","equippedTo":"Chest","hidden":"No","repairSkill":"Leatherworker"},
     {"name":"Tesla Coil","defense":"0/3","soak":0,"encumbrance":2,"price":9,"rarity":8,"specials":"None","setBonus":"None","spawnLocations":"All","durability":2,"description":"A small piece of blue metal in a square surrounded by black wires","anomalousEffect":"None","equippedTo":"Chest","hidden":"No","repairSkill":"Goldsmith"},
@@ -68,158 +562,4 @@ export default function Armor() {
     {"name":"Armwraps of power","defense":"0/0","soak":1,"encumbrance":0,"price":8,"rarity":7,"specials":"Anomalous","setBonus":"None","spawnLocations":"All","durability":100,"description":"A pre-wrapped section of gauze.","anomalousEffect":"Your brawl attacks have the auto-hit trait.","equippedTo":"Arms","hidden":"No","repairSkill":"Weaver"},
     {"name":"Earrings of Insight","defense":"1/1","soak":0,"encumbrance":0,"price":3,"rarity":2,"specials":"None","setBonus":"None","spawnLocations":"All","durability":2,"description":"A vibrant orange set of jeweled earrings","anomalousEffect":"None","equippedTo":"Ears","hidden":"No","repairSkill":"Goldsmith"},
     {"name":"Ring of Retries","defense":"0/0","soak":0,"encumbrance":0,"price":80,"rarity":10,"specials":"Anomalous/Breaking","setBonus":"None","spawnLocations":"None","durability":100,"description":"A black ring with a bronze beetle.","anomalousEffect":"Whenever you would fail a check, you may reroll it. Each time you use this, the ring loses one durability and cannot be repaired.","equippedTo":"Ring","hidden":"Yes","repairSkill":"None"}]
-    
-  const addData = () => {
-    for(let i = 0; i < data.length; i++) {
-      setDoc(doc(db, 'Armor', data[i].name), {
-        name: data[i].name,
-        defense: data[i].defense,
-        soak: data[i].soak,
-        encumbrance: data[i].encumbrance,
-        price: data[i].price,
-        rarity: data[i].rarity,
-        specials: data[i].specials,
-        setBonus: data[i].setBonus,
-        spawnLocations: data[i].spawnLocations,
-        durability: data[i].durability,
-        description: data[i].description,
-        anomalousEffect: data[i].anomalousEffect,
-        equippedTo: data[i].equippedTo,
-        hidden: data[i].hidden,
-        repairSkill: data[i].repairSkill
-      })
-    }
-  }
-
-  const getFromDB = () => {
-    const q = query(collection(db, 'Armor'), orderBy("name", "asc"));
-
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      setArmor(queryData);
-    })
-
-    return () => {
-      unsub();
-    }
-  }
-
-  const DisplayItems = () => {
-    let empty = true;
-
-    return (
-      <Stack direction='row' flexWrap='wrap' gap={1}>
-        {armor.map((item) => {
-          if(
-            (item.hidden === 'No' || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN') &&
-            (item.price === parseInt(price) || (item.price >= 10 && parseInt(price) === 10) || price === '-1') &&
-            (item.rarity === parseInt(rarity) || rarity === '-1') &&
-            (item.name.toUpperCase().includes(name.toUpperCase()) || name === '' || item.setBonus.toUpperCase().includes(name.toUpperCase())) &&
-            (item.setBonus === setBonus || setBonus === '-')
-          ) {
-            empty = false;
-            return <ArmorItem currArmor={item}/>
-          }
-        })}
-        {empty ? <Typography>There is no armor that match your criteria.</Typography> : ""}
-      </Stack>
-    )
-  }
-
-  const getSetBonusList = () => {
-    const bonusList = [];
-
-    for(let i = 0; i < armor.length; i++) {
-      let count = 0;
-      for(let j = 0; j < bonusList.length; j++) {
-        if(armor[i].setBonus === bonusList[j]) {
-          count++;
-          break;
-        }
-      }
-      if(count === 0 && armor[i].setBonus !== 'None') bonusList.push(armor[i].setBonus)
-    }
-
-    return bonusList.map((bonus, index) => {
-      return <MenuItem value={bonus} key={index}>{bonus}</MenuItem>
-    })
-  }
-
-  return (
-    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
-      <Box>
-      <Button onClick={addData}>Add</Button>
-        {armor.length > 0 ?
-          <Box>
-            <Stack direction={{xs: 'column', md: 'row'}} spacing={2} flexWrap='wrap' gap={1} paddingBottom={2}>
-              <Box>
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder='Enter Name'></Input>
-              </Box>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="price">Select Price</InputLabel>
-                <Select
-                  labelId='price'
-                  label={"Select Price"}
-                  onChange={e => setPrice(e.target.value)}
-                  value={price}
-                >
-                  <MenuItem value='-1'>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10+</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="rarity">Select Rarity</InputLabel>
-                <Select
-                  labelId='rarity'
-                  label={"Select Rarity"}
-                  onChange={e => setRarity(e.target.value)}
-                  value={rarity}
-                >
-                  <MenuItem value='-1'>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="rarity">Select Set Bonus</InputLabel>
-                <Select
-                  labelId='setBonus'
-                  label={"Select Set Bonus"}
-                  onChange={e => setSetBonus(e.target.value)}
-                  value={setBonus}
-                >
-                  <MenuItem value='-'>No Set</MenuItem>
-                  {getSetBonusList()}
-                </Select>
-              </FormControl>
-            </Stack>
-            <DisplayItems />
-          </Box>
-        :
-          getFromDB()
-        }
-      </Box>
-  )
-}
+*/

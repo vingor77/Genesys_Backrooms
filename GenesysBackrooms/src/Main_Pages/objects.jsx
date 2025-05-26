@@ -1,24 +1,563 @@
-import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Collapse,
+  Badge,
+  Fab,
+  Snackbar,
+  Alert,
+  alpha,
+  useTheme
+} from "@mui/material";
+import {
+  Search,
+  FilterList,
+  Clear,
+  Add,
+  ExpandMore,
+  ExpandLess,
+  Inventory2,
+  Tune
+} from '@mui/icons-material';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { useState } from "react";
 import ObjectItem from "../Components/objectItem";
 import NotLoggedIn from "../Components/notLoggedIn";
 
-//0-8 is worth 1-9 respectively. 9s and 10s are based on what it is. Any that seem too much to be worth 1, sell or buy it in stacks.
-/*
-  Common: 0/1
-  Uncommon: 2/3
-  Rare: 4/5
-  Very Rare: 6/7
-  Legendary: 8
-  Less than 100: 9
-  One-of-a-kind: 10
-  Artifact: Whatever it feels like
-*/
-
 export default function Objects() {
-  const data = [
+  const [objects, setObjects] = useState([]);
+  const [objectName, setObjectName] = useState('');
+  const [objectNum, setObjectNum] = useState('');
+  const [spawnLocation, setSpawnLocation] = useState('');
+  const [price, setPrice] = useState('-1');
+  const [rarity, setRarity] = useState('-1');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+
+  const theme = useTheme();
+  const data = [];
+
+  const showToast = (message, severity = 'success') => {
+    setToast({ open: true, message, severity });
+  };
+
+  const hideToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast({ ...toast, open: false });
+  };
+
+  const addData = async () => {
+    try {
+      for(let i = 0; i < data.length; i++) {
+        await setDoc(doc(db, 'Objects', data[i].name), {
+          name: data[i].name,
+          description: data[i].description,
+          price: data[i].price,
+          objectNumber: data[i].objectNumber,
+          spawnLocations: data[i].spawnLocations,
+          rarity: data[i].rarity,
+          encumbrance: data[i].encumbrance,
+          table: data[i].table,
+          shownToPlayer: data[i].shownToPlayer
+        });
+      }
+      showToast('Object data added successfully!');
+    } catch (error) {
+      showToast('Error adding object data', 'error');
+      console.error(error);
+    }
+  };
+
+  const getObjectsFromDB = () => {
+    const q = query(collection(db, 'Objects'), orderBy("objectNumber", "asc"));
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const queryData = [];
+      querySnapshot.forEach((doc) => {
+        queryData.push(doc.data());
+      });
+      setObjects(queryData);
+      setLoading(false);
+    });
+
+    return () => { unsub(); };
+  };
+
+  const DisplayObjects = () => {
+    let empty = true;
+    const filteredObjects = [];
+
+    objects.forEach((object, index) => {
+      if(withinParameters(object)) {
+        empty = false;
+        filteredObjects.push(<ObjectItem key={index} currObject={object} mainPage={true} />);
+      }
+    });
+
+    return (
+      <Box sx={{ mt: 3 }}>
+        {empty ? (
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center', 
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.info.main, 0.05),
+              border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`
+            }}
+          >
+            <Search sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No objects found
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Try adjusting your search criteria to find more items
+            </Typography>
+          </Paper>
+        ) : (
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Inventory2 color="primary" />
+              Found {filteredObjects.length} object{filteredObjects.length !== 1 ? 's' : ''}
+            </Typography>
+            <Stack direction="row" flexWrap="wrap" gap={2}>
+              {filteredObjects}
+            </Stack>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const withinParameters = (object) => {
+    const matchesName = object.name.toUpperCase().includes(objectName.toUpperCase()) || objectName === '';
+    const matchesNumber = parseInt(object.objectNumber) === parseInt(objectNum) || objectNum === '';
+    const matchesRarity = object.rarity === parseInt(rarity) || rarity === '-1';
+    const matchesPrice = (price === '10' && object.price >= 10) || 
+                        (price !== '10' && price !== '-1' && object.price === parseInt(price)) || 
+                        price === '-1';
+    const matchesVisibility = object.shownToPlayer || localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
+    
+    let matchesSpawn = true;
+    if (spawnLocation !== '') {
+      matchesSpawn = false;
+      if (object.spawnLocations && Array.isArray(object.spawnLocations)) {
+        matchesSpawn = object.spawnLocations.some(location => 
+          location.toUpperCase().includes(spawnLocation.toUpperCase())
+        );
+      }
+    }
+
+    return matchesName && matchesNumber && matchesRarity && matchesPrice && matchesVisibility && matchesSpawn;
+  };
+
+  const clearAllFilters = () => {
+    setObjectName('');
+    setObjectNum('');
+    setSpawnLocation('');
+    setPrice('-1');
+    setRarity('-1');
+    showToast('All filters cleared');
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (objectName !== '') count++;
+    if (objectNum !== '') count++;
+    if (spawnLocation !== '') count++;
+    if (price !== '-1') count++;
+    if (rarity !== '-1') count++;
+    return count;
+  };
+
+  const getFilteredCount = () => {
+    return objects.filter(object => withinParameters(object)).length;
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("loggedIn") !== 'false') {
+      getObjectsFromDB();
+    }
+  }, []);
+
+  if (localStorage.getItem("loggedIn") === 'false') {
+    return <NotLoggedIn />;
+  }
+
+  const FilterSection = () => (
+    <Box>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6} md={3}>
+          <TextField
+            fullWidth
+            size="small"
+            value={objectNum}
+            onChange={(e) => setObjectNum(e.target.value)}
+            label="Object Number"
+            placeholder="Enter number"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="price-label">Price Range</InputLabel>
+            <Select
+              labelId="price-label"
+              label="Price Range"
+              onChange={(e) => setPrice(e.target.value)}
+              value={price}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Price</MenuItem>
+              <MenuItem value="0">Free (0)</MenuItem>
+              <MenuItem value="1">Budget (1)</MenuItem>
+              <MenuItem value="2">Cheap (2)</MenuItem>
+              <MenuItem value="3">Affordable (3)</MenuItem>
+              <MenuItem value="4">Moderate (4)</MenuItem>
+              <MenuItem value="5">Standard (5)</MenuItem>
+              <MenuItem value="6">Premium (6)</MenuItem>
+              <MenuItem value="7">Expensive (7)</MenuItem>
+              <MenuItem value="8">Luxury (8)</MenuItem>
+              <MenuItem value="9">Elite (9)</MenuItem>
+              <MenuItem value="10">Legendary (10+)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="rarity-label">Rarity Level</InputLabel>
+            <Select
+              labelId="rarity-label"
+              label="Rarity Level"
+              onChange={(e) => setRarity(e.target.value)}
+              value={rarity}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Rarity</MenuItem>
+              <MenuItem value="0">Common (0)</MenuItem>
+              <MenuItem value="1">Uncommon (1)</MenuItem>
+              <MenuItem value="2">Rare (2)</MenuItem>
+              <MenuItem value="3">Epic (3)</MenuItem>
+              <MenuItem value="4">Legendary (4)</MenuItem>
+              <MenuItem value="5">Mythic (5)</MenuItem>
+              <MenuItem value="6">Divine (6)</MenuItem>
+              <MenuItem value="7">Cosmic (7)</MenuItem>
+              <MenuItem value="8">Transcendent (8)</MenuItem>
+              <MenuItem value="9">Omnipotent (9)</MenuItem>
+              <MenuItem value="10">Absolute (10)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={clearAllFilters}
+            startIcon={<Clear />}
+            disabled={getActiveFilterCount() === 0}
+            sx={{ 
+              borderRadius: 2,
+              py: 1.5
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Grid>
+      </Grid>
+
+      {/* Active Filters Display */}
+      {getActiveFilterCount() > 0 && (
+        <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Active Filters:
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {objectName && (
+              <Chip
+                label={`Name: "${objectName}"`}
+                onDelete={() => setObjectName('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {objectNum && (
+              <Chip
+                label={`Number: ${objectNum}`}
+                onDelete={() => setObjectNum('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {spawnLocation && (
+              <Chip
+                label={`Location: "${spawnLocation}"`}
+                onDelete={() => setSpawnLocation('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {price !== '-1' && (
+              <Chip
+                label={`Price: ${price === '10' ? '10+' : price}`}
+                onDelete={() => setPrice('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {rarity !== '-1' && (
+              <Chip
+                label={`Rarity: ${rarity}`}
+                onDelete={() => setRarity('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+          </Stack>
+        </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
+      {/* Header */}
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          mb: 4, 
+          borderRadius: 3, 
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white'
+        }}
+      >
+        <Box sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          p: { xs: 2, sm: 3 }
+        }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Object Collection
+              </Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                Browse and search through available objects
+              </Typography>
+            </Box>
+            {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
+              <Button 
+                onClick={addData}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  }
+                }}
+              >
+                Add Data
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 3 }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              Loading object collection...
+            </Typography>
+          </Box>
+        ) : objects.length > 0 ? (
+          <Box>
+            {/* Search and Filter Section */}
+            <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
+              <CardHeader
+                title={
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Tune color="primary" />
+                      <Typography variant="h6" fontWeight="bold">
+                        Search & Filter
+                      </Typography>
+                      {getActiveFilterCount() > 0 && (
+                        <Chip 
+                          label={`${getActiveFilterCount()} active`} 
+                          color="primary" 
+                          size="small"
+                        />
+                      )}
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip 
+                        label={`${getFilteredCount()} items`} 
+                        color="success" 
+                        variant="outlined"
+                        size="small"
+                      />
+                      <IconButton 
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                        sx={{ 
+                          display: { xs: 'flex', md: 'none' },
+                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                        }}
+                      >
+                        <Badge badgeContent={getActiveFilterCount()} color="error">
+                          {filtersOpen ? <ExpandLess /> : <ExpandMore />}
+                        </Badge>
+                      </IconButton>
+                    </Box>
+                  </Box>
+                }
+                sx={{ pb: 1 }}
+              />
+              <CardContent>
+                {/* Search Bar - Always Visible */}
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    value={objectName}
+                    onChange={(e) => setObjectName(e.target.value)}
+                    placeholder="Search by object name..."
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: objectName && (
+                        <IconButton size="small" onClick={() => setObjectName('')}>
+                          <Clear />
+                        </IconButton>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
+                        },
+                        '&.Mui-focused': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+
+                {/* Filters - Collapsible on Mobile */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                  <FilterSection />
+                </Box>
+                
+                <Collapse in={filtersOpen} sx={{ display: { xs: 'block', md: 'none' } }}>
+                  <FilterSection />
+                </Collapse>
+              </CardContent>
+            </Card>
+
+            {/* Results */}
+            <DisplayObjects />
+          </Box>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              No object data available
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Mobile Filter Fab */}
+      <Fab
+        color="primary"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', md: 'none' }
+        }}
+        onClick={() => setFiltersOpen(!filtersOpen)}
+      >
+        <Badge badgeContent={getActiveFilterCount()} color="error">
+          <FilterList />
+        </Badge>
+      </Fab>
+
+      {/* Toast Notifications */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={hideToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={hideToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}
+
+let tempTable = {
+  "Colombina Mask": {description: "A sleek venetian eye mask, similar to the masks worn in phantom of the opera. These tend to be colorful.", type: "Outstanding", difficulty: "2", effect: 'You become secretive. Your stealth acts as though it is 1 level higher while your discipline acts as though it is 1 level lower.'},
+  "Bauta Mask": {description: "A rectangular full face mask with a pointed chin, defined nose, and eye holes. These tend to be one base color.", type: "Outstanding", difficulty: "2", effect: 'You may only use blunt objects to attack. This means no firearms and no sharp weapons.'},
+  "Pantalone Mask": {description: "A solid color mask with a nose similar to a beak that ends above the mouth.", type: "Outstanding", difficulty: "2", effect: 'All social interaction checks add 1 difficulty.'},
+  "Volto Mask": {description: "A white full face mask with golden swirls on it.", type: "Basic", difficulty: "3", effect: 'Your deception skill acts as though it is 1 level higher. You recieve 2 wounds per round in social encounters.'},
+  "Kitsune Mask": {description: "A half mask that ends above the mouth. It tends to be colorful and resembles that of a fox.", type: "Basic", difficulty: "3", effect: 'Your charm skill acts as though it is 1 level higher but uour negotiation skill acts as though it is 1 level lower.'},
+  "Arlecchino Mask": {description: "A solid color mask that ends above the mouth. It has a large nose and plump cheeks.", type: "Basic", difficulty: "3", effect: 'You cannot stealth, but you recieve an extra free maneuver per turn. This does not count towards your maneuver per turn limit.'},
+  "Buskin Mask": {description: "A tragedy mask.", type: "No", difficulty: "4", effect: 'You automatically gain 3 failures to any check made using cool.'},
+  "Oni Mask": {description: "A full mask, generally red in color, with horns and large fangs around the mouth. This is to resemble a demon.", type: "No", difficulty: "4", effect: 'You involintarily attack any you deem as evil or corrupt.'},
+  "Sock Mask": {description: "A comedy mask.", type: "No", difficulty: "4", effect: 'You involuntarily attack any not smiling whenever you look at them.'},
+}
+
+//console.log(JSON.stringify(tempTable));
+
+/*
+  Colombina: You become secretive. Your stealth acts as though it is 1 level higher while your discipline acts as though it is 1 level lower.
+  Bauta: You may only use blunt objects to attack. This means no firearms and no sharp weapons.
+  Pantalone: All social interaction checks add 1 difficulty.
+  Volto: Your deception skill acts as though it is 1 level higher. You recieve 2 wounds per round in social encounters.
+  Kitsune: Your charm skill acts as though it is 1 level higher but uour negotiation skill acts as though it is 1 level lower.
+  Arlecchino: You cannot stealth, but you recieve an extra free maneuver per turn. This does not count towards your maneuver per turn limit.
+  Buskin: You automatically gain 3 failures to any check made using cool.
+  Oni: You involintarily attack any you deem as evil or corrupt.
+  Sock: You involuntarily attack any not smiling whenever you look at them.
+
+
+  [
     {price: 0, shownToPlayer: false, objectNumber: 31, spawnLocations: ["Beta"], name: "Ouija Board", rarity: 10, table: "No", encumbrance: 0, description: "The Ouija Board allows you to contact the spirits of the dead. The chance of succeeding changes based on how well you knew the person in life. You may speak for 10 minutes should you succeed. You cannot use the Ouija Board more than once every 24 hours."},
     {price: 1, shownToPlayer: false, objectNumber: 15, spawnLocations: ["All"], name: "Firesalt", rarity: 0, table: "No", encumbrance: 0, description: "A small red crystal that when crushed or thrown, it harmlessly explodes while creating a loud crackling sound. Firesalt when heated melts to form a liquid which may be used to purify food and drinks."},
     {price: 2, shownToPlayer: false, objectNumber: 85, spawnLocations: ["Recourse Station", "Beta", "Aries Station", "Pisces Station", "194"], name: "Agrugua Fruit", rarity: 4, table: "No", encumbrance: 0, description: "These look like standard fruit upon inspection but once consumed, it has a far different effect. When consumed, you heal 3 wounds. Should the juices be squeezed into your eyes, you will be able to see in the dark, out to 2 ranges. This fruit is grown exclusively on level 194."},
@@ -96,184 +635,4 @@ export default function Objects() {
     {price: 0, shownToPlayer: false, objectNumber: 97, spawnLocations: ["Beta"], name: "The Everything Machine", rarity: 10, table: 'No', encumbrance: 999, description: "A giant box of wires and terminals in various positions and orientations. This machine is capable of destroying and creating anything but it is more complex and complicatied than you could even imagine."},
     {price: 6, shownToPlayer: false, objectNumber: 24, spawnLocations: ["0", "68", "74", "177", "Station 1", "Station 2", "Station 3", "Area 2"], name: "Wall Mask", rarity: 5, table: '{"Colombina Mask":{"description":"A sleek venetian eye mask, similar to the masks worn in phantom of the opera. These tend to be colorful.","type":"Outstanding","difficulty":"2","effect":"You become secretive. Your stealth acts as though it is 1 level higher while your discipline acts as though it is 1 level lower."},"Bauta Mask":{"description":"A rectangular full face mask with a pointed chin, defined nose, and eye holes. These tend to be one base color.","type":"Outstanding","difficulty":"2","effect":"You may only use blunt objects to attack. This means no firearms and no sharp weapons."},"Pantalone Mask":{"description":"A solid color mask with a nose similar to a beak that ends above the mouth.","type":"Outstanding","difficulty":"2","effect":"All social interaction checks add 1 difficulty."},"Volto Mask":{"description":"A white full face mask with golden swirls on it.","type":"Basic","difficulty":"3","effect":"Your deception skill acts as though it is 1 level higher. You recieve 2 wounds per round in social encounters."},"Kitsune Mask":{"description":"A half mask that ends above the mouth. It tends to be colorful and resembles that of a fox.","type":"Basic","difficulty":"3","effect":"Your charm skill acts as though it is 1 level higher but uour negotiation skill acts as though it is 1 level lower."},"Arlecchino Mask":{"description":"A solid color mask that ends above the mouth. It has a large nose and plump cheeks.","type":"Basic","difficulty":"3","effect":"You cannot stealth, but you recieve an extra free maneuver per turn. This does not count towards your maneuver per turn limit."},"Buskin Mask":{"description":"A tragedy mask.","type":"No","difficulty":"4","effect":"You automatically gain 3 failures to any check made using cool."},"Oni Mask":{"description":"A full mask, generally red in color, with horns and large fangs around the mouth. This is to resemble a demon.","type":"No","difficulty":"4","effect":"You involintarily attack any you deem as evil or corrupt."},"Sock Mask":{"description":"A comedy mask.","type":"No","difficulty":"4","effect":"You involuntarily attack any not smiling whenever you look at them."}}', encumbrance: 0, description: "A mask bolted on the wall, or sometimes next to a corpse on the floor. Whenever you see a mask, you must roll vigilance to not be compelled to put the mask on. The difficulty is determined by the type of mask. If you fail, you must attempt to put the mask on. At the end of each hour, you may attempt the vigilance check again to remove the mask. If another player attempts to remove your mask, you automatically enter combat with said player. The attempting player must succeed on an athletics or coordination check against your coordination in order to succeed."},
   ];
-
-  const addData = () => {
-    for(let i = 0; i < data.length; i++) {
-      setDoc(doc(db, 'Objects', data[i].name), {
-        name: data[i].name,
-        description: data[i].description,
-        price: data[i].price,
-        objectNumber: data[i].objectNumber,
-        spawnLocations: data[i].spawnLocations,
-        rarity: data[i].rarity,
-        encumbrance: data[i].encumbrance,
-        table: data[i].table,
-        shownToPlayer: data[i].shownToPlayer
-      })
-    }
-  }
-
-  const [objects, setObjects] = useState([]);
-  const [objectNum, setObjectNum] = useState('');
-  const [rarity, setRarity] = useState('');
-  const [objectName, setObjectName] = useState('');
-  const [spawnLocation, setSpawnLocation] = useState('');
-  const [price, setPrice] = useState('');
-
-  const getObjectsFromDB = () => {
-    const q = query(collection(db, 'Objects'), orderBy("objectNumber", "asc"));
-
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      setObjects(queryData);
-    })
-
-    return () => {
-      unsub();
-    }
-  }
-
-  const DisplayObjects = () => {
-    const filtered = [];
-
-    for(let i = 0; i < objects.length; i++) {
-      if(withinParameters(i)) {
-        if(spawnLocation === '') {
-          filtered.push(objects[i]);
-        }
-        else {
-          for(let j = 0; j < objects[i].spawnLocations.length; j++) {
-            if(objects[i].spawnLocations[j].toUpperCase().includes(spawnLocation.toUpperCase())) {
-              filtered.push(objects[i]);
-            }
-          }
-        }
-      }
-    }
-
-    let count = 0;
-
-    return (
-      <Stack direction='row' flexWrap='wrap' gap={1}>
-        {filtered.map((object) => {
-          count++;
-          {return <ObjectItem currObject={object} mainPage={true}/>}
-        })}
-        {count === 0 ? <Typography>There are no objects that match your criteria.</Typography> : ""}
-      </Stack>
-    )
-  };
-
-  const withinParameters = (i) => {
-    if(
-      (objects[i].name.toUpperCase().includes(objectName.toUpperCase()) || objectName === '') &&
-      (objects[i].rarity === parseInt(rarity) || rarity === '') &&
-      (parseInt(objects[i].objectNumber) === parseInt(objectNum) || objectNum === '') && 
-      (objects[i].shownToPlayer || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN')
-    ) {
-      if((price === '10' && objects[i].price >= 10) || ((price !== '10' && objects[i].price === parseInt(price)) || price === '')) {
-        return true
-      }
-      else return false
-    }
-    else return false
-  }
-
-  return (
-    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
-      <Box>
-        <Button onClick={addData}>Add data</Button>
-        {objects.length === 0 ?
-          getObjectsFromDB()
-        :
-          <Box>
-            <Stack direction={{xs: 'column', md: 'row'}} spacing={2} flexWrap='wrap' gap={1} paddingBottom={2}>
-              <Box>
-                <Input value={objectName} onChange={e => setObjectName(e.target.value)} placeholder='Enter object name' labelId='Object name'></Input>
-              </Box>
-              <Box>
-                <Input value={objectNum} onChange={e => setObjectNum(e.target.value)} placeholder='Enter object number' labelId='Object number'></Input>
-              </Box>
-              <Box>
-                <Input value={spawnLocation} onChange={e => setSpawnLocation(e.target.value)} placeholder='Enter spawn location' labelId='Spawn location'></Input>
-              </Box>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="price">Select Price</InputLabel>
-                <Select
-                  labelId='price'
-                  label={"Select Price"}
-                  onChange={e => setPrice(e.target.value)}
-                  value={price}
-                >
-                  <MenuItem value=''>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10+</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="rarity">Select Rarity</InputLabel>
-                <Select
-                  labelId='rarity'
-                  label={"Select Rarity"}
-                  onChange={e => setRarity(e.target.value)}
-                  value={rarity}
-                >
-                  <MenuItem value=''>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-            <DisplayObjects />
-          </Box>
-        }
-      </Box>
-  )
-}
-
-let tempTable = {
-  "Colombina Mask": {description: "A sleek venetian eye mask, similar to the masks worn in phantom of the opera. These tend to be colorful.", type: "Outstanding", difficulty: "2", effect: 'You become secretive. Your stealth acts as though it is 1 level higher while your discipline acts as though it is 1 level lower.'},
-  "Bauta Mask": {description: "A rectangular full face mask with a pointed chin, defined nose, and eye holes. These tend to be one base color.", type: "Outstanding", difficulty: "2", effect: 'You may only use blunt objects to attack. This means no firearms and no sharp weapons.'},
-  "Pantalone Mask": {description: "A solid color mask with a nose similar to a beak that ends above the mouth.", type: "Outstanding", difficulty: "2", effect: 'All social interaction checks add 1 difficulty.'},
-  "Volto Mask": {description: "A white full face mask with golden swirls on it.", type: "Basic", difficulty: "3", effect: 'Your deception skill acts as though it is 1 level higher. You recieve 2 wounds per round in social encounters.'},
-  "Kitsune Mask": {description: "A half mask that ends above the mouth. It tends to be colorful and resembles that of a fox.", type: "Basic", difficulty: "3", effect: 'Your charm skill acts as though it is 1 level higher but uour negotiation skill acts as though it is 1 level lower.'},
-  "Arlecchino Mask": {description: "A solid color mask that ends above the mouth. It has a large nose and plump cheeks.", type: "Basic", difficulty: "3", effect: 'You cannot stealth, but you recieve an extra free maneuver per turn. This does not count towards your maneuver per turn limit.'},
-  "Buskin Mask": {description: "A tragedy mask.", type: "No", difficulty: "4", effect: 'You automatically gain 3 failures to any check made using cool.'},
-  "Oni Mask": {description: "A full mask, generally red in color, with horns and large fangs around the mouth. This is to resemble a demon.", type: "No", difficulty: "4", effect: 'You involintarily attack any you deem as evil or corrupt.'},
-  "Sock Mask": {description: "A comedy mask.", type: "No", difficulty: "4", effect: 'You involuntarily attack any not smiling whenever you look at them.'},
-}
-
-//console.log(JSON.stringify(tempTable));
-
-/*
-  Colombina: You become secretive. Your stealth acts as though it is 1 level higher while your discipline acts as though it is 1 level lower.
-  Bauta: You may only use blunt objects to attack. This means no firearms and no sharp weapons.
-  Pantalone: All social interaction checks add 1 difficulty.
-  Volto: Your deception skill acts as though it is 1 level higher. You recieve 2 wounds per round in social encounters.
-  Kitsune: Your charm skill acts as though it is 1 level higher but uour negotiation skill acts as though it is 1 level lower.
-  Arlecchino: You cannot stealth, but you recieve an extra free maneuver per turn. This does not count towards your maneuver per turn limit.
-  Buskin: You automatically gain 3 failures to any check made using cool.
-  Oni: You involintarily attack any you deem as evil or corrupt.
-  Sock: You involuntarily attack any not smiling whenever you look at them.
 */

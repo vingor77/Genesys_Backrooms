@@ -1,5 +1,5 @@
 import { Box, Button, Card, Chip, Dialog,Typography, CardContent,CardHeader,Stack,Paper,Fade,Avatar,Grid,IconButton,Divider } from "@mui/material";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import db from '../Components/firebase';
 import { Shield,AttachMoney,Build,Security,FitnessCenter,AutoAwesome,Visibility,VisibilityOff,Close,StarRate } from '@mui/icons-material';
@@ -95,7 +95,7 @@ export default function ArmorItem(props) {
   return (
     <>
       <Fade in timeout={500}>
-        <Card 
+        <Card
           elevation={8}
           sx={{
             width: { xs: '100%', md: '420px' },

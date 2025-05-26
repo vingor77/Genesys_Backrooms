@@ -1,7 +1,46 @@
-import { Box, Button, FormControl, Input, InputLabel, MenuItem, Select, Stack, Toolbar, Typography } from "@mui/material";
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Collapse,
+  Badge,
+  Fab,
+  Snackbar,
+  Alert,
+  alpha,
+  useTheme,
+  useMediaQuery,
+  AppBar,
+  Toolbar,
+  Fade
+} from "@mui/material";
+import {
+  Search,
+  FilterList,
+  Clear,
+  Add,
+  ExpandMore,
+  ExpandLess,
+  Tune,
+  ArrowBack,
+  Security
+} from '@mui/icons-material';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { useState } from "react";
 import WeaponItem from "../Components/weaponItem";
 import NotLoggedIn from "../Components/notLoggedIn";
 
@@ -11,8 +50,806 @@ export default function Weapons() {
   const [price, setPrice] = useState('-1');
   const [rarity, setRarity] = useState('-1');
   const [setBonus, setSetBonus] = useState('-');
+  const [skillFilter, setSkillFilter] = useState('');
+  const [rangeFilter, setRangeFilter] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedWeapon, setSelectedWeapon] = useState(null);
 
-  const data = [{"name":"Axe","description":"A typical single-blade axe with a wooden handle","skill":"Melee","damage":3,"crit":3,"range":"Engaged","encumbrance":2,"price":2,"rarity":1,"specials":"Vicious 1/Dual-wield","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const data = [];
+
+  const showToast = (message, severity = 'success') => {
+    setToast({ open: true, message, severity });
+  };
+
+  const hideToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToast({ ...toast, open: false });
+  };
+
+  const addData = async () => {
+    try {
+      for(let i = 0; i < data.length; i++) {
+        await setDoc(doc(db, 'Weapons', data[i].name), {
+          name: data[i].name,
+          description: data[i].description,
+          skill: data[i].skill,
+          damage: data[i].damage,
+          crit: data[i].crit,
+          range: data[i].range,
+          encumbrance: data[i].encumbrance,
+          price: data[i].price,
+          rarity: data[i].rarity,
+          specials: data[i].specials,
+          durability: data[i].durability,
+          spawnLocations: data[i].spawnLocations,
+          setBonus: data[i].setBonus,
+          anomalousEffect: data[i].anomalousEffect,
+          hidden: data[i].hidden,
+          repairSkill: data[i].repairSkill
+        });
+      }
+      showToast('Weapon data added successfully!');
+    } catch (error) {
+      showToast('Error adding weapon data', 'error');
+      console.error(error);
+    }
+  };
+
+  const getFromDB = () => {
+    const q = query(collection(db, 'Weapons'), orderBy("name", "asc"));
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const queryData = [];
+      querySnapshot.forEach((doc) => {
+        queryData.push(doc.data());
+      });
+      setWeapons(queryData);
+      setLoading(false);
+    });
+
+    return () => { unsub(); };
+  };
+
+  const getSetBonusList = () => {
+    const bonusSet = new Set();
+    weapons.forEach(weapon => {
+      if (weapon.setBonus && weapon.setBonus !== 'None' && typeof weapon.setBonus === 'string') {
+        bonusSet.add(weapon.setBonus);
+      }
+    });
+    return Array.from(bonusSet).sort();
+  };
+
+  const getUniqueSkills = () => {
+    const skills = [...new Set(weapons.map(weapon => weapon.skill).filter(skill => skill && typeof skill === 'string' && skill.trim() !== ''))];
+    return skills.sort();
+  };
+
+  const getUniqueRanges = () => {
+    const ranges = [...new Set(weapons.map(weapon => weapon.range).filter(range => range && typeof range === 'string' && range.trim() !== ''))];
+    return ranges.sort();
+  };
+
+  const getFilteredWeapons = () => {
+    return weapons.filter(weapon => {
+      const matchesName = !name || 
+        (weapon.name && weapon.name.toLowerCase().includes(name.toLowerCase())) ||
+        (weapon.setBonus && weapon.setBonus.toLowerCase().includes(name.toLowerCase())) ||
+        (weapon.description && weapon.description.toLowerCase().includes(name.toLowerCase()));
+      
+      const matchesPrice = price === '-1' || 
+        (price === '10' && weapon.price >= 10) || 
+        (price !== '10' && weapon.price === parseInt(price));
+      
+      const matchesRarity = rarity === '-1' || weapon.rarity === parseInt(rarity);
+      const matchesSetBonus = setBonus === '-' || weapon.setBonus === setBonus;
+      const matchesSkill = !skillFilter || weapon.skill === skillFilter;
+      const matchesRange = !rangeFilter || weapon.range === rangeFilter;
+      const matchesVisibility = weapon.hidden === 'No' || localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
+      
+      return matchesName && matchesPrice && matchesRarity && matchesSetBonus && 
+             matchesSkill && matchesRange && matchesVisibility;
+    });
+  };
+
+  const clearAllFilters = () => {
+    setName('');
+    setPrice('-1');
+    setRarity('-1');
+    setSetBonus('-');
+    setSkillFilter('');
+    setRangeFilter('');
+    showToast('All filters cleared');
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (name !== '') count++;
+    if (price !== '-1') count++;
+    if (rarity !== '-1') count++;
+    if (setBonus !== '-') count++;
+    if (skillFilter !== '') count++;
+    if (rangeFilter !== '') count++;
+    return count;
+  };
+
+  const getFilteredCount = () => {
+    return getFilteredWeapons().length;
+  };
+
+  const handleWeaponSelect = (weapon) => {
+    setSelectedWeapon(weapon);
+    if (isMobile) {
+      setShowDetails(true);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowDetails(false);
+  };
+
+  const getSkillColor = (skill) => {
+    const skillColors = {
+      'melee': 'error',
+      'ranged': 'primary',
+      'brawl': 'warning',
+      'lightsaber': 'secondary',
+      'gunnery': 'info',
+      'thrown': 'success'
+    };
+    return skillColors[skill?.toLowerCase()] || 'default';
+  };
+
+  const DisplayItems = () => {
+    const filteredWeapons = getFilteredWeapons();
+
+    return (
+      <Box sx={{ mt: 3 }}>
+        {filteredWeapons.length === 0 ? (
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center', 
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.info.main, 0.05),
+              border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`
+            }}
+          >
+            <Search sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No weapons found
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Try adjusting your search criteria to find more weapons
+            </Typography>
+          </Paper>
+        ) : (
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              Found {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''}
+            </Typography>
+            <Stack direction="row" flexWrap="wrap" gap={2}>
+              {filteredWeapons.map((weapon, index) => (
+                <WeaponItem key={index} currWeapon={weapon} />
+              ))}
+            </Stack>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const renderFilterSection = () => (
+    <Box>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="price-label">Price Range</InputLabel>
+            <Select
+              labelId="price-label"
+              label="Price Range"
+              onChange={(e) => setPrice(e.target.value)}
+              value={price}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Price</MenuItem>
+              <MenuItem value="0">Free (0)</MenuItem>
+              <MenuItem value="1">Budget (1)</MenuItem>
+              <MenuItem value="2">Cheap (2)</MenuItem>
+              <MenuItem value="3">Affordable (3)</MenuItem>
+              <MenuItem value="4">Moderate (4)</MenuItem>
+              <MenuItem value="5">Standard (5)</MenuItem>
+              <MenuItem value="6">Premium (6)</MenuItem>
+              <MenuItem value="7">Expensive (7)</MenuItem>
+              <MenuItem value="8">Luxury (8)</MenuItem>
+              <MenuItem value="9">Elite (9)</MenuItem>
+              <MenuItem value="10">Legendary (10+)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="rarity-label">Rarity Level</InputLabel>
+            <Select
+              labelId="rarity-label"
+              label="Rarity Level"
+              onChange={(e) => setRarity(e.target.value)}
+              value={rarity}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-1">Any Rarity</MenuItem>
+              <MenuItem value="0">Common (0)</MenuItem>
+              <MenuItem value="1">Uncommon (1)</MenuItem>
+              <MenuItem value="2">Rare (2)</MenuItem>
+              <MenuItem value="3">Epic (3)</MenuItem>
+              <MenuItem value="4">Legendary (4)</MenuItem>
+              <MenuItem value="5">Mythic (5)</MenuItem>
+              <MenuItem value="6">Divine (6)</MenuItem>
+              <MenuItem value="7">Cosmic (7)</MenuItem>
+              <MenuItem value="8">Transcendent (8)</MenuItem>
+              <MenuItem value="9">Omnipotent (9)</MenuItem>
+              <MenuItem value="10">Absolute (10)</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="set-label">Set Bonus</InputLabel>
+            <Select
+              labelId="set-label"
+              label="Set Bonus"
+              onChange={(e) => setSetBonus(e.target.value)}
+              value={setBonus}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="-">No Set Filter</MenuItem>
+              <MenuItem value="None">No Set Bonus</MenuItem>
+              {getSetBonusList().map(bonus => (
+                <MenuItem key={bonus} value={bonus}>{bonus}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="skill-label">Weapon Skill</InputLabel>
+            <Select
+              labelId="skill-label"
+              label="Weapon Skill"
+              onChange={(e) => setSkillFilter(e.target.value)}
+              value={skillFilter}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="">Any Skill</MenuItem>
+              {getUniqueSkills().map(skill => (
+                <MenuItem key={skill} value={skill}>{skill}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="range-label">Range Type</InputLabel>
+            <Select
+              labelId="range-label"
+              label="Range Type"
+              onChange={(e) => setRangeFilter(e.target.value)}
+              value={rangeFilter}
+              sx={{ borderRadius: 2 }}
+            >
+              <MenuItem value="">Any Range</MenuItem>
+              {getUniqueRanges().map(range => (
+                <MenuItem key={range} value={range}>{range}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={clearAllFilters}
+            startIcon={<Clear />}
+            disabled={getActiveFilterCount() === 0}
+            sx={{ 
+              borderRadius: 2,
+              py: 1.5
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Grid>
+      </Grid>
+
+      {/* Active Filters Display */}
+      {getActiveFilterCount() > 0 && (
+        <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Active Filters:
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {name && (
+              <Chip
+                label={`Search: "${name}"`}
+                onDelete={() => setName('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {price !== '-1' && (
+              <Chip
+                label={`Price: ${price === '10' ? '10+' : price}`}
+                onDelete={() => setPrice('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {rarity !== '-1' && (
+              <Chip
+                label={`Rarity: ${rarity}`}
+                onDelete={() => setRarity('-1')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {setBonus !== '-' && (
+              <Chip
+                label={`Set: ${setBonus}`}
+                onDelete={() => setSetBonus('-')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {skillFilter && (
+              <Chip
+                label={`Skill: ${skillFilter}`}
+                onDelete={() => setSkillFilter('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {rangeFilter && (
+              <Chip
+                label={`Range: ${rangeFilter}`}
+                onDelete={() => setRangeFilter('')}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+          </Stack>
+        </Box>
+      )}
+    </Box>
+  );
+
+  const renderWeaponsList = () => {
+    const filteredWeapons = getFilteredWeapons();
+
+    if (filteredWeapons.length === 0) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            {getActiveFilterCount() > 0 ? 
+              'No weapons match your filters' : 'No weapons found'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Try adjusting your search or filters
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Stack spacing={1} sx={{ p: 2 }}>
+        {filteredWeapons.map((weapon, index) => {
+          const isSelected = selectedWeapon?.name === weapon.name;
+          
+          return (
+            <Card 
+              key={`weapon-${weapon.name}-${index}`}
+              sx={{ 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                border: isSelected ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.12)',
+                transform: isSelected ? 'scale(1.01)' : 'scale(1)',
+                boxShadow: isSelected ? 3 : 1,
+                '&:hover': {
+                  transform: 'scale(1.01)',
+                  boxShadow: 2,
+                },
+                '&:active': {
+                  transform: 'scale(0.99)',
+                },
+                backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.04)' : 'white'
+              }}
+              onClick={() => handleWeaponSelect(weapon)}
+            >
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Box sx={{ flex: 1, pr: 1 }}>
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        color: isSelected ? 'primary.main' : 'text.primary',
+                        mb: 0.5
+                      }}
+                    >
+                      {weapon.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {weapon.skill && `${weapon.skill} weapon`}
+                      {weapon.damage && ` • Damage: ${weapon.damage}`}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={0.5} flexShrink={0}>
+                    {weapon.skill && (
+                      <Chip 
+                        label={weapon.skill}
+                        color={getSkillColor(weapon.skill)}
+                        size="small"
+                        variant="filled"
+                        sx={{ fontSize: '0.7rem', height: '24px' }}
+                      />
+                    )}
+                    {weapon.rarity !== undefined && (
+                      <Chip 
+                        label={`R${weapon.rarity}`}
+                        color="secondary"
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: '0.7rem', height: '24px' }}
+                      />
+                    )}
+                  </Stack>
+                </Box>
+                
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {weapon.description || weapon.specials || 'No description available'}
+                </Typography>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </Stack>
+    );
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("loggedIn") !== 'false') {
+      getFromDB();
+    }
+  }, []);
+
+  if (localStorage.getItem("loggedIn") === 'false') {
+    return <NotLoggedIn />;
+  }
+
+  // Mobile view
+  if (isMobile) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+        {/* Mobile App Bar */}
+        <AppBar position="sticky" elevation={2}>
+          <Toolbar>
+            {showDetails ? (
+              <>
+                <IconButton
+                  edge="start"
+                  color="inherit"
+                  onClick={handleBackToList}
+                  sx={{ mr: 2 }}
+                >
+                  <ArrowBack />
+                </IconButton>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  {selectedWeapon?.name || 'Weapon Details'}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  Weapons ({getFilteredCount()})
+                </Typography>
+                <IconButton
+                  color="inherit"
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                >
+                  <Badge badgeContent={getActiveFilterCount()} color="error">
+                    <Tune />
+                  </Badge>
+                </IconButton>
+                {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
+                  <IconButton color="inherit" onClick={addData}>
+                    <Add />
+                  </IconButton>
+                )}
+              </>
+            )}
+          </Toolbar>
+        </AppBar>
+
+        {/* Mobile Content */}
+        {showDetails ? (
+          <Box sx={{ p: 2 }}>
+            <Fade in={true} timeout={500}>
+              <Box>
+                {selectedWeapon && <WeaponItem currWeapon={selectedWeapon} />}
+              </Box>
+            </Fade>
+          </Box>
+        ) : (
+          <Box>
+            {/* Collapsible Filters */}
+            <Collapse in={filtersOpen}>
+              <Paper elevation={1} sx={{ borderRadius: 0, p: 2 }}>
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Search by name, set bonus, or description..."
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: name && (
+                        <IconButton size="small" onClick={() => setName('')}>
+                          <Clear />
+                        </IconButton>
+                      ),
+                    }}
+                    size="small"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                </Box>
+                {renderFilterSection()}
+              </Paper>
+            </Collapse>
+
+            {/* Weapons List */}
+            <Box sx={{ pb: 8 }}>
+              {renderWeaponsList()}
+            </Box>
+          </Box>
+        )}
+
+        {/* Mobile FAB for filters */}
+        {!filtersOpen && !showDetails && (
+          <Fab
+            color="primary"
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              right: 16,
+            }}
+            onClick={() => setFiltersOpen(true)}
+          >
+            <Badge badgeContent={getActiveFilterCount()} color="error">
+              <FilterList />
+            </Badge>
+          </Fab>
+        )}
+      </Box>
+    );
+  }
+
+  // Desktop view
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
+      {/* Header */}
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          mb: 4, 
+          borderRadius: 3, 
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #FF5722 0%, #FF8A50 100%)',
+          color: 'white'
+        }}
+      >
+        <Box sx={{ 
+          p: { xs: 2, sm: 3 }
+        }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Weapon Arsenal
+              </Typography>
+              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                Browse and search through available weapons
+              </Typography>
+            </Box>
+            {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
+              <Button 
+                onClick={addData}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)'
+                  }
+                }}
+              >
+                Add Data
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 3 }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              Loading weapon arsenal...
+            </Typography>
+          </Box>
+        ) : weapons.length > 0 ? (
+          <Box>
+            {/* Search and Filter Section */}
+            <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
+              <CardHeader
+                title={
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Tune color="primary" />
+                      <Typography variant="h6" fontWeight="bold">
+                        Search & Filter
+                      </Typography>
+                      {getActiveFilterCount() > 0 && (
+                        <Chip 
+                          label={`${getActiveFilterCount()} active`} 
+                          color="primary" 
+                          size="small"
+                        />
+                      )}
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Chip 
+                        label={`${getFilteredCount()} weapons`} 
+                        color="success" 
+                        variant="outlined"
+                        size="small"
+                      />
+                      <IconButton 
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                        sx={{ 
+                          display: { xs: 'flex', md: 'none' },
+                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                        }}
+                      >
+                        <Badge badgeContent={getActiveFilterCount()} color="error">
+                          {filtersOpen ? <ExpandLess /> : <ExpandMore />}
+                        </Badge>
+                      </IconButton>
+                    </Box>
+                  </Box>
+                }
+                sx={{ pb: 1 }}
+              />
+              <CardContent>
+                {/* Search Bar - Always Visible */}
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Search by name, set bonus, or description..."
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
+                      endAdornment: name && (
+                        <IconButton size="small" onClick={() => setName('')}>
+                          <Clear />
+                        </IconButton>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
+                        },
+                        '&.Mui-focused': {
+                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+                        }
+                      }
+                    }}
+                  />
+                </Box>
+
+                {/* Filters - Collapsible on Mobile */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                  {renderFilterSection()}
+                </Box>
+                
+                <Collapse in={filtersOpen} sx={{ display: { xs: 'block', md: 'none' } }}>
+                  {renderFilterSection()}
+                </Collapse>
+              </CardContent>
+            </Card>
+
+            {/* Results */}
+            <DisplayItems />
+          </Box>
+        ) : (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+            <Typography variant="h6" color="text.secondary">
+              No weapon data available
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Mobile Filter Fab */}
+      <Fab
+        color="primary"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          display: { xs: 'flex', md: 'none' }
+        }}
+        onClick={() => setFiltersOpen(!filtersOpen)}
+      >
+        <Badge badgeContent={getActiveFilterCount()} color="error">
+          <FilterList />
+        </Badge>
+      </Fab>
+
+      {/* Toast Notifications */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={hideToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={hideToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}
+
+/*
+[{"name":"Axe","description":"A typical single-blade axe with a wooden handle","skill":"Melee","damage":3,"crit":3,"range":"Engaged","encumbrance":2,"price":2,"rarity":1,"specials":"Vicious 1/Dual-wield","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
     {"name":"Greataxe","description":"A double sided metallic axe with a wooden handle","skill":"Melee","damage":4,"crit":3,"range":"Engaged","encumbrance":4,"price":5,"rarity":4,"specials":"Cumbersome 3/Pierce 2/Vicious 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
     {"name":"Halberd","description":"A polearm with a blade at the tip and side of the tip","skill":"Melee","damage":3,"crit":3,"range":"Engaged","encumbrance":5,"price":4,"rarity":3,"specials":"Defensive 1/Pierce 3/Reach","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
     {"name":"Knife","description":"A simple steel knife that looks like its used to cut steak.","skill":"Melee","damage":1,"crit":3,"range":"Engaged","encumbrance":1,"price":2,"rarity":1,"specials":"None","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
@@ -53,158 +890,4 @@ export default function Weapons() {
     {"name":"Umbrella Gunsword","description":"A standard umbrella with white dots scattered on a blue base. Two small switches sit on the handle.","skill":"Melee or Ranged","damage":10,"crit":2,"range":"Medium","encumbrance":2,"price":5,"rarity":4,"specials":"Vicious 2/Sneak","durability":2,"spawnLocations":"None","setBonus":"None","anomalousEffect":"None","hidden":"Yes","repairSkill":"Weaver"},
     {"name":"Golden Axe","description":"A purely gold double sided war axe with symbols etched into the handle.","skill":"Melee","damage":10,"crit":1,"range":"Engaged","encumbrance":0,"price":100,"rarity":10,"specials":"Vicious 5/AutoHit/Anomalous","durability":100,"spawnLocations":"None","setBonus":"Golden Set","anomalousEffect":"The axe has a diety within it assisting in all attacks. Automatcally apply a critical injury whenever an attack hits.","hidden":"Yes","repairSkill":"Medicine"}]
     
-  const addData = () => {
-    for(let i = 0; i < data.length; i++) {
-      setDoc(doc(db, 'Weapons', data[i].name), {
-        name: data[i].name,
-        description: data[i].description,
-        skill: data[i].skill,
-        damage: data[i].damage,
-        crit: data[i].crit,
-        range: data[i].range,
-        encumbrance: data[i].encumbrance,
-        price: data[i].price,
-        rarity: data[i].rarity,
-        specials: data[i].specials,
-        durability: data[i].durability,
-        spawnLocations: data[i].spawnLocations,
-        setBonus: data[i].setBonus,
-        anomalousEffect: data[i].anomalousEffect,
-        hidden: data[i].hidden,
-        repairSkill: data[i].repairSkill
-      })
-    }
-  }
-
-  const getFromDB = () => {
-    const q = query(collection(db, 'Weapons'), orderBy("name", "asc"));
-
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      setWeapons(queryData);
-    })
-
-    return () => {
-      unsub();
-    }
-  }
-
-  const DisplayItems = () => {
-    let empty = true;
-
-    return (
-      <Stack direction='row' flexWrap='wrap' gap={1}>
-        {weapons.map((item) => {
-          if(
-            (item.hidden === 'No' || localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN') &&
-            (item.price === parseInt(price) || (item.price >= 10 && parseInt(price) === 10) || price === '-1') &&
-            (item.rarity === parseInt(rarity) || rarity === '-1') &&
-            (item.name.toUpperCase().includes(name.toUpperCase()) || name === '' || item.setBonus.toUpperCase().includes(name.toUpperCase())) &&
-            (item.setBonus === setBonus || setBonus === '-')
-          ) {
-            empty = false;
-            return <WeaponItem currWeapon={item}/>
-          }
-        })}
-        {empty ? <Typography>There are no weapons that match your criteria.</Typography> : ""}
-      </Stack>
-    )
-  }
-
-  const getSetBonusList = () => {
-    const bonusList = [];
-
-    for(let i = 0; i < weapons.length; i++) {
-      let count = 0;
-      for(let j = 0; j < bonusList.length; j++) {
-        if(weapons[i].setBonus === bonusList[j]) {
-          count++;
-          break;
-        }
-      }
-      if(count === 0 && weapons[i].setBonus !== 'None') bonusList.push(weapons[i].setBonus)
-    }
-
-    return bonusList.map((bonus, index) => {
-      return <MenuItem value={bonus} key={index}>{bonus}</MenuItem>
-    })
-  }
-
-  return (
-    localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> : 
-      <Box>
-        <Button onClick={addData}>Add</Button>
-        {weapons.length > 0 ?
-          <Box>
-            <Stack direction={{xs: 'column', md: 'row'}} spacing={2} flexWrap='wrap' gap={1} paddingBottom={2}>
-              <Box>
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder='Enter Name'></Input>
-              </Box>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="price">Select Price</InputLabel>
-                <Select
-                  labelId='price'
-                  label={"Select Price"}
-                  onChange={e => setPrice(e.target.value)}
-                  value={price}
-                >
-                  <MenuItem value='-1'>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10+</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="rarity">Select Rarity</InputLabel>
-                <Select
-                  labelId='rarity'
-                  label={"Select Rarity"}
-                  onChange={e => setRarity(e.target.value)}
-                  value={rarity}
-                >
-                  <MenuItem value='-1'>Any</MenuItem>
-                  <MenuItem value='0'>0</MenuItem>
-                  <MenuItem value='1'>1</MenuItem>
-                  <MenuItem value='2'>2</MenuItem>
-                  <MenuItem value='3'>3</MenuItem>
-                  <MenuItem value='4'>4</MenuItem>
-                  <MenuItem value='5'>5</MenuItem>
-                  <MenuItem value='6'>6</MenuItem>
-                  <MenuItem value='7'>7</MenuItem>
-                  <MenuItem value='8'>8</MenuItem>
-                  <MenuItem value='9'>9</MenuItem>
-                  <MenuItem value='10'>10</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{minWidth: 150}}>
-                <InputLabel id="rarity">Select Set Bonus</InputLabel>
-                <Select
-                  labelId='setBonus'
-                  label={"Select Set Bonus"}
-                  onChange={e => setSetBonus(e.target.value)}
-                  value={setBonus}
-                >
-                  <MenuItem value='-'>No Set</MenuItem>
-                  {getSetBonusList()}
-                </Select>
-              </FormControl>
-            </Stack>
-            <DisplayItems />
-          </Box>
-        :
-          getFromDB()
-        }
-      </Box>
-  )
-}
+*/

@@ -3067,14 +3067,13 @@ export default function Information() {
     <Box key="durability" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
       {/* Header Section */}
       <Paper 
-        elevation={2} 
+        elevation={3} 
         sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
+          mb: 4, 
+          borderRadius: 3, 
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white'
         }}
       >
         <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -5425,7 +5424,7 @@ export default function Information() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <Typography variant="h3" gutterBottom textAlign="center" fontWeight="bold">
           RPG Information System
@@ -6372,6 +6371,6 @@ export default function Information() {
           </AccordionDetails>
         </Accordion>
       </Stack>
-    </Container>
+    </Box>
   );
 }

@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Card,CardContent,CardHeader,Grid,Chip,Stack,Paper,Fade,Avatar,Accordion,AccordionSummary,AccordionDetails } from "@mui/material";
+import { Box, Button, Typography, Card, CardContent, CardHeader, Grid, Chip, Stack, Paper, Fade, Avatar, Accordion, AccordionSummary, AccordionDetails, useMediaQuery, useTheme, IconButton, Divider } from "@mui/material";
 import ObjectItem from '../Components/objectItem';
 import WeaponItem from '../Components/weaponItem';
 import ArmorItem from '../Components/armorItem';
@@ -7,10 +7,13 @@ import People from '../Components/people';
 import PhenomenonItem from '../Components/phenomenonItem';
 import EntityItem from '../Components/entityItem';
 import { useState } from "react";
-import { Home,Refresh,Visibility,Thermostat,Dangerous,ExitToApp,AutoAwesome,Group,Construction,ExpandMore,Room,Map } from '@mui/icons-material';
+import { Home, Refresh, Visibility, Thermostat, Dangerous, ExitToApp, AutoAwesome, Group, Construction, ExpandMore, Room, Map } from '@mui/icons-material';
 
 export default function LevelItem(props) {
   const [refresh, setRefresh] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const level = props.data.level;
   const lightLevel = Math.floor(Math.random() * (parseInt(level.lightLevels.split('/')[1]) - parseInt(level.lightLevels.split('/')[0]) + 1)) + parseInt(level.lightLevels.split('/')[0]);
@@ -59,26 +62,43 @@ export default function LevelItem(props) {
     }
   };
 
-  const theme = getLevelTheme();
+  const levelTheme = getLevelTheme();
 
   const StatCard = ({ icon, label, value, color = 'rgba(255,255,255,0.9)' }) => (
     <Paper
       elevation={2}
       sx={{
-        p: 2,
+        p: isMobile ? 1.5 : 2,
         borderRadius: 2,
         background: 'rgba(255,255,255,0.1)',
         backdropFilter: 'blur(10px)',
-        textAlign: 'center'
+        textAlign: 'center',
+        minHeight: isMobile ? '80px' : '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}
     >
-      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} mb={0.5}>
         {icon}
-        <Typography variant="subtitle2" fontWeight="bold" color="white">
+        <Typography 
+          variant={isMobile ? "caption" : "subtitle2"} 
+          fontWeight="bold" 
+          color="white"
+          sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}
+        >
           {label}
         </Typography>
       </Box>
-      <Typography variant="h6" fontWeight="bold" color={color}>
+      <Typography 
+        variant={isMobile ? "body2" : "h6"} 
+        fontWeight="bold" 
+        color={color}
+        sx={{ 
+          fontSize: isMobile ? '0.875rem' : '1.25rem',
+          lineHeight: 1.2
+        }}
+      >
         {value}
       </Typography>
     </Paper>
@@ -86,7 +106,7 @@ export default function LevelItem(props) {
 
   const SectionCard = ({ icon, title, children, defaultExpanded = true }) => (
     <Accordion 
-      defaultExpanded={defaultExpanded}
+      defaultExpanded={defaultExpanded && !isMobile}
       sx={{
         background: 'rgba(255,255,255,0.1)',
         backdropFilter: 'blur(10px)',
@@ -97,16 +117,26 @@ export default function LevelItem(props) {
     >
       <AccordionSummary 
         expandIcon={<ExpandMore sx={{ color: 'white' }} />}
-        sx={{ color: 'white' }}
+        sx={{ 
+          color: 'white',
+          minHeight: isMobile ? 48 : 56,
+          '& .MuiAccordionSummary-content': {
+            margin: isMobile ? '8px 0' : '12px 0'
+          }
+        }}
       >
         <Box display="flex" alignItems="center" gap={1}>
           {icon}
-          <Typography variant="h6" fontWeight="bold">
+          <Typography 
+            variant={isMobile ? "subtitle1" : "h6"} 
+            fontWeight="bold"
+            sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}
+          >
             {title}
           </Typography>
         </Box>
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails sx={{ p: isMobile ? 1.5 : 2 }}>
         {children}
       </AccordionDetails>
     </Accordion>
@@ -144,24 +174,38 @@ export default function LevelItem(props) {
         >
           <CardHeader
             avatar={
-              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}>
-                <Room />
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                color: 'white',
+                width: isMobile ? 40 : 56,
+                height: isMobile ? 40 : 56
+              }}>
+                <Room fontSize={isMobile ? "medium" : "large"} />
               </Avatar>
             }
             title={
-              <Typography variant="h5" fontWeight="bold" color="white">
+              <Typography 
+                variant={isMobile ? "h6" : "h5"} 
+                fontWeight="bold" 
+                color="white"
+                sx={{ fontSize: isMobile ? '1.125rem' : '1.5rem' }}
+              >
                 Room {roomIndex + 1}
               </Typography>
             }
-            sx={{ color: 'white' }}
+            sx={{ 
+              color: 'white',
+              p: isMobile ? 2 : 3,
+              pb: isMobile ? 1 : 2
+            }}
           />
-          <CardContent>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
+          <CardContent sx={{ p: isMobile ? 2 : 3, pt: 0 }}>
+            <Grid container spacing={isMobile ? 1.5 : 2} sx={{ mb: 3 }}>
               <Grid item xs={6} sm={3}>
                 <StatCard 
                   icon={<Home fontSize="small" />} 
                   label="Size" 
-                  value={`${width}×${length}×${level.roomHeight} ft`} 
+                  value={isMobile ? `${width}×${length}×${level.roomHeight}` : `${width}×${length}×${level.roomHeight} ft`} 
                 />
               </Grid>
               <Grid item xs={6} sm={3}>
@@ -189,16 +233,17 @@ export default function LevelItem(props) {
             </Grid>
 
             <SectionCard icon={<ExitToApp />} title={`Exits (${exitsPerRoom})`}>
-              <Stack spacing={1}>
+              <Stack spacing={1} direction={isMobile ? "column" : "row"} flexWrap="wrap" useFlexGap>
                 {exitTypes.map((exit, index) => (
                   <Chip
                     key={index}
                     label={exit}
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     sx={{
                       bgcolor: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      justifyContent: 'flex-start'
+                      justifyContent: 'flex-start',
+                      minHeight: isMobile ? '36px' : '24px'
                     }}
                   />
                 ))}
@@ -210,16 +255,17 @@ export default function LevelItem(props) {
             </SectionCard>
 
             <SectionCard icon={<AutoAwesome />} title="Effects">
-              <Stack spacing={1}>
+              <Stack spacing={1} direction={isMobile ? "column" : "row"} flexWrap="wrap" useFlexGap>
                 {effects.map((effect, index) => (
                   <Chip
                     key={index}
                     label={effect}
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     sx={{
                       bgcolor: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      justifyContent: 'flex-start'
+                      justifyContent: 'flex-start',
+                      minHeight: isMobile ? '36px' : '24px'
                     }}
                   />
                 ))}
@@ -227,7 +273,7 @@ export default function LevelItem(props) {
             </SectionCard>
 
             <SectionCard icon={<Group />} title="Spawns">
-              <Grid container spacing={2}>
+              <Grid container spacing={isMobile ? 1.5 : 2}>
                 {spawns.map((spawn, index) => (
                   <Grid item xs={12} sm={6} md={4} key={index}>
                     {determineSpawns(spawn)}
@@ -237,16 +283,17 @@ export default function LevelItem(props) {
             </SectionCard>
 
             <SectionCard icon={<Construction />} title="Defects">
-              <Stack spacing={1}>
+              <Stack spacing={1} direction={isMobile ? "column" : "row"} flexWrap="wrap" useFlexGap>
                 {defects.map((defect, index) => (
                   <Chip
                     key={index}
                     label={defect}
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     sx={{
                       bgcolor: 'rgba(255,255,255,0.2)',
                       color: 'white',
-                      justifyContent: 'flex-start'
+                      justifyContent: 'flex-start',
+                      minHeight: isMobile ? '36px' : '24px'
                     }}
                   />
                 ))}
@@ -259,21 +306,32 @@ export default function LevelItem(props) {
     
     return (
       <Box>
-        <Typography variant="h4" fontWeight="bold" color="white" textAlign="center" sx={{ mb: 3 }}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          fontWeight="bold" 
+          color="white" 
+          textAlign="center" 
+          sx={{ 
+            mb: 3,
+            fontSize: isMobile ? '1.5rem' : '2.125rem',
+            px: 2
+          }}
+        >
           Finite Level Layout
         </Typography>
         <Paper
           elevation={2}
           sx={{
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             mb: 3,
             borderRadius: 2,
             background: 'rgba(255,255,255,0.1)',
             backdropFilter: 'blur(10px)',
-            textAlign: 'center'
+            textAlign: 'center',
+            mx: isMobile ? 1 : 0
           }}
         >
-          <Typography variant="h6" color="white">
+          <Typography variant={isMobile ? "body1" : "h6"} color="white">
             Total Rooms: {level.roomCount}
           </Typography>
         </Paper>
@@ -300,16 +358,17 @@ export default function LevelItem(props) {
     if(props.count > 0 && props.type === 'exitsFromLevel') exitNum = Math.floor(Math.random() * level.exitCount);
 
     return (
-      <Stack spacing={1}>
+      <Stack spacing={1} direction={isMobile ? "column" : "row"} flexWrap="wrap" useFlexGap>
         {chosen.map((item, index) => (
           <Chip
             key={index}
             label={`${item} ${props.type === 'exitsFromLevel' ? `(${exitNum})` : ""}`}
-            size="small"
+            size={isMobile ? "medium" : "small"}
             sx={{
               bgcolor: 'rgba(255,255,255,0.2)',
               color: 'white',
-              justifyContent: 'flex-start'
+              justifyContent: 'flex-start',
+              minHeight: isMobile ? '36px' : '24px'
             }}
           />
         ))}
@@ -596,7 +655,7 @@ export default function LevelItem(props) {
             <Paper
               elevation={2}
               sx={{
-                p: 2,
+                p: isMobile ? 1.5 : 2,
                 borderRadius: 2,
                 background: 'rgba(255,255,255,0.1)',
                 backdropFilter: 'blur(10px)',
@@ -628,7 +687,7 @@ export default function LevelItem(props) {
       <Paper
         elevation={2}
         sx={{
-          p: 2,
+          p: isMobile ? 1.5 : 2,
           borderRadius: 2,
           background: 'rgba(255,255,255,0.1)',
           backdropFilter: 'blur(10px)',
@@ -643,15 +702,20 @@ export default function LevelItem(props) {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', background: theme.color, p: 3 }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: levelTheme.color, 
+      p: isMobile ? 1.5 : 3,
+      pb: isMobile ? 3 : 3 // Extra bottom padding for mobile
+    }}>
       <Fade in timeout={800}>
         <Box>
           {/* Header */}
           <Card
             elevation={8}
             sx={{
-              mb: 4,
-              borderRadius: 4,
+              mb: isMobile ? 3 : 4,
+              borderRadius: isMobile ? 3 : 4,
               background: 'rgba(255,255,255,0.1)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255,255,255,0.2)'
@@ -661,43 +725,78 @@ export default function LevelItem(props) {
               avatar={
                 <Avatar
                   sx={{
-                    width: 70,
-                    height: 70,
+                    width: isMobile ? 50 : 70,
+                    height: isMobile ? 50 : 70,
                     bgcolor: 'rgba(255,255,255,0.2)',
                     border: '3px solid rgba(255,255,255,0.3)',
-                    fontSize: '2rem'
+                    fontSize: isMobile ? '1.5rem' : '2rem'
                   }}
                 >
-                  {theme.icon}
+                  {levelTheme.icon}
                 </Avatar>
               }
               title={
-                <Typography variant="h3" fontWeight="bold" color="white">
+                <Typography 
+                  variant={isMobile ? "h5" : "h3"} 
+                  fontWeight="bold" 
+                  color="white"
+                  sx={{ 
+                    fontSize: isMobile ? '1.25rem' : '3rem',
+                    lineHeight: 1.2
+                  }}
+                >
                   Level {level.level}: {level.name}
                 </Typography>
               }
               subheader={
                 <Box>
-                  <Typography variant="h6" color="rgba(255,255,255,0.9)" sx={{ mb: 1 }}>
+                  <Typography 
+                    variant={isMobile ? "body1" : "h6"} 
+                    color="rgba(255,255,255,0.9)" 
+                    sx={{ 
+                      mb: isMobile ? 1.5 : 1,
+                      fontSize: isMobile ? '0.875rem' : '1.25rem',
+                      lineHeight: 1.4
+                    }}
+                  >
                     {level.description}
                   </Typography>
-                  <Stack direction='row' spacing={2}>
-                    <Typography color='white'>Tags:</Typography>
-                    {level.tags.split('/').map((tag, index) => {
-                      return <Chip 
-                        label={tag}
-                        sx={{
-                          bgcolor: 'rgba(255,255,255,0.2)',
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
-                        key={index}
-                      />
-                    })}
-                  </Stack>
+                  <Box>
+                    <Typography 
+                      color='white' 
+                      variant={isMobile ? "body2" : "body1"}
+                      sx={{ mb: 1, fontWeight: 'bold' }}
+                    >
+                      Tags:
+                    </Typography>
+                    <Stack 
+                      direction={isMobile ? 'column' : 'row'} 
+                      spacing={1} 
+                      flexWrap="wrap" 
+                      useFlexGap
+                      sx={{ gap: isMobile ? '8px' : '4px' }}
+                    >
+                      {level.tags.split('/').map((tag, index) => {
+                        return <Chip 
+                          label={tag}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.2)',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            minHeight: isMobile ? '32px' : '24px',
+                            fontSize: isMobile ? '0.875rem' : '0.8125rem',
+                            '& .MuiChip-label': {
+                              px: isMobile ? 1.5 : 1
+                            }
+                          }}
+                          key={index}
+                        />
+                      })}
+                    </Stack>
+                  </Box>
                 </Box>
               }
-              sx={{ p: 3 }}
+              sx={{ p: isMobile ? 2 : 3 }}
             />
           </Card>
 
@@ -708,7 +807,7 @@ export default function LevelItem(props) {
             <Card
               elevation={8}
               sx={{
-                borderRadius: 4,
+                borderRadius: isMobile ? 3 : 4,
                 background: 'rgba(255,255,255,0.1)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.2)'
@@ -716,14 +815,26 @@ export default function LevelItem(props) {
             >
               <CardHeader
                 title={
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h4" fontWeight="bold" color="white">
+                  <Box 
+                    display="flex" 
+                    justifyContent="space-between" 
+                    alignItems={isMobile ? "flex-start" : "center"}
+                    flexDirection={isMobile ? "column" : "row"}
+                    gap={isMobile ? 2 : 0}
+                  >
+                    <Typography 
+                      variant={isMobile ? "h5" : "h4"} 
+                      fontWeight="bold" 
+                      color="white"
+                      sx={{ fontSize: isMobile ? '1.5rem' : '2.125rem' }}
+                    >
                       Procedural Room Generator
                     </Typography>
                     <Button
                       variant="contained"
                       onClick={() => setRefresh(!refresh)}
                       startIcon={<Refresh />}
+                      size={isMobile ? "large" : "medium"}
                       sx={{
                         bgcolor: 'rgba(255,255,255,0.2)',
                         color: 'white',
@@ -731,22 +842,30 @@ export default function LevelItem(props) {
                         '&:hover': {
                           bgcolor: 'rgba(255,255,255,0.3)'
                         },
-                        borderRadius: 3
+                        borderRadius: 3,
+                        minHeight: isMobile ? '48px' : '36px',
+                        px: isMobile ? 3 : 2,
+                        fontSize: isMobile ? '1rem' : '0.875rem',
+                        alignSelf: isMobile ? 'stretch' : 'auto'
                       }}
                     >
                       Generate New Room
                     </Button>
                   </Box>
                 }
-                sx={{ color: 'white', pb: 1 }}
+                sx={{ 
+                  color: 'white', 
+                  pb: 1,
+                  p: isMobile ? 2 : 3
+                }}
               />
-              <CardContent>
+              <CardContent sx={{ p: isMobile ? 2 : 3, pt: 0 }}>
                 {/* Current Environment */}
                 {level.environments !== 'None' && (
                   <Paper
                     elevation={2}
                     sx={{
-                      p: 2,
+                      p: isMobile ? 1.5 : 2,
                       mb: 3,
                       borderRadius: 2,
                       background: 'rgba(255,255,255,0.1)',
@@ -754,19 +873,24 @@ export default function LevelItem(props) {
                       textAlign: 'center'
                     }}
                   >
-                    <Typography variant="h6" color="white" fontWeight="bold">
+                    <Typography 
+                      variant={isMobile ? "body1" : "h6"} 
+                      color="white" 
+                      fontWeight="bold"
+                      sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}
+                    >
                       Current Environment: {level.environments.split('/')[Math.floor(Math.random() * level.environments.split('/').length)]}
                     </Typography>
                   </Paper>
                 )}
 
                 {/* Room Stats */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={isMobile ? 1.5 : 2} sx={{ mb: 3 }}>
                   <Grid item xs={6} sm={3}>
                     <StatCard 
                       icon={<Home fontSize="small" />} 
                       label="Room Size" 
-                      value={`${width}×${length}×${level.roomHeight} ft`} 
+                      value={isMobile ? `${width}×${length}×${level.roomHeight}` : `${width}×${length}×${level.roomHeight} ft`} 
                     />
                   </Grid>
                   <Grid item xs={6} sm={3}>
@@ -806,8 +930,8 @@ export default function LevelItem(props) {
                   <SelectFromCount count={effectCount} list={effects} type={'effects'}/>
                 </SectionCard>
 
-                <SectionCard icon={<Group />} title="Spawned Objects & Entities" defaultExpanded={true}>
-                  <Grid container spacing={2}>
+                <SectionCard icon={<Group />} title="Spawned Objects & Entities" defaultExpanded={!isMobile}>
+                  <Grid container spacing={isMobile ? 1.5 : 2}>
                     {[...Array(Math.floor(Math.random() * parseInt(level.maxSpawns)) + 1)].map((_, index) => (
                       <Grid item xs={12} sm={6} md={4} key={index}>
                         {determineSpawns(null)}

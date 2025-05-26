@@ -371,7 +371,8 @@ export default function Craft(props) {
                     p: 3,
                     borderRadius: 2,
                     background: 'rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)'
+                    backdropFilter: 'blur(10px)',
+                    minHeight: '150px'
                   }}
                 >
                   <Typography variant="h6" fontWeight="bold" color="white" gutterBottom>
