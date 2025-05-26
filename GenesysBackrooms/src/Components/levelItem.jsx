@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, Typography, Card,CardContent,CardHeader,Grid,Chip,Stack,Paper,Fade,Avatar,Accordion,AccordionSummary,AccordionDetails } from "@mui/material";
 import ObjectItem from '../Components/objectItem';
 import WeaponItem from '../Components/weaponItem';
 import ArmorItem from '../Components/armorItem';
@@ -7,6 +7,7 @@ import People from '../Components/people';
 import PhenomenonItem from '../Components/phenomenonItem';
 import EntityItem from '../Components/entityItem';
 import { useState } from "react";
+import { Home,Refresh,Visibility,Thermostat,Dangerous,ExitToApp,AutoAwesome,Group,Construction,ExpandMore,Room,Map } from '@mui/icons-material';
 
 export default function LevelItem(props) {
   const [refresh, setRefresh] = useState(false);
@@ -28,6 +29,89 @@ export default function LevelItem(props) {
   const defects = level.defects.split('/');
   const spawnChances = level.spawnChances.split('/');
 
+  // Get level difficulty theme
+  const getLevelTheme = () => {
+    const difficulty = parseInt(level.sdClass);
+    if (difficulty <= 1) {
+      return {
+        color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        category: 'Safe',
+        icon: '🏠'
+      };
+    } else if (difficulty > 1 && difficulty <= 3) {
+      return {
+        color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+        category: 'Moderate',
+        icon: '🏢'
+      };
+    } else if (difficulty > 3 && difficulty <= 4) {
+      return {
+        color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        category: 'Dangerous',
+        icon: '⚠️'
+      };
+    } else {
+      return {
+        color: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        category: 'Lethal',
+        icon: '💀'
+      };
+    }
+  };
+
+  const theme = getLevelTheme();
+
+  const StatCard = ({ icon, label, value, color = 'rgba(255,255,255,0.9)' }) => (
+    <Paper
+      elevation={2}
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        background: 'rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(10px)',
+        textAlign: 'center'
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+        {icon}
+        <Typography variant="subtitle2" fontWeight="bold" color="white">
+          {label}
+        </Typography>
+      </Box>
+      <Typography variant="h6" fontWeight="bold" color={color}>
+        {value}
+      </Typography>
+    </Paper>
+  );
+
+  const SectionCard = ({ icon, title, children, defaultExpanded = true }) => (
+    <Accordion 
+      defaultExpanded={defaultExpanded}
+      sx={{
+        background: 'rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(10px)',
+        '&:before': { display: 'none' },
+        borderRadius: 2,
+        mb: 2
+      }}
+    >
+      <AccordionSummary 
+        expandIcon={<ExpandMore sx={{ color: 'white' }} />}
+        sx={{ color: 'white' }}
+      >
+        <Box display="flex" alignItems="center" gap={1}>
+          {icon}
+          <Typography variant="h6" fontWeight="bold">
+            {title}
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
+        {children}
+      </AccordionDetails>
+    </Accordion>
+  );
+
   const FiniteRoom = () => {
     const level = props.data.level;
 
@@ -47,56 +131,152 @@ export default function LevelItem(props) {
       const exitFromLevelCount = Math.floor(Math.random() * 100) <= parseInt(level.exitFromLevelChance) ? 1: 0;
 
       return (
-        <Box key={roomIndex} sx={{ border: '1px solid black', p: 2, my: 2 }}>
-          <Typography variant="h6">Room {roomIndex + 1}</Typography>
-          
-          <Typography>Room Size: {width} feet by {length} feet by {level.roomHeight} feet</Typography>
-          <Typography>Light Level: {lightLevel}</Typography>
-          <Typography>Heat Level: {heat}</Typography>
-          <Typography>Corrosive Atmosphere: {corrosion}</Typography>
-          
-          <Typography variant="subtitle1">Exits ({exitsPerRoom}):</Typography>
-          <Box pl={2}>
-            {exitTypes.map((exit, index) => (
-              <Box>
-                <Typography key={index}>- {exit}</Typography>
-              </Box>
-            ))}
-          </Box>
+        <Card 
+          key={roomIndex} 
+          elevation={4}
+          sx={{ 
+            mb: 3,
+            borderRadius: 3,
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)'
+          }}
+        >
+          <CardHeader
+            avatar={
+              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}>
+                <Room />
+              </Avatar>
+            }
+            title={
+              <Typography variant="h5" fontWeight="bold" color="white">
+                Room {roomIndex + 1}
+              </Typography>
+            }
+            sx={{ color: 'white' }}
+          />
+          <CardContent>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={6} sm={3}>
+                <StatCard 
+                  icon={<Home fontSize="small" />} 
+                  label="Size" 
+                  value={`${width}×${length}×${level.roomHeight} ft`} 
+                />
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <StatCard 
+                  icon={<Visibility fontSize="small" />} 
+                  label="Light" 
+                  value={lightLevel} 
+                />
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <StatCard 
+                  icon={<Thermostat fontSize="small" />} 
+                  label="Heat" 
+                  value={heat} 
+                />
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <StatCard 
+                  icon={<Dangerous fontSize="small" />} 
+                  label="Corrosion" 
+                  value={corrosion} 
+                  color={corrosion > 0 ? '#ef4444' : 'rgba(255,255,255,0.9)'}
+                />
+              </Grid>
+            </Grid>
 
-          <Typography variant="subtitle1">Exits From Level:</Typography>
-          <Box pl={2}>
-            <SelectFromCount count={exitFromLevelCount} list={levelExits}/>
-          </Box>
-  
-          <Typography variant="subtitle1">Effects:</Typography>
-          <Box pl={2}>
-            {effects.map((effect, index) => (
-              <Typography key={index}>- {effect}</Typography>
-            ))}
-          </Box>
-  
-          <Typography variant="subtitle1">Spawns:</Typography>
-          <Stack direction='row' spacing={2}>
-            {spawns.map((spawn) => (
-              determineSpawns(spawn)
-            ))}
-          </Stack>
-  
-          <Typography variant="subtitle1">Defects:</Typography>
-          <Box pl={2}>
-            {defects.map((defect, index) => (
-              <Typography key={index}>- {defect}</Typography>
-            ))}
-          </Box>
-        </Box>
+            <SectionCard icon={<ExitToApp />} title={`Exits (${exitsPerRoom})`}>
+              <Stack spacing={1}>
+                {exitTypes.map((exit, index) => (
+                  <Chip
+                    key={index}
+                    label={exit}
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      justifyContent: 'flex-start'
+                    }}
+                  />
+                ))}
+              </Stack>
+            </SectionCard>
+
+            <SectionCard icon={<Map />} title="Level Exits">
+              <SelectFromCount count={exitFromLevelCount} list={levelExits} type={'exitsFromLevel'}/>
+            </SectionCard>
+
+            <SectionCard icon={<AutoAwesome />} title="Effects">
+              <Stack spacing={1}>
+                {effects.map((effect, index) => (
+                  <Chip
+                    key={index}
+                    label={effect}
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      justifyContent: 'flex-start'
+                    }}
+                  />
+                ))}
+              </Stack>
+            </SectionCard>
+
+            <SectionCard icon={<Group />} title="Spawns">
+              <Grid container spacing={2}>
+                {spawns.map((spawn, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={index}>
+                    {determineSpawns(spawn)}
+                  </Grid>
+                ))}
+              </Grid>
+            </SectionCard>
+
+            <SectionCard icon={<Construction />} title="Defects">
+              <Stack spacing={1}>
+                {defects.map((defect, index) => (
+                  <Chip
+                    key={index}
+                    label={defect}
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      justifyContent: 'flex-start'
+                    }}
+                  />
+                ))}
+              </Stack>
+            </SectionCard>
+          </CardContent>
+        </Card>
       );
     };
     
     return (
       <Box>
-        <Typography variant="h5">Finite Level: {level.name}</Typography>
-        <Typography>Total Rooms: {level.roomCount}</Typography>
+        <Typography variant="h4" fontWeight="bold" color="white" textAlign="center" sx={{ mb: 3 }}>
+          Finite Level Layout
+        </Typography>
+        <Paper
+          elevation={2}
+          sx={{
+            p: 2,
+            mb: 3,
+            borderRadius: 2,
+            background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(10px)',
+            textAlign: 'center'
+          }}
+        >
+          <Typography variant="h6" color="white">
+            Total Rooms: {level.roomCount}
+          </Typography>
+        </Paper>
         
         {[...Array(parseInt(level.roomCount))].map((_, index) => renderRoom(index))}
       </Box>
@@ -104,21 +284,37 @@ export default function LevelItem(props) {
   }
 
   const SelectFromCount = (props) => {
-    if(props.count === 0) return <Typography>- None</Typography>
+    if(props.count === 0) return (
+      <Typography color="rgba(255,255,255,0.7)" fontStyle="italic">
+        None
+      </Typography>
+    );
 
     const chosen = [];
-    //Props are count and list of possibles.
+    //Props are count, list of possibles, and type of list.
     for(let i = 0; i < props.count; i++) {
       chosen.push(props.list[Math.floor(Math.random() * props.list.length)]);
     }
 
+    let exitNum = -1;
+    if(props.count > 0 && props.type === 'exitsFromLevel') exitNum = Math.floor(Math.random() * level.exitCount);
+
     return (
-      <Box>
-        {chosen.map((item, index) => {
-          return <Typography key={index}>- {item}</Typography>
-        })}
-      </Box>
-    )
+      <Stack spacing={1}>
+        {chosen.map((item, index) => (
+          <Chip
+            key={index}
+            label={`${item} ${props.type === 'exitsFromLevel' ? `(${exitNum})` : ""}`}
+            size="small"
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              justifyContent: 'flex-start'
+            }}
+          />
+        ))}
+      </Stack>
+    );
   }
 
   const determineSpawns = (spawn) => {
@@ -395,8 +591,23 @@ export default function LevelItem(props) {
           const random = filtered.length === 0 ? Math.floor(Math.random() * props.data.interest.length) : Math.floor(Math.random() * filtered.length);
           let chosen = filtered.length === 0 ? props.data.interest[random] : filtered[random];
 
-          if(Math.floor(Math.random() * 101) <= 15 || extraSocials[0] === 'None') return <People currPerson={chosen}/>
-          return <Typography>{extraSocials[Math.floor(Math.random() * extraSocials.length)]}</Typography>
+          if(Math.floor(Math.random() * 101) > 15 || extraSocials[0] === 'None') return <People currPerson={chosen}/>
+          return (
+            <Paper
+              elevation={2}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                textAlign: 'center'
+              }}
+            >
+              <Typography variant="body2" color="white">
+                {extraSocials[Math.floor(Math.random() * extraSocials.length)]}
+              </Typography>
+            </Paper>
+          );
         }
         if(selectedType === 'PHENOMENA') {
           const filtered = [];
@@ -412,50 +623,207 @@ export default function LevelItem(props) {
         break;
       }
     }
+
+    return (
+      <Paper
+        elevation={2}
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          background: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          textAlign: 'center'
+        }}
+      >
+        <Typography variant="body2" color="rgba(255,255,255,0.7)">
+          Nothing spawned
+        </Typography>
+      </Paper>
+    );
   }
 
   return (
-    <Box>
-      <Typography variant="h3" textAlign='center'>Level {level.level}: {level.name}</Typography>
-      <Typography textAlign='center'>{level.description}</Typography>
-      <br />
-      {level.finite === 'Yes' ? <FiniteRoom /> :
+    <Box sx={{ minHeight: '100vh', background: theme.color, p: 3 }}>
+      <Fade in timeout={800}>
         <Box>
-          <Button variant="outlined" onClick={() => setRefresh(!refresh)}>Next Room</Button>
-          <Box sx={{ p: 2, my: 2 }}>
-            <Typography>Room Size: {width} feet by {length} feet by {level.roomHeight} feet</Typography>
-            <Typography>Light Level: {lightLevel}</Typography>
-            <Typography>Heat Level: {heat}</Typography>
-            <Typography>Corrosive Atmosphere: {corrosion}</Typography>
-            <br />
-            <Typography variant="subtitle1">Exits: ({exitCount})</Typography>
-            <Box pl={2}>
-              <SelectFromCount count={exitCount} list={exitTypes}/>
-            </Box>
+          {/* Header */}
+          <Card
+            elevation={8}
+            sx={{
+              mb: 4,
+              borderRadius: 4,
+              background: 'rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}
+          >
+            <CardHeader
+              avatar={
+                <Avatar
+                  sx={{
+                    width: 70,
+                    height: 70,
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    border: '3px solid rgba(255,255,255,0.3)',
+                    fontSize: '2rem'
+                  }}
+                >
+                  {theme.icon}
+                </Avatar>
+              }
+              title={
+                <Typography variant="h3" fontWeight="bold" color="white">
+                  Level {level.level}: {level.name}
+                </Typography>
+              }
+              subheader={
+                <Box>
+                  <Typography variant="h6" color="rgba(255,255,255,0.9)" sx={{ mb: 1 }}>
+                    {level.description}
+                  </Typography>
+                  <Stack direction='row' spacing={2}>
+                    <Typography color='white'>Tags:</Typography>
+                    {level.tags.split('/').map((tag, index) => {
+                      return <Chip 
+                        label={tag}
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.2)',
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
+                        key={index}
+                      />
+                    })}
+                  </Stack>
+                </Box>
+              }
+              sx={{ p: 3 }}
+            />
+          </Card>
 
-            <Typography variant="subtitle1">Exits From Level:</Typography>
-            <Box pl={2}>
-              <SelectFromCount count={exitFromLevelCount} list={levelExits}/>
-            </Box>
-            
-            <Typography variant="subtitle1">Effects:</Typography>
-            <Box pl={2}>
-              <SelectFromCount count={effectCount} list={effects} />
-            </Box>
-            
-            {/*Add loop to get more than 1 spawn per room. */}
-            <Typography variant="subtitle1">Spawns:</Typography>
-            <Stack direction='row' spacing={2}>
-              {[...Array(Math.floor(Math.random() * parseInt(level.maxSpawns)) + 1)].map(() => determineSpawns(null))}
-            </Stack>
-            
-            <Typography variant="subtitle1">Defects:</Typography>
-            <Box pl={2}>
-              <SelectFromCount count={defectCount} list={defects}/>
-            </Box>
-          </Box>
+          {/* Content */}
+          {level.finite === 'Yes' ? (
+            <FiniteRoom />
+          ) : (
+            <Card
+              elevation={8}
+              sx={{
+                borderRadius: 4,
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              <CardHeader
+                title={
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h4" fontWeight="bold" color="white">
+                      Procedural Room Generator
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={() => setRefresh(!refresh)}
+                      startIcon={<Refresh />}
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        backdropFilter: 'blur(10px)',
+                        '&:hover': {
+                          bgcolor: 'rgba(255,255,255,0.3)'
+                        },
+                        borderRadius: 3
+                      }}
+                    >
+                      Generate New Room
+                    </Button>
+                  </Box>
+                }
+                sx={{ color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                {/* Current Environment */}
+                {level.environments !== 'None' && (
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 2,
+                      mb: 3,
+                      borderRadius: 2,
+                      background: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(10px)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Typography variant="h6" color="white" fontWeight="bold">
+                      Current Environment: {level.environments.split('/')[Math.floor(Math.random() * level.environments.split('/').length)]}
+                    </Typography>
+                  </Paper>
+                )}
+
+                {/* Room Stats */}
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard 
+                      icon={<Home fontSize="small" />} 
+                      label="Room Size" 
+                      value={`${width}×${length}×${level.roomHeight} ft`} 
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard 
+                      icon={<Visibility fontSize="small" />} 
+                      label="Light Level" 
+                      value={lightLevel} 
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard 
+                      icon={<Thermostat fontSize="small" />} 
+                      label="Heat Level" 
+                      value={heat} 
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <StatCard 
+                      icon={<Dangerous fontSize="small" />} 
+                      label="Corrosion" 
+                      value={corrosion} 
+                      color={corrosion > 0 ? '#ef4444' : 'rgba(255,255,255,0.9)'}
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Room Content Sections */}
+                <SectionCard icon={<ExitToApp />} title={`Exits (${exitCount})`}>
+                  <SelectFromCount count={exitCount} list={exitTypes} type={'exits'}/>
+                </SectionCard>
+
+                <SectionCard icon={<Map />} title="Level Exits">
+                  <SelectFromCount count={exitFromLevelCount} list={levelExits} type={'exitsFromLevel'}/>
+                </SectionCard>
+
+                <SectionCard icon={<AutoAwesome />} title="Environmental Effects">
+                  <SelectFromCount count={effectCount} list={effects} type={'effects'}/>
+                </SectionCard>
+
+                <SectionCard icon={<Group />} title="Spawned Objects & Entities" defaultExpanded={true}>
+                  <Grid container spacing={2}>
+                    {[...Array(Math.floor(Math.random() * parseInt(level.maxSpawns)) + 1)].map((_, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        {determineSpawns(null)}
+                      </Grid>
+                    ))}
+                  </Grid>
+                </SectionCard>
+
+                <SectionCard icon={<Construction />} title="Room Defects">
+                  <SelectFromCount count={defectCount} list={defects} type={'defects'}/>
+                </SectionCard>
+              </CardContent>
+            </Card>
+          )}
         </Box>
-      }
+      </Fade>
     </Box>
-  )
+  );
 }

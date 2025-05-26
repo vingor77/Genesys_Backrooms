@@ -45,10 +45,13 @@ export default function Levels() {
         exitFromLevel: data[i].exitFromLevel,
         defectCount: data[i].defectCount,
         defects: data[i].defects,
+        environments: data[i].environments,
   
         // Metadata
         tags: data[i].tags,
         spawnChances: data[i].spawnChances,
+        maxSpawns: data[i].maxSpawns,
+        socialEncounters: data[i].socialEncounters,
   
         // Finite level properties
         finite: data[i].finite,

@@ -1,10 +1,10 @@
-import { Box, Button, Card, Divider, debounce, MenuItem, Select, Stack, TextField, Tooltip, Typography, CardContent, CardHeader, Tabs, Tab } from "@mui/material";
+import { Box, Button, Card, debounce, MenuItem, Select, Stack, TextField, Tooltip, Typography, CardContent, CardHeader, Tabs, Tab,Grid,Paper,Chip,IconButton,Alert,LinearProgress,Badge,Slide } from "@mui/material";
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import db from '../Components/firebase';
 import NotLoggedIn from "../Components/notLoggedIn";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { TextFieldElement, useFieldArray, useForm } from 'react-hook-form-mui';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, Timer, Shield, Diamond,AccessTime,AdminPanelSettings,Edit,RemoveCircle,PlayArrow,Psychology,LocalHospital,Warning,FitnessCenter } from '@mui/icons-material';
 
 export default function PlayerFunctions() {
   const [timers, setTimers] = useState([]);
@@ -319,53 +319,180 @@ export default function PlayerFunctions() {
     const resourcesChange = debounce(handleResources, 500);
 
     return (
-      <Box>
-        <Card>
-          <CardHeader title="Equipped Gear" />
-          <CardContent>
-            <Stack gap={1} direction={{sm: 'column', md: 'row'}}>
-              <Stack gap={1} width={{sm: '100%', md: '50%'}}>
-                <TextFieldElement fullWidth control={control} name="gear.head" label='Head' onChange={(event) => gearChange(event, "head")} />
-                <TextFieldElement fullWidth control={control} name="gear.chest" label='Chest' onChange={(event) => gearChange(event, "chest")} />
-                <TextFieldElement fullWidth control={control} name="gear.arms" label='Arms' onChange={(event) => gearChange(event, "arms")} />
-                <TextFieldElement fullWidth control={control} name="gear.legs" label='Legs' onChange={(event) => gearChange(event, "legs")} />
-                <TextFieldElement fullWidth control={control} name="gear.feet" label='Feet' onChange={(event) => gearChange(event, "feet")} />
-              </Stack>
-              <Stack gap={1} width={{sm: '100%', md: '50%'}}>
-                <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Ears' onChange={(event) => jewelryChange(event, "earrings")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Neck' onChange={(event) => jewelryChange(event, "choker")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Wrist' onChange={(event) => jewelryChange(event, "bracelet")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.leftRing" label='Left Ring' onChange={(event) => jewelryChange(event, "leftRing")} />
-                <TextFieldElement fullWidth control={control} name="jewelry.rightRing" label='Right Ring' onChange={(event) => jewelryChange(event, "rightRing")} />
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader title='Resources' />
-          <CardContent>
-            <Stack direction='row' gap={1} flexWrap='wrap'>
-              {fields.map((field, index) => (
-                <Box key={field.id}>
-                  <Stack spacing={1}>
-                    <TextFieldElement control={control} label="Resource Name" name={`resources.${index}.name`} onChange={(event) => resourcesChange(event, index, "name")} />
-                    <TextFieldElement control={control} label="Resources Remaining" name={`resources.${index}.remaining`} type="number" onChange={(event) => resourcesChange(event, index, 'remaining')} />
-                    <TextFieldElement control={control} label="Resource Maximum" name={`resources.${index}.maximum`} type="number" onChange={(event) => resourcesChange(event, index, 'maximum')} />
-                  </Stack>
-                  <Box mt={2}>
-                    <Button onClick={() => removeResource(index)} color="error" startIcon={<Delete />}>Delete</Button>
+      <Box sx={{ mt: 3 }}>
+        <Grid container spacing={3}>
+          {/* Equipment Card */}
+          <Grid item xs={12}>
+            <Card 
+              elevation={4}
+              sx={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                borderRadius: 3
+              }}
+            >
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Shield />
+                    <Typography variant="h5" fontWeight="bold">Equipped Gear</Typography>
                   </Box>
+                }
+                sx={{ pb: 1 }}
+              />
+              <CardContent>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Paper elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Shield fontSize="small" />
+                        Armor & Protection
+                      </Typography>
+                      <Stack spacing={2}>
+                        <TextFieldElement fullWidth control={control} name="gear.head" label='Head' 
+                          onChange={(event) => gearChange(event, "head")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="gear.chest" label='Chest' 
+                          onChange={(event) => gearChange(event, "chest")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="gear.arms" label='Arms' 
+                          onChange={(event) => gearChange(event, "arms")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="gear.legs" label='Legs' 
+                          onChange={(event) => gearChange(event, "legs")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="gear.feet" label='Feet' 
+                          onChange={(event) => gearChange(event, "feet")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Paper elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Diamond fontSize="small" />
+                        Jewelry & Accessories
+                      </Typography>
+                      <Stack spacing={2}>
+                        <TextFieldElement fullWidth control={control} name="jewelry.earrings" label='Ears' 
+                          onChange={(event) => jewelryChange(event, "earrings")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="jewelry.choker" label='Neck' 
+                          onChange={(event) => jewelryChange(event, "choker")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="jewelry.bracelet" label='Wrist' 
+                          onChange={(event) => jewelryChange(event, "bracelet")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="jewelry.leftRing" label='Left Ring' 
+                          onChange={(event) => jewelryChange(event, "leftRing")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                        <TextFieldElement fullWidth control={control} name="jewelry.rightRing" label='Right Ring' 
+                          onChange={(event) => jewelryChange(event, "rightRing")} 
+                          sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                        />
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Resources Card */}
+          <Grid item xs={12}>
+            <Card elevation={4} sx={{ borderRadius: 3 }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <FitnessCenter color="primary" />
+                    <Typography variant="h5" fontWeight="bold">Resources</Typography>
+                  </Box>
+                }
+                sx={{ bgcolor: 'primary.main', color: 'white' }}
+              />
+              <CardContent>
+                <Grid container spacing={3}>
+                  {fields.map((field, index) => (
+                    <Grid item xs={12} md={6} lg={4} key={field.id}>
+                      <Paper 
+                        elevation={2} 
+                        sx={{ 
+                          p: 3, 
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                          color: 'white',
+                          position: 'relative'
+                        }}
+                      >
+                        <IconButton
+                          onClick={() => removeResource(index)}
+                          sx={{ position: 'absolute', top: 8, right: 8, color: 'white' }}
+                          size="small"
+                        >
+                          <Delete />
+                        </IconButton>
+                        <Stack spacing={2} sx={{ mt: 1 }}>
+                          <TextFieldElement 
+                            control={control} 
+                            label="Resource Name" 
+                            name={`resources.${index}.name`} 
+                            onChange={(event) => resourcesChange(event, index, "name")}
+                            sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                          />
+                          <Box display="flex" gap={1}>
+                            <TextFieldElement 
+                              control={control} 
+                              label="Current" 
+                              name={`resources.${index}.remaining`} 
+                              type="number" 
+                              onChange={(event) => resourcesChange(event, index, 'remaining')}
+                              sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                            />
+                            <TextFieldElement 
+                              control={control} 
+                              label="Maximum" 
+                              name={`resources.${index}.maximum`} 
+                              type="number" 
+                              onChange={(event) => resourcesChange(event, index, 'maximum')}
+                              sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                            />
+                          </Box>
+                          {page.resources[index]?.remaining && page.resources[index]?.maximum && (
+                            <LinearProgress 
+                              variant="determinate" 
+                              value={(page.resources[index].remaining / page.resources[index].maximum) * 100}
+                              sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.3)' }}
+                            />
+                          )}
+                        </Stack>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Box mt={3} display="flex" justifyContent="center">
+                  <Button 
+                    onClick={addResource} 
+                    startIcon={<Add />}
+                    variant="contained"
+                    size="large"
+                    sx={{ borderRadius: 3, px: 4 }}
+                  >
+                    Add Resource
+                  </Button>
                 </Box>
-              ))}
-            </Stack>
-            <br />
-            <Divider />
-            <br />
-            <Box>
-              <Button onClick={addResource} startIcon={<Add />}>Add Item</Button>
-            </Box>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Box>
     )
   }
@@ -453,7 +580,15 @@ export default function PlayerFunctions() {
       <Box>
         {exhaustionEffects.map((effect, index) => {
           if(index <= effects.exhaustion) {
-            return <Typography>{index + 1}: {effect}</Typography>
+            return (
+              <Alert 
+                key={index}
+                severity={index === 0 ? "success" : index <= 2 ? "warning" : "error"}
+                sx={{ mb: 1 }}
+              >
+                <Typography><strong>Level {index}:</strong> {effect}</Typography>
+              </Alert>
+            )
           }
         })}
       </Box>
@@ -473,7 +608,15 @@ export default function PlayerFunctions() {
       <Box>
         {diseaseEffects.map((effect, index) => {
           if(index <= effects.disease) {
-            return <Typography>{index + 1}:  {effect}</Typography>
+            return (
+              <Alert 
+                key={index}
+                severity={index === 0 ? "success" : index <= 1 ? "info" : index <= 2 ? "warning" : "error"}
+                sx={{ mb: 1 }}
+              >
+                <Typography><strong>Stage {index}:</strong> {effect}</Typography>
+              </Alert>
+            )
           }
         })}
       </Box>
@@ -492,7 +635,15 @@ export default function PlayerFunctions() {
       <Box>
         {wretchedEffects.map((effect, index) => {
           if(index <= effects.wretchedCycle) {
-            return <Typography>{index + 1}:  {effect}</Typography>
+            return (
+              <Alert 
+                key={index}
+                severity={index === 0 ? "success" : index === 1 ? "warning" : "error"}
+                sx={{ mb: 1 }}
+              >
+                <Typography><strong>Stage {index}:</strong> {effect}</Typography>
+              </Alert>
+            )
           }
         })}
       </Box>
@@ -521,7 +672,15 @@ export default function PlayerFunctions() {
         {sanityEffects.map((effect, index) => {
           if(index <= effects.sanity && sanityEffects[index] !== 'None') {
             count++;
-            return <Typography>{count}:  {effect}</Typography>
+            return (
+              <Alert 
+                key={index}
+                severity={count <= 2 ? "info" : count <= 4 ? "warning" : "error"}
+                sx={{ mb: 1 }}
+              >
+                <Typography><strong>Level {index}:</strong> {effect}</Typography>
+              </Alert>
+            )
           }
         })}
       </Box>
@@ -533,209 +692,709 @@ export default function PlayerFunctions() {
     const brawn = parseInt(effects.brawn);
     const maxEncumbrance = parseInt(5 + brawn);
 
-    if(encumbrance <= maxEncumbrance) return <Typography>No detriment</Typography>
-    else if(encumbrance > maxEncumbrance && encumbrance < (maxEncumbrance + brawn)) return <Typography>You add {encumbrance - maxEncumbrance} setback dice to all brawn and agility checks.</Typography>
-    else return <Typography>You add {encumbrance - maxEncumbrance} setback dice to all brawn and agility checks and all maneuvers now cost strain.</Typography>
+    let severity = "success";
+    let message = "No detriment";
+
+    if(encumbrance > maxEncumbrance && encumbrance < (maxEncumbrance + brawn)) {
+      severity = "warning";
+      message = `You add ${encumbrance - maxEncumbrance} setback dice to all brawn and agility checks.`;
+    } else if(encumbrance >= (maxEncumbrance + brawn)) {
+      severity = "error";
+      message = `You add ${encumbrance - maxEncumbrance} setback dice to all brawn and agility checks and all maneuvers now cost strain.`;
+    }
+
+    return (
+      <Alert severity={severity}>
+        <Typography>{message}</Typography>
+      </Alert>
+    )
   }
 
   const DisplayEffects = () => {
     return (
-      <Box>
-        <Button onClick={updateEffects} variant="outlined">Confirm</Button>
-        <Stack gap={1} padding={2}>
-          <TextField type="number" label='Exhaustion Level' value={effects.exhaustion} variant="outlined" onChange={(e) => setEffects({...effects, exhaustion: e.target.value})} sx={{width: '300px'}}/>
-          <DisplayExhaustion />
-        </Stack>
-        <Stack gap={1} padding={2}>
-          <TextField type="number" label='The Disease Level' value={effects.disease} variant="outlined" onChange={(e) => setEffects({...effects, disease: e.target.value})} sx={{width: '300px'}} />
-          <DisplayDisease />
-        </Stack>
-        <Stack gap={1} padding={2}>
-          <TextField type="number" label='The Wretched Cycle Level' value={effects.wretchedCycle} variant="outlined" onChange={(e) => setEffects({...effects, wretchedCycle: e.target.value})} sx={{width: '300px'}} />
-          <DisplayWretched />
-        </Stack>
-        <Stack gap={1} padding={2}>
-          <TextField type="number" label='Sanity Level' value={effects.sanity} variant="outlined" onChange={(e) => setEffects({...effects, sanity: e.target.value})} sx={{width: '300px'}} />
-          <DisplaySanity />
-        </Stack>
-        <Stack gap={1} padding={2}>
-          <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
-            <TextField type="number" label='Encumbrance' value={effects.encumbrance} variant="outlined" onChange={(e) => setEffects({...effects, encumbrance: e.target.value})} sx={{width: '300px'}} />
-            <TextField type="number" label='Brawn' value={effects.brawn} variant="outlined" onChange={(e) => setEffects({...effects, brawn: e.target.value})} sx={{width: '300px'}} />
-            <TextField type="number" label='Max Encumbrance' value={parseInt(effects.brawn) + 5} variant="outlined" sx={{width: '300px'}} disabled/>
-          </Stack>
-         <DisplayEncumbrance />
-        </Stack>
+      <Box sx={{ mt: 3 }}>
+        <Box display="flex" justifyContent="center" mb={4}>
+          <Button 
+            onClick={updateEffects} 
+            variant="contained" 
+            size="large"
+            startIcon={<LocalHospital />}
+            sx={{ borderRadius: 3, px: 4, py: 1.5 }}
+          >
+            Update Effects
+          </Button>
+        </Box>
+
+        <Grid container spacing={3}>
+          {/* Exhaustion */}
+          <Grid item xs={12} lg={6}>
+            <Card elevation={4} sx={{ borderRadius: 3, height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <FitnessCenter />
+                    <Typography variant="h6">Exhaustion</Typography>
+                    <Chip 
+                      label={`Level ${effects.exhaustion}`} 
+                      color={effects.exhaustion == 0 ? "success" : effects.exhaustion <= 2 ? "warning" : "error"}
+                      size="small"
+                    />
+                  </Box>
+                }
+                sx={{ bgcolor: 'error.main', color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                <TextField 
+                  type="number" 
+                  label='Exhaustion Level' 
+                  value={effects.exhaustion} 
+                  variant="outlined" 
+                  onChange={(e) => setEffects({...effects, exhaustion: e.target.value})} 
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <DisplayExhaustion />
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Disease */}
+          <Grid item xs={12} lg={6}>
+            <Card elevation={4} sx={{ borderRadius: 3, height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <LocalHospital />
+                    <Typography variant="h6">The Disease</Typography>
+                    <Chip 
+                      label={`Stage ${effects.disease}`} 
+                      color={effects.disease == 0 ? "success" : effects.disease <= 2 ? "warning" : "error"}
+                      size="small"
+                    />
+                  </Box>
+                }
+                sx={{ bgcolor: 'warning.main', color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                <TextField 
+                  type="number" 
+                  label='The Disease Level' 
+                  value={effects.disease} 
+                  variant="outlined" 
+                  onChange={(e) => setEffects({...effects, disease: e.target.value})} 
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <DisplayDisease />
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Wretched Cycle */}
+          <Grid item xs={12} lg={6}>
+            <Card elevation={4} sx={{ borderRadius: 3, height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Warning />
+                    <Typography variant="h6">Wretched Cycle</Typography>
+                    <Chip 
+                      label={`Stage ${effects.wretchedCycle}`} 
+                      color={effects.wretchedCycle == 0 ? "success" : effects.wretchedCycle == 1 ? "warning" : "error"}
+                      size="small"
+                    />
+                  </Box>
+                }
+                sx={{ bgcolor: 'secondary.main', color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                <TextField 
+                  type="number" 
+                  label='The Wretched Cycle Level' 
+                  value={effects.wretchedCycle} 
+                  variant="outlined" 
+                  onChange={(e) => setEffects({...effects, wretchedCycle: e.target.value})} 
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <DisplayWretched />
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Sanity */}
+          <Grid item xs={12} lg={6}>
+            <Card elevation={4} sx={{ borderRadius: 3, height: '100%' }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Psychology />
+                    <Typography variant="h6">Sanity</Typography>
+                    <Chip 
+                      label={`Level ${effects.sanity}`} 
+                      color={effects.sanity == 0 ? "success" : effects.sanity <= 4 ? "info" : effects.sanity <= 7 ? "warning" : "error"}
+                      size="small"
+                    />
+                  </Box>
+                }
+                sx={{ bgcolor: 'info.main', color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                <TextField 
+                  type="number" 
+                  label='Sanity Level' 
+                  value={effects.sanity} 
+                  variant="outlined" 
+                  onChange={(e) => setEffects({...effects, sanity: e.target.value})} 
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <DisplaySanity />
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Encumbrance */}
+          <Grid item xs={12}>
+            <Card elevation={4} sx={{ borderRadius: 3 }}>
+              <CardHeader 
+                title={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <FitnessCenter />
+                    <Typography variant="h6">Encumbrance & Capacity</Typography>
+                  </Box>
+                }
+                sx={{ bgcolor: 'success.main', color: 'white', pb: 1 }}
+              />
+              <CardContent>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} md={4}>
+                    <TextField 
+                      type="number" 
+                      label='Current Encumbrance' 
+                      value={effects.encumbrance} 
+                      variant="outlined" 
+                      onChange={(e) => setEffects({...effects, encumbrance: e.target.value})} 
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField 
+                      type="number" 
+                      label='Brawn Score' 
+                      value={effects.brawn} 
+                      variant="outlined" 
+                      onChange={(e) => setEffects({...effects, brawn: e.target.value})} 
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField 
+                      type="number" 
+                      label='Max Encumbrance' 
+                      value={parseInt(effects.brawn) + 5} 
+                      variant="outlined" 
+                      fullWidth
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box mt={2}>
+                      <Typography variant="subtitle2" gutterBottom>Encumbrance Status:</Typography>
+                      <DisplayEncumbrance />
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Box>
     )
   }
 
+  const TimerCard = memo(({ timer, isGlobal = false }) => {
+    const getTimerColor = useCallback((time) => {
+      if (time <= 5) return 'error';
+      if (time <= 15) return 'warning';
+      return 'success';
+    }, []);
+
+    const displayName = isGlobal ? timer.name.split('://:')[0] : timer.name;
+
+    return (
+      <Card 
+        elevation={2}
+        sx={{ 
+          borderRadius: 2,
+          background: isGlobal 
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          color: 'white',
+          position: 'relative',
+          minHeight: '120px',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            transition: 'transform 0.2s ease'
+          }
+        }}
+      >
+        {isGlobal && (
+          <Chip
+            label="Global"
+            size="small"
+            sx={{ 
+              position: 'absolute', 
+              top: 4, 
+              right: 4, 
+              bgcolor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontSize: '0.7rem',
+              height: '20px'
+            }}
+          />
+        )}
+        <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+          <Tooltip title={timer.description} arrow>
+            <Typography 
+              variant="subtitle1" 
+              fontWeight="bold" 
+              gutterBottom 
+              sx={{ 
+                cursor: 'help',
+                fontSize: '0.95rem',
+                lineHeight: 1.2,
+                mb: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {displayName}
+            </Typography>
+          </Tooltip>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} mb={1}>
+            <AccessTime fontSize="small" />
+            <Typography variant="h6" fontWeight="bold">
+              {timer.time}
+            </Typography>
+          </Box>
+          <LinearProgress 
+            variant="determinate" 
+            value={Math.min((timer.time / 100) * 100, 100)}
+            color={getTimerColor(timer.time)}
+            sx={{ 
+              height: 6, 
+              borderRadius: 3,
+              bgcolor: 'rgba(255,255,255,0.3)',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+    );
+  });
+
+  // Memoize the timer list to prevent unnecessary re-renders
+  const TimersList = memo(({ timers, isGlobal = false, title, color }) => (
+    <Card elevation={4} sx={{ borderRadius: 3, height: '500px' }}>
+      <CardHeader 
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            {isGlobal ? <AdminPanelSettings /> : <Timer />}
+            <Typography variant="h6">{title}</Typography>
+            <Chip label={timers.length} color={color} size="small" />
+          </Box>
+        }
+        sx={{ bgcolor: `${color}.main`, color: 'white', py: 1 }}
+      />
+      <CardContent sx={{ height: 'calc(100% - 56px)', overflow: 'auto', p: 2 }}>
+        {timers.length === 0 ? (
+          <Typography variant="body1" textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+            No {isGlobal ? 'global' : 'personal'} timers active
+          </Typography>
+        ) : (
+          <Grid container spacing={1.5}>
+            {timers.map((timer) => (
+              <Grid item xs={6} sm={4} md={3} lg={6} xl={4} key={`${timer.name}-${timer.time}`}>
+                <TimerCard timer={timer} isGlobal={isGlobal} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </CardContent>
+    </Card>
+  ));
+
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
-      <Box padding={2}>
-        <br />
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label='Gear and Resources'/>
-          <Tab label='Timers' />
-          <Tab label='Effects' />
-        </Tabs>
+      <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
+        <Typography variant="h3" fontWeight="bold" textAlign="center" gutterBottom sx={{ mb: 4 }}>
+          Player Dashboard
+        </Typography>
+        
+        <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{ 
+              '& .MuiTab-root': { 
+                fontSize: '1.1rem', 
+                fontWeight: 'bold',
+                py: 2
+              }
+            }}
+          >
+            <Tab 
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Shield />
+                  Gear & Resources
+                </Box>
+              }
+            />
+            <Tab 
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Timer />
+                  Timers
+                </Box>
+              }
+            />
+            <Tab 
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Psychology />
+                  Effects
+                </Box>
+              }
+            />
+          </Tabs>
+        </Paper>
 
-        {tabValue === 0 ?
-          <Box>
-            <Divider>Gear and Resources</Divider>
-            {Object.keys(page).length > 0 ? 
-              <HandleForm />
-            :
-              getFromEquippedDB()
-            }
-          </Box>
-        :
-          ""
-        }
-        {tabValue === 1 ?
-        <Box>
-          <Divider>Timers</Divider>
-          <br />
-          {timers.length > 0 || globalTimers.length > 0 ?
+        {/* Gear and Resources Tab */}
+        {tabValue === 0 && (
+          <Slide direction="right" in={tabValue === 0} timeout={300}>
             <Box>
-              <Stack direction={{sm: 'column', md: 'row'}} maxHeight='500px' gap={1}>
-                <Box width={{sm: '100%', md: '60%'}} border='1px solid black' maxHeight='500px' overflow='auto'>
-                  <br />
-                  <Typography variant="h4" textAlign='center'>Personal Timers</Typography>
-                  <Stack direction={{sm: 'column', md: 'row'}} flexWrap='wrap' gap={1} padding={2}>
-                    {timers.length === 0 ? "" : timers.map((item) => {
-                      return (
-                        <Card variant="outlined" sx={{width: {xs: '100%', md: '300px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
-                          <Box sx={{ p: 2 }}>
-                            <Tooltip title={item.description}>
-                              <Typography variant="h4">{item.name}</Typography>
-                            </Tooltip>
-                            <Typography>Time remaining: {item.time}</Typography>
+              {Object.keys(page).length > 0 ? (
+                <HandleForm />
+              ) : (
+                getFromEquippedDB()
+              )}
+            </Box>
+          </Slide>
+        )}
+
+        {/* Timers Tab */}
+        {tabValue === 1 && (
+          <Slide direction="right" in={tabValue === 1} timeout={300}>
+            <Box sx={{ mt: 3 }}>
+              {/* Timer Display Section */}
+              {timers.length > 0 || globalTimers.length > 0 ? (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  {/* Personal Timers */}
+                  <Grid item xs={12} lg={8}>
+                    <TimersList 
+                      timers={timers} 
+                      title="Personal Timers" 
+                      color="primary" 
+                    />
+                  </Grid>
+
+                  {/* Global Timers */}
+                  <Grid item xs={12} lg={4}>
+                    <TimersList 
+                      timers={globalTimers} 
+                      title="Global Timers" 
+                      color="secondary" 
+                      isGlobal
+                    />
+                  </Grid>
+                </Grid>
+              ) : (
+                getFromDB()
+              )}
+
+              {/* Timer Management Section */}
+              <Grid container spacing={3}>
+                {/* Add New Timer */}
+                <Grid item xs={12} lg={4}>
+                  <Card elevation={4} sx={{ borderRadius: 3 }}>
+                    <CardHeader 
+                      title={
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Add />
+                          <Typography variant="h6">Add New Timer</Typography>
+                        </Box>
+                      }
+                      sx={{ bgcolor: 'success.main', color: 'white' }}
+                    />
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <TextField 
+                          label='Timer Name' 
+                          value={addName} 
+                          variant="outlined" 
+                          onChange={(e) => setAddName(e.target.value)}
+                          fullWidth
+                        />
+                        <TextField 
+                          type="number" 
+                          label='Timer Value' 
+                          variant="outlined" 
+                          value={addTime} 
+                          onChange={(e) => setAddTime(e.target.value)}
+                          fullWidth
+                        />
+                        <TextField 
+                          label='Timer Description' 
+                          variant="outlined" 
+                          value={addDescription} 
+                          onChange={(e) => setAddDescription(e.target.value)}
+                          multiline
+                          rows={3}
+                          fullWidth
+                        />
+                        <Button 
+                          onClick={addTimer} 
+                          variant="contained" 
+                          size="large"
+                          startIcon={<Add />}
+                          sx={{ borderRadius: 3 }}
+                        >
+                          Create Timer
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Admin Global Timer */}
+                {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' && (
+                  <Grid item xs={12} lg={4}>
+                    <Card elevation={4} sx={{ borderRadius: 3 }}>
+                      <CardHeader 
+                        title={
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <AdminPanelSettings />
+                            <Typography variant="h6">Add Global Timer</Typography>
                           </Box>
-                        </Card>
-                      )
-                    })}
-                  </Stack>
-                </Box>
-                <Box width={{sm: '100%', md: '40%'}} border='1px solid black' maxHeight='500px' overflow='auto'>
-                  <br />
-                  <Typography variant="h4" textAlign='center'>Global Timers</Typography>
-                  <Stack direction='row' flexWrap='wrap' gap={1} padding={2}>
-                    {globalTimers.length === 0 ? "" : globalTimers.map((item) => {
-                      return (
-                        <Card variant="outlined" sx={{width: {xs: '100%', md: '300px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '150px'}}>
-                          <Box sx={{ p: 2 }}>
-                            <Tooltip title={item.description}>
-                              <Typography variant="h4">{item.name.split('://:')[0]}</Typography>
-                            </Tooltip>
-                            <Typography>Time remaining: {item.time}</Typography>
+                        }
+                        sx={{ bgcolor: 'warning.main', color: 'white' }}
+                      />
+                      <CardContent>
+                        <Stack spacing={2}>
+                          <TextField 
+                            label='Timer Name' 
+                            value={globalTimer.name} 
+                            variant="outlined" 
+                            onChange={(e) => setGlobalTimer({...globalTimer, name: e.target.value})}
+                            fullWidth
+                          />
+                          <TextField 
+                            type="number" 
+                            label='Timer Value' 
+                            variant="outlined" 
+                            value={globalTimer.value} 
+                            onChange={(e) => setGlobalTimer({...globalTimer, value: e.target.value})}
+                            fullWidth
+                          />
+                          <TextField 
+                            label='Timer Description' 
+                            variant="outlined" 
+                            value={globalTimer.description} 
+                            onChange={(e) => setGlobalTimer({...globalTimer, description: e.target.value})}
+                            multiline
+                            rows={3}
+                            fullWidth
+                          />
+                          <Button 
+                            onClick={addGlobalTimer} 
+                            variant="contained" 
+                            size="large"
+                            startIcon={<AdminPanelSettings />}
+                            sx={{ borderRadius: 3 }}
+                          >
+                            Create Global Timer
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
+
+                {/* Edit Timer */}
+                <Grid item xs={12} lg={4}>
+                  <Card elevation={4} sx={{ borderRadius: 3 }}>
+                    <CardHeader 
+                      title={
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Edit />
+                          <Typography variant="h6">Edit Timer</Typography>
+                        </Box>
+                      }
+                      sx={{ bgcolor: 'info.main', color: 'white' }}
+                    />
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <Select 
+                          value={editName || 'None'} 
+                          onChange={handleEditSelect}
+                          fullWidth
+                          displayEmpty
+                        >
+                          <MenuItem value='None'>Select Timer to Edit</MenuItem>
+                          {timers.map((timer) => (
+                            <MenuItem key={timer.name} value={timer.name}>{timer.name}</MenuItem>
+                          ))}
+                          {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' &&
+                            globalTimers.map((timer) => (
+                              <MenuItem key={timer.name} value={timer.name}>
+                                {timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}
+                              </MenuItem>
+                            ))
+                          }
+                        </Select>
+                        <TextField 
+                          type="number" 
+                          label='New Timer Value' 
+                          variant="outlined" 
+                          value={editTime} 
+                          onChange={(e) => setEditTime(e.target.value)}
+                          fullWidth
+                          disabled={editName === 'None'}
+                        />
+                        <TextField 
+                          label='New Timer Description' 
+                          variant="outlined" 
+                          value={editDescription} 
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          multiline
+                          rows={3}
+                          fullWidth
+                          disabled={editName === 'None'}
+                        />
+                        <Button 
+                          onClick={editTimer} 
+                          variant="contained" 
+                          size="large"
+                          startIcon={<Edit />}
+                          disabled={editName === 'None'}
+                          sx={{ borderRadius: 3 }}
+                        >
+                          Update Timer
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Remove Timer */}
+                <Grid item xs={12} lg={4}>
+                  <Card elevation={4} sx={{ borderRadius: 3 }}>
+                    <CardHeader 
+                      title={
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <RemoveCircle />
+                          <Typography variant="h6">Remove Timer</Typography>
+                        </Box>
+                      }
+                      sx={{ bgcolor: 'error.main', color: 'white' }}
+                    />
+                    <CardContent>
+                      <Stack spacing={2}>
+                        <Select 
+                          value={removeName || 'None'} 
+                          onChange={(e) => setRemoveName(e.target.value)}
+                          fullWidth
+                          displayEmpty
+                        >
+                          <MenuItem value='None'>Select Timer to Remove</MenuItem>
+                          {timers.map((timer) => (
+                            <MenuItem key={timer.name} value={timer.name}>{timer.name}</MenuItem>
+                          ))}
+                          {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' &&
+                            globalTimers.map((timer) => (
+                              <MenuItem key={timer.name} value={timer.name}>
+                                {timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}
+                              </MenuItem>
+                            ))
+                          }
+                        </Select>
+                        <Button 
+                          onClick={removeTimer} 
+                          variant="contained" 
+                          color="error"
+                          size="large"
+                          startIcon={<Delete />}
+                          disabled={removeName === 'None'}
+                          sx={{ borderRadius: 3, mt: 4 }}
+                        >
+                          Delete Timer
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Admin Tick Timers */}
+                {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' && (
+                  <Grid item xs={12} lg={4}>
+                    <Card elevation={4} sx={{ borderRadius: 3 }}>
+                      <CardHeader 
+                        title={
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <PlayArrow />
+                            <Typography variant="h6">Tick All Timers</Typography>
                           </Box>
-                        </Card>
-                      )
-                    })}
-                  </Stack>
-                </Box>
-              </Stack>
+                        }
+                        sx={{ bgcolor: 'purple', color: 'white' }}
+                      />
+                      <CardContent>
+                        <Stack spacing={2}>
+                          <TextField 
+                            type="number" 
+                            label='Tick Value' 
+                            value={tick} 
+                            variant="outlined" 
+                            onChange={(e) => setTick(e.target.value)}
+                            fullWidth
+                          />
+                          <Button 
+                            onClick={reduceTime} 
+                            variant="contained" 
+                            size="large"
+                            startIcon={<PlayArrow />}
+                            sx={{ 
+                              borderRadius: 3, 
+                              mt: 4,
+                              bgcolor: 'purple',
+                              '&:hover': { bgcolor: 'darkmagenta' }
+                            }}
+                          >
+                            Advance Time
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
+              </Grid>
             </Box>
-          :
-            getFromDB()
-          }
-          <br />
-          <Stack direction={{sm: 'column', md: 'row'}} spacing={1}>
-            <Box width={{sm: '100%', md: '33%'}} border='1px solid black'>
-              <br />
-              <Typography variant="h4" textAlign='center'>Add New Timer</Typography>
-              <br />
-              <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
-                <TextField label='Timer Name' value={addName} variant="outlined" onChange={(e) => setAddName(e.target.value)} />
-                <TextField type="number" label='Timer value' variant="outlined" value={addTime} onChange={(e) => setAddTime(e.target.value)} />
-                <TextField label='Timer Description' variant="outlined" value={addDescription} onChange={(e) => setAddDescription(e.target.value)} />
-                <Button onClick={addTimer} variant="outlined">Confirm</Button>
-              </Stack>
+          </Slide>
+        )}
+
+        {/* Effects Tab */}
+        {tabValue === 2 && (
+          <Slide direction="right" in={tabValue === 2} timeout={300}>
+            <Box>
+              {effects && <DisplayEffects />}
             </Box>
-            {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
-              <Box border='1px solid black' padding={2}>
-                <Typography variant="h4" textAlign='center'>Add Global Timer</Typography>
-                <br />
-                <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
-                  <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
-                    <TextField label='Timer Name' value={globalTimer.name} variant="outlined" onChange={(e) => setGlobalTimer({...globalTimer, name: e.target.value})} />
-                    <TextField type="number" label='Timer value' variant="outlined" value={globalTimer.value} onChange={(e) => setGlobalTimer({...globalTimer, value: e.target.value})} />
-                    <TextField label='Timer Description' variant="outlined" value={globalTimer.description} onChange={(e) => setGlobalTimer({...globalTimer, description: e.target.value})} />
-                    <Button onClick={addGlobalTimer} variant="outlined">Confirm</Button>
-                  </Stack>
-                </Stack>
-              </Box>
-            :
-              ""
-            }
-            <Box width={{sm: '100%', md: '33%'}} border='1px solid black'>
-              <br />
-              <Typography variant="h4" textAlign='center'>Edit Timer</Typography>
-              <br />
-              <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
-                <Select value={editName || 'None'} onChange={handleEditSelect}>
-                  {timers.length === 0 ? "" : timers.map((timer) => {
-                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
-                  })}
-                  {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
-                    globalTimers.map((timer) => {
-                      return <MenuItem value={timer.name}>{timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}</MenuItem>
-                    })
-                  :
-                    ""
-                  }
-                  <MenuItem value='None'>None Selected</MenuItem>
-                </Select>
-                <TextField type="number" label='New Timer value' variant="outlined" value={editTime} onChange={(e) => setEditTime(e.target.value)} />
-                <TextField label='New Timer Description' variant="outlined" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
-                <Button onClick={editTimer} variant="outlined">Confirm</Button>
-              </Stack>
-            </Box>
-            <Box border='1px solid black' padding={2}>
-              <Typography variant="h4" textAlign='center'>Remove Timer</Typography>
-              <br />
-              <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
-                <Select value={removeName || 'None'} onChange={(e) => setRemoveName(e.target.value)}>
-                  {timers.map((timer) => {
-                    return <MenuItem value={timer.name}>{timer.name}</MenuItem>
-                  })}
-                  {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
-                    globalTimers.map((timer) => {
-                      return <MenuItem value={timer.name}>{timer.name.split("://:")[0] + " " + timer.name.split("://:")[1]}</MenuItem>
-                    })
-                  :
-                    ""
-                  }
-                  <MenuItem value='None'>None Selected</MenuItem>
-                </Select>
-                <Button onClick={removeTimer} variant="outlined">Confirm</Button>
-              </Stack>
-            </Box>
-            {localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN' ?
-              <Box border='1px solid black' padding={2}>
-                <Typography variant="h4" textAlign='center'>Tick Timers</Typography>
-                <br />
-                <Stack direction={{sm: 'column', md: 'row'}} spacing={2}>
-                  <Stack direction={{sm: 'column', md: 'row'}} gap={1} padding={2}>
-                    <TextField type="number" label='Tick Value' value={tick} variant="outlined" onChange={(e) => setTick(e.target.value)} />
-                    <Button onClick={reduceTime} variant="outlined">Confirm</Button>
-                  </Stack>
-                </Stack>
-              </Box>
-            :
-              ""
-            }
-          </Stack>
-        </Box>
-        :
-          ""
-        }
-        {tabValue === 2 ?
-          <DisplayEffects />
-        : 
-          ""
-        }
+          </Slide>
+        )}
       </Box>
   )
 }

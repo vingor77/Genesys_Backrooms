@@ -8,7 +8,7 @@ import GroupItem from "../Components/groupItem";
 export default function Groups() {
   const [groups, setGroups] = useState([]);
 
-  const data = [{"name":"Backrooms Robotics","description":"The Backrooms Robotics is a technologically advanced group of individuals who strive to create and distribute mechanical and technological items throughout the Backrooms.","purpose":"The surface purpose of Backrooms Robotics is to spread helpful devices to the people of the Backrooms. The hidden agenda however, is much more nefarious. Backrooms Robotics rig all of thier devices to track everything possible about a person using thier product. Thier true goal is to use this information to feed into an all-encompassing AI to wipe out not just the Backrooms but also the Frontrooms.","relations":"BNTG:3/EOA:2/INF:3/FOJ:3/KGI:3/MEG:2/MM:3/UEC:3/BBAR:3/BTA:3/CBS:3/CPS:3/IMBH:3/VOB:3","subGroups":"None","shortName":"BSR"},
+  const data3 = [{"name":"Backrooms Robotics","description":"The Backrooms Robotics is a technologically advanced group of individuals who strive to create and distribute mechanical and technological items throughout the Backrooms.","purpose":"The surface purpose of Backrooms Robotics is to spread helpful devices to the people of the Backrooms. The hidden agenda however, is much more nefarious. Backrooms Robotics rig all of thier devices to track everything possible about a person using thier product. Thier true goal is to use this information to feed into an all-encompassing AI to wipe out not just the Backrooms but also the Frontrooms.","relations":"BNTG:3/EOA:2/INF:3/FOJ:3/KGI:3/MEG:2/MM:3/UEC:3/BBAR:3/BTA:3/CBS:3/CPS:3/IMBH:3/VOB:3","subGroups":"None","shortName":"BSR"},
     {"name":"The Backrooms Non-Aligned Trade Group","description":"The BNTG is a large group originally created by the MEG but has since become independant.","purpose":"The purpose of the BNTG is to trade with all wanderers regardless of group affiliation and personal beliefs.","relations":"BSR:3/EOA:2/INF:3/FOJ:3/KGI:3/MEG:5/MM:3/UEC:3/BBAR:3/BTA:3/CBS:3/CPS:3/IMBH:3/VOB:3","subGroups":"None","shortName":"BNTG"},
     {"name":"The Eyes of Argos","description":"The Eyes of Argos is a group run by Argos, an avatar, who judge people based on some scale unknown to any not within the group.","purpose":"The purpose of the Eyes of Argos is to punish the evildoers, or at least those evil in the eyes of the Argos religion.","relations":"BSR:2/BNTG:3/INF:1/FOJ:2/KGI:3/MEG:3/MM:3/UEC:1/BBAR:3/BTA:3/CBS:3/CPS:3/IMBH:3/VOB:2","subGroups":"Inquisitors of Truth: The personal guard of Argos. The Inquisitors of Truth are brutal and will kill criminals on sight. They are strict though and will never kill a person other than thier target./Justice Seekers: The prosecuters. The Justice Seekers track, catch, and prosecute criminals in the fairest way possible./Law Keepers: The librarians and historians of the Eyes of Argos. They keep records of all forms of justice, religious or righteous, with pen and paper and discuss what kind of justice is more correct./Sin Hunters: The bounty hunters. The Sin Hunters are similar to the Inquisitors of Truth except they imprison rather than kill. Only should the Sin Hunters fail does the Inquisitors of Truth engage./Sentinels of the Watch: The protectors of the outposts owned by the Eyes of Argos.","shortName":"EOA"},
     {"name":"The Iron Fist","description":"The Iron Fist is a fiery group of people who feels betrayed by the gods of the realm.","purpose":"The purpose of the Iron Fist is to slaughter all gods, benevolent or evil, and to eradicate all worship within the Backrooms.","relations":"BSR:3/BNTG:3/EOA:1/FOJ:1/KGI:3/MEG:2/MM:3/UEC:5/BBAR:3/BTA:3/CBS:3/CPS:2/IMBH:3/VOB:1","subGroups":"Mars: The soldiers. Mars is the section of the Iron Fist that does the actual fighting with these gods./Jupiter: The intelligence. Jupiter gathers as much information on the targets through espionage or by research./Saturn: The conductors. Saturn is comprised of only the leaders of every of sub group and is the conductors of all operations./Sol: The creators. Sol creates all of the tools and weapons utilized by the rest of the group./Mercury: The assassins. Mercury silently infiltrates a targets domain to slay it when direct confrontation becomes ill-advised.","shortName":"INF"},
@@ -24,16 +24,15 @@ export default function Groups() {
     {"name":"The Interdimensional Museum of Backrooms History","description":"The Interdimensional Museum of Backrooms History is a group of enthusiastic people who want to share the history and knowledge of the Backrooms with all who seek it.","purpose":"The purpose of the Interdimensional Museum of Backrooms History is to help people understand the world around them more and help them rest easy.","relations":"BSR:3/BNTG:3/EOA:3/INF:3/FOJ:3/KGI:3/MEG:3/MM:3/UEC:3/BBAR:3/BTA:3/CBS:3/CPS:3/VOB:3","subGroups":"Records and Cataloging: This sub group gathers and stores digital and physical references and data about the history of the Backrooms and how it all came to be./Biology and Anthropology: This sub group stores information about entities, creatures, and cultrures from within the Backrooms. Sometimes this group can be seen doing field research with other groups./Archeology: This sub group gathers and stores historical objects found within levels and catalogs everything about it, theorizing how it could have been made and how its been placed there. This group can also sometimes be found on field missions./Public Relations: This sub group handles all communication between the other sub groups, other groups, and the general public from within the Museum. Whenever a guest has a question or needs to speak with staff, this is the group that responds first.","shortName":"IMBH"},
     {"name":"The Visionaries of Berry","description":"The Visionaries of Berry is a group of dedicated worshippers to the entity Berry, a black cat. ","purpose":"The purpose of the Visionaries of Berry is to analyze the false prophecies of the entity known as Berry. They believe this entity can bring them the truth about existence itself and how to overcome it.","relations":"BSR:3/BNTG:3/EOA:2/INF:1/FOJ:1/KGI:3/MEG:3/MM:3/UEC:3/BBAR:3/BTA:3/CBS:3/CPS:3/IMBH:3","subGroups":"None","shortName":"VOB"}]
 
-
   const addData = () => {
     for(let i = 0; i < data.length; i++) {
       setDoc(doc(db, 'Groups', data[i].name), {
         name: data[i].name,
-        description: data[i].description,
-        purpose: data[i].purpose,
-        relations: data[i].relations.split('/'),
+        primaryGoal: data[i].primaryGoal,
         subGroups: data[i].subGroups,
-        shortName: data[i].shortName
+        relations: data[i].relations,
+        link: data[i].link,
+        outposts: data[i].outposts
       })
     }
   }
@@ -53,6 +52,31 @@ export default function Groups() {
       unsub();
     }
   }
+
+  const data = [
+    {
+      "name": "Unbound Explorers Coalition",
+      "primaryGoal": "The U.E.C.'s specific primary goal is to establish safety and territorial dominance across multiple levels of a hostile environment, while expanding their influence level by level. They aim to protect people from entity threats and create secure colonies/outposts where residents can live under U.E.C. protection and control.",
+      "subGroups": [
+        {"name": "Hands of Athena", "function": "Strategic Leadership, Media Control, and Resident Selection", "leader": "Lysander Cross"},
+        {"name": "Partisans of Arete", "function": "Military Operations, Territorial Expansion, and Entity Elimination", "leader": "Thalia Vex"},
+        {"name": "Homeland Defense Force", "function": "Internal Security, Resident Protection, and Enforcement", "leader": "Marcus Ordell"},
+        {"name": "Servants of Ponos", "function": "Scavenging, Material Gathering, and Supply Chain Management", "leader": "Elena Forge"},
+        {"name": "Research Team Circe", "function": "Entity Research, Weapon Development, and Technological Advancements", "leader": "Ms. White"},
+        {"name": "Cross-Divisional Leadership", "function": "Bridge Communications Between Sub-Groups", "leader": "Cedric Hunsen"},
+      ],
+      "relations": ["BNTG: Kill on sight", "MEG: Friendly relations"], //Placeholder
+      "link": "https://docs.google.com/document/d/1zlL3609lKMmO0J0_eB-ppSi9wxxhao9izCAsXvKAOew/edit?usp=sharing",
+      "outposts": [
+        {"name": "Level 76", "status": "Active Major Settlement", "function": "Resource Extraction and Processesing", "population": "Civilians and U.E.C members"},
+        {"name": "Level 831", "status": "Destroyed via terrorist attack", "function": "Unknown (previously operational)", "population": "Few U.E.C members"},
+        {"name": "Level 466", "status": "Active Settlement", "function": "Specialized valuable resource collection", "population": "Civilians"},
+        {"name": "Level 502", "status": "Active but dangerous", "function": "Advanced technology research and development", "population": "U.E.C members"},
+        {"name": "Level 283", "status": "Newly Established", "function": "Expansion base, prisoner labor camp", "population": "U.E.C members and prisoners"},
+      ]
+    }
+  ]
+
 
   return (
     localStorage.getItem("loggedIn") === 'false' ? <NotLoggedIn /> :
