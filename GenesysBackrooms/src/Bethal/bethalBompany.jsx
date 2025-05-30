@@ -1,1453 +1,1748 @@
-import { Box, Button, Card, Checkbox, Dialog, Divider, Drawer, Stack, Table, TableBody, TableCell, TableRow, TextField, Typography } from "@mui/material";
-import { collection, doc, onSnapshot, query, setDoc } from "firebase/firestore";
-import { useState } from "react";
-import db from '../Components/firebase';
-import Room from "./room";
-import Shop from "./shop";
-import NightEntity from "./nightEntity";
-import InsideEntity from "./insideEntity";
+import React, { useState, useCallback } from 'react';
+import {
+  AppBar, Toolbar, Typography, Container, Grid, Card, CardContent,
+  Button, Dialog, DialogTitle, DialogContent, Box, Chip, Table,
+  TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Select, MenuItem, FormControl, InputLabel, Tabs, Tab, Alert,
+  Tooltip, LinearProgress, DialogActions
+} from '@mui/material';
+import { 
+  Map, Refresh, Security, Dangerous, AccessTime, Warning, Info
+} from '@mui/icons-material';
 
-export default function Bethal() {
-  //Data from DB
-  const [insideEntities, setInsideEntities] = useState([]);
-  const [nightEntities, setNightEntities] = useState([]);
-  const [moons, setMoons] = useState([]);
-  const [scraps, setScraps] = useState([]);
-  const [rooms, setRooms] = useState([]);
-
-  //Processed Data.
-  const [currMoon, setCurrMoon] = useState("Adamance");
-  const [prevMoon, setPrevMoon] = useState("");
-  const [weather, setWeather] = useState([]);
-  const [roomData, setRoomData] = useState([]);
-  const [chosenNightEntities, setChosenNightEntities] = useState([]);
-  const [chosenDayEntities, setChosenDayEntities] = useState([]);
-  const [grid, setGrid] = useState([]);
-  const [time, setTime] = useState({});
-  const [day, setDay] = useState(-1);
-  const [round, setRound] = useState(-1);
-  const [entityLocations, setEntityLocations] = useState([]);
-  const [shop, setShop] = useState([]);
-  const [mapGenerated, setMapGenerated] = useState(false);
-  const [nightSpawned, setNightSpawned] = useState([]);
-  const [dataRetrieved, setDataRetrieved] = useState(false);
-  const [floodLevel, setFloodLevel] = useState(0);
-  const [moonList, setMoonList] = useState(false);
-  const [toxicLevels, setToxicLevels] = useState(-1);
-  const [updatingRoom, setUpdatingRoom] = useState([]);
-  const [open, setOpen] = useState([]);
-  const [targets, setTargets] = useState([]); //Can only ever be 1 bracken, 1 ghost girl.
-  const [attacking, setAttacking] = useState([]); //Bracken first, ghost girl second.
-  const [shipIntegrity, setShipIntegrity] = useState([]);
-
-  const mapSizes = [21, 18, 32, 18, 36, 23, 32, 40, 21];
-  const quotas = [130, 236, 361, 517, 717, 973, 1300, 1700, 2205, 2811, 3536, 4392, 5392, 5392, 6548, 7873, 9380];
-
-  const getData = (dataType) => {
-    const q = query(collection(db, dataType));
-  
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      if(dataType === 'InsideEntities') setInsideEntities(queryData)
-      else if(dataType === 'NightEntities') setNightEntities(queryData);
-      else if(dataType === 'Moons') setMoons(queryData);
-      else if(dataType === 'Scraps') setScraps(queryData);
-      else setRooms(queryData);
-    })
-  
-    return () => {
-      unsub();
-    }
+// Enhanced Game Data with Accurate Spawning Rules
+const MOONS = {
+  'Company Building': {
+    difficulty: 'S', weather: ['Clear'], minScrapValue: 0, maxScrapValue: 0,
+    scrapSpawnRange: { min: 0, max: 0 }, mapSizeMultiplier: 1.0,
+    entities: { inside: [], outside: [], daytime: [] },
+    roomCount: { min: 3, max: 5 }, hazardLevel: 0, cost: 0,
+    powerLevels: { maxIndoor: 0, maxOutdoor: 0, maxDaytime: 0 },
+    interiorTypes: { 'Facility': 100.0, 'Mansion': 0.0, 'Mineshaft': 0.0 },
+    nightStartTime: 1080, // 6:00 PM (never has outdoor entities anyway)
+    description: 'The Company headquarters. Safe but offers no scrap value.'
+  },
+  'Experimentation': {
+    difficulty: 'B', weather: ['Clear', 'Dusty', 'Foggy'], minScrapValue: 120, maxScrapValue: 250,
+    scrapSpawnRange: { min: 8, max: 14 }, mapSizeMultiplier: 1.0,
+    entities: {
+      inside: ['Bracken', 'Thumper', 'Spiders', 'Hoarding Bug', 'Coil-Head', 'Snare Flea', 'Hygrodere'],
+      outside: ['Eyeless Dog', 'Forest Keeper', 'Manticoil', 'Roaming Locust'],
+      daytime: ['Manticoil', 'Roaming Locust', 'Circuit Bees']
+    },
+    roomCount: { min: 8, max: 12 }, hazardLevel: 2, cost: 0,
+    powerLevels: { maxIndoor: 4, maxOutdoor: 6, maxDaytime: 15 },
+    interiorTypes: { 'Facility': 98.0, 'Mansion': 1.5, 'Mineshaft': 0.5 },
+    eclipseSpawn: { minIndoorEntities: 1, minOutdoorEntities: 2 },
+    nightStartTime: 1080, // 6:00 PM - Standard night start
+    description: 'A moderately dangerous industrial facility with standard Company security protocols.'
+  },
+  'Assurance': {
+    difficulty: 'D', weather: ['Clear', 'Overcast', 'Dusty'], minScrapValue: 80, maxScrapValue: 180,
+    scrapSpawnRange: { min: 6, max: 12 }, mapSizeMultiplier: 1.0,
+    entities: {
+      inside: ['Spiders', 'Hoarding Bug', 'Hygrodere', 'Snare Flea'],
+      outside: ['Manticoil', 'Eyeless Dog'], daytime: ['Manticoil', 'Circuit Bees']
+    },
+    roomCount: { min: 8, max: 12 }, hazardLevel: 1, cost: 0,
+    powerLevels: { maxIndoor: 2, maxOutdoor: 4, maxDaytime: 15 },
+    interiorTypes: { 'Facility': 98.5, 'Mansion': 1.0, 'Mineshaft': 0.5 },
+    eclipseSpawn: { minIndoorEntities: 0, minOutdoorEntities: 1 },
+    nightStartTime: 1140, // 7:00 PM - Safer moon, later night start
+    description: 'The safest operational moon with minimal hostile presence but lower scrap yields.'
+  },
+  'Vow': {
+    difficulty: 'C', weather: ['Clear', 'Stormy', 'Foggy', 'Overcast'], minScrapValue: 100, maxScrapValue: 200,
+    scrapSpawnRange: { min: 7, max: 13 }, mapSizeMultiplier: 1.15,
+    entities: {
+      inside: ['Bracken', 'Thumper', 'Spiders', 'Hoarding Bug', 'Coil-Head', 'Snare Flea', 'Hygrodere'],
+      outside: ['Eyeless Dog', 'Forest Keeper', 'Manticoil'],
+      daytime: ['Manticoil', 'Roaming Locust', 'Circuit Bees']
+    },
+    roomCount: { min: 9, max: 14 }, hazardLevel: 2, cost: 0,
+    powerLevels: { maxIndoor: 6, maxOutdoor: 8, maxDaytime: 20 },
+    interiorTypes: { 'Facility': 100.0, 'Mansion': 0.0, 'Mineshaft': 0.0 },
+    eclipseSpawn: { minIndoorEntities: 1, minOutdoorEntities: 2 },
+    nightStartTime: 1080, // 6:00 PM - Standard night start
+    description: 'A balanced facility offering moderate risk and reward ratios with high Bracken spawn rates.'
+  },
+  'Offense': {
+    difficulty: 'B', weather: ['Clear', 'Dusty', 'Foggy', 'Stormy'], minScrapValue: 140, maxScrapValue: 220,
+    scrapSpawnRange: { min: 9, max: 17 }, mapSizeMultiplier: 1.35,
+    entities: {
+      inside: ['Bracken', 'Thumper', 'Spiders', 'Hoarding Bug', 'Coil-Head', 'Jester', 'Nutcracker', 'Snare Flea', 'Hygrodere'],
+      outside: ['Eyeless Dog', 'Forest Keeper', 'Baboon Hawk', 'Manticoil'],
+      daytime: ['Manticoil', 'Baboon Hawk', 'Circuit Bees']
+    },
+    roomCount: { min: 10, max: 15 }, hazardLevel: 3, cost: 0,
+    powerLevels: { maxIndoor: 8, maxOutdoor: 10, maxDaytime: 25 },
+    interiorTypes: { 'Facility': 98.0, 'Mansion': 1.5, 'Mineshaft': 0.5 },
+    eclipseSpawn: { minIndoorEntities: 2, minOutdoorEntities: 3 },
+    nightStartTime: 1020, // 5:00 PM - More dangerous moon, earlier night start
+    description: 'A military installation with increased security measures and hostile entities.'
+  },
+  'Rend': {
+    difficulty: 'A', weather: ['Clear', 'Eclipsed', 'Foggy', 'Dusty'], minScrapValue: 180, maxScrapValue: 350,
+    scrapSpawnRange: { min: 12, max: 20 }, mapSizeMultiplier: 1.7,
+    entities: {
+      inside: ['Bracken', 'Thumper', 'Spiders', 'Hoarding Bug', 'Coil-Head', 'Jester', 'Nutcracker', 'Masked', 'Ghost Girl', 'Snare Flea', 'Hygrodere'],
+      outside: ['Eyeless Dog', 'Forest Keeper', 'Baboon Hawk', 'Earth Leviathan'],
+      daytime: []
+    },
+    roomCount: { min: 14, max: 22 }, hazardLevel: 4, cost: 550,
+    powerLevels: { maxIndoor: 10, maxOutdoor: 6, maxDaytime: 0 },
+    interiorTypes: { 'Facility': 3.0, 'Mansion': 97.0, 'Mineshaft': 0.0 },
+    eclipseSpawn: { minIndoorEntities: 3, minOutdoorEntities: 4 },
+    nightStartTime: 960, // 4:00 PM - Very dangerous moon, early night start
+    description: 'A high-security facility with frequent eclipse events and aggressive entity populations.'
+  },
+  'Titan': {
+    difficulty: 'A+', weather: ['Clear', 'Stormy', 'Foggy', 'Eclipsed', 'Dusty'], minScrapValue: 200, maxScrapValue: 400,
+    scrapSpawnRange: { min: 15, max: 25 }, mapSizeMultiplier: 2.2,
+    entities: {
+      inside: ['Bracken', 'Thumper', 'Spiders', 'Hoarding Bug', 'Coil-Head', 'Jester', 'Nutcracker', 'Masked', 'Ghost Girl', 'Snare Flea', 'Hygrodere'],
+      outside: ['Eyeless Dog', 'Forest Keeper', 'Baboon Hawk', 'Earth Leviathan'],
+      daytime: []
+    },
+    roomCount: { min: 18, max: 26 }, hazardLevel: 5, cost: 700,
+    powerLevels: { maxIndoor: 18, maxOutdoor: 7, maxDaytime: 0 },
+    interiorTypes: { 'Facility': 81.4, 'Mansion': 18.6, 'Mineshaft': 0.0 },
+    eclipseSpawn: { minIndoorEntities: 5, minOutdoorEntities: 6 },
+    nightStartTime: 900, // 3:00 PM - Most dangerous moon, very early night start
+    description: 'The most dangerous operational facility with maximum entity density and lethal conditions.'
   }
+};
 
-  const getShopData = () => {
-    const q = query(collection(db, 'Shop'));
+const ENTITY_POWER_LEVELS = {
+  'Bracken': 3, 'Thumper': 3, 'Spiders': 1, 'Hoarding Bug': 1, 'Coil-Head': 1,
+  'Jester': 3, 'Nutcracker': 3, 'Masked': 1, 'Ghost Girl': 2, 'Snare Flea': 1,
+  'Hygrodere': 1, 'Eyeless Dog': 1, 'Forest Keeper': 3, 'Baboon Hawk': 1,
+  'Earth Leviathan': 3, 'Manticoil': 1, 'Roaming Locust': 1, 'Circuit Bees': 2
+};
 
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const queryData = [];
-      querySnapshot.forEach((doc) => {
-        queryData.push(doc.data());
-      })
-      setShop(queryData);
-    })
+const SCRAPS = {
+  'Apparatus': { minValue: 80, maxValue: 280, weight: 'Heavy', rarity: 'Legendary', rarityWeight: 1 },
+  'Gold Bar': { minValue: 156, maxValue: 176, weight: 'Light', rarity: 'Legendary', rarityWeight: 5 },
+  'Cash Register': { minValue: 120, maxValue: 200, weight: 'Heavy', rarity: 'Rare', rarityWeight: 15 },
+  'Painting': { minValue: 80, maxValue: 120, weight: 'Medium', rarity: 'Rare', rarityWeight: 25 },
+  'Stop Sign': { minValue: 42, maxValue: 120, weight: 'Medium', rarity: 'Uncommon', rarityWeight: 35 },
+  'Engine': { minValue: 40, maxValue: 78, weight: 'Heavy', rarity: 'Uncommon', rarityWeight: 20 },
+  'Chemical Jug': { minValue: 7, maxValue: 21, weight: 'Medium', rarity: 'Common', rarityWeight: 45 },
+  'Metal Sheet': { minValue: 2, maxValue: 7, weight: 'Light', rarity: 'Common', rarityWeight: 65 },
+  'Scrap Metal': { minValue: 6, maxValue: 18, weight: 'Light', rarity: 'Common', rarityWeight: 85 },
+  'Flashlight': { minValue: 12, maxValue: 25, weight: 'Light', rarity: 'Uncommon', rarityWeight: 20 }
+};
 
-    return () => {
-      unsub();
-    }
+const ENTITIES = {
+  'Bracken': {
+    brawn: 4, agility: 5, intellect: 3, cunning: 4, willpower: 3, presence: 2,
+    soak: 6, wounds: 18, strain: 12, defense: { melee: 2, ranged: 3 },
+    abilities: ['Ambush Predator: Add ⬢⬢ when attacking from stealth', 'Neck Snap: Critical +50 on ⚡⚡⚡', 'Shadow Stalker: Move when unobserved'],
+    description: 'A tall, dark humanoid entity that stalks prey from the shadows and strikes when unobserved.'
+  },
+  'Thumper': {
+    brawn: 5, agility: 3, intellect: 1, cunning: 2, willpower: 4, presence: 1,
+    soak: 8, wounds: 25, strain: 8, defense: { melee: 1, ranged: 1 },
+    abilities: ['Powerful Bite: +2 damage', 'Vent Crawler: Move through small spaces', 'Loud Movement: Heard from Long range'],
+    description: 'A large, aggressive quadruped with powerful jaws that hunts through facility ventilation systems.'
+  },
+  'Coil-Head': {
+    brawn: 6, agility: 2, intellect: 1, cunning: 1, willpower: 5, presence: 3,
+    soak: 10, wounds: 30, strain: 15, defense: { melee: 0, ranged: 0 },
+    abilities: ['Quantum Lock: Cannot move when observed', 'Instant Kill: Lethal attack when unobserved', 'Unblinking Stare: Add ⬢ to nearby targets'],
+    description: 'A nightmarish spring-loaded mannequin that freezes when observed but kills instantly when unseen.'
+  },
+  'Jester': {
+    brawn: 4, agility: 4, intellect: 2, cunning: 3, willpower: 4, presence: 4,
+    soak: 6, wounds: 20, strain: 16, defense: { melee: 2, ranged: 2 },
+    abilities: ['Wind-up Music: 3 rounds before rampage', 'Rampage Mode: Add ⬢⬢⬢ and +2 damage', 'Immune to strain/fear'],
+    description: 'A wind-up jester toy that becomes extremely violent after its music box melody completes.'
   }
+};
 
-  const getWeather = () => {
-    const temp = [];
-    const maxUnknown = 4;
-    let unknown = 0;
+const ROOM_TYPES = ['Main Entrance', 'Storage Room', 'Office', 'Maintenance', 'Generator Room', 'Cafeteria', 'Laboratory'];
+const DOOR_TYPES = ['Open', 'Standard Door', 'Security Door', 'Vent', 'Locked Door'];
+const TRAPS = [
+  { name: 'Spike Trap', damage: 8, difficulty: 2 },
+  { name: 'Turret', damage: 12, difficulty: 3 },
+  { name: 'Mine', damage: 15, difficulty: 3 }
+];
 
-    for(let i = 0; i < moons.length; i++) {
-      if(unknown < maxUnknown && Math.floor(Math.random() * 2) === 1) {
-        temp.push(moons[i].weather[Math.floor(Math.random() * moons[i].weather.length)] + "?");
-        unknown++;
+const WEATHER_EFFECTS = {
+  'Clear': {
+    description: 'Perfect conditions for Company operations with clear skies and calm weather.',
+    mechanicalEffects: 'No additional dice modifiers.',
+    effects: ['No weather penalties', 'Normal visibility', 'Communication functions normally']
+  },
+  'Eclipsed': {
+    description: 'Unnatural eclipse blocks out the sun, plunging the moon into perpetual darkness.',
+    mechanicalEffects: 'Poor Lighting everywhere. Add ⬢⬢ to vision checks. Entity spawn +50%. Entities +1 damage.',
+    effects: ['Unnatural darkness', 'Entities more aggressive', 'Communication intermittent', 'Psychological pressure']
+  },
+  'Foggy': {
+    description: 'Dense fog blankets the area, reducing visibility to mere meters.',
+    mechanicalEffects: 'Visibility limited to Short range. Add ⬢⬢⬢ to Ranged attacks. Add ⬢⬢ to Perception.',
+    effects: ['Severely reduced visibility', 'Navigation difficult', 'Sound carries strangely', 'Entities gain +2 Stealth']
+  },
+  'Stormy': {
+    description: 'Violent thunderstorms with heavy rain, high winds, and dangerous lightning strikes.',
+    mechanicalEffects: 'Add ⬢⬢ to Perception. Random lightning illumination. Add ⬢ to Athletics.',
+    effects: ['Heavy rain reduces perception', 'Lightning illuminates randomly', 'Surfaces slippery', 'Equipment malfunctions']
+  }
+};
+
+function LethalCompanyRPG() {
+  const [selectedMoon, setSelectedMoon] = useState('Experimentation');
+  const [generatedFacility, setGeneratedFacility] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [currentTime, setCurrentTime] = useState(420);
+  const [gameEntities, setGameEntities] = useState([]);
+  const [nextEntitySpawn, setNextEntitySpawn] = useState(465);
+  const [announcements, setAnnouncements] = useState([]);
+  const [currentPowerUsage, setCurrentPowerUsage] = useState({ indoor: 0, outdoor: 0, daytime: 0 });
+  const [isEclipsed, setIsEclipsed] = useState(false);
+
+  const ENTITY_BEHAVIORS = {
+    'Bracken': { 
+      moveFrequency: 1, movePattern: 'stealth', speed: 'fast', powerLevel: 3,
+      roundsToMove: () => 1 + Math.floor(Math.random() * 2) // 1-2 rounds
+    },
+    'Thumper': { 
+      moveFrequency: 2, movePattern: 'patrol', speed: 'very_fast', powerLevel: 3,
+      roundsToMove: () => 1 + Math.floor(Math.random() * 2) // 1-2 rounds
+    },
+    'Spiders': { 
+      moveFrequency: 3, movePattern: 'territorial', speed: 'medium', powerLevel: 1,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 3) // 2-4 rounds
+    },
+    'Hoarding Bug': { 
+      moveFrequency: 2, movePattern: 'scavenger', speed: 'fast', powerLevel: 1,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 3) // 2-4 rounds
+    },
+    'Coil-Head': { 
+      moveFrequency: 0, movePattern: 'quantum', speed: 'instant', powerLevel: 1,
+      roundsToMove: () => 1 // Always moves every round when not observed
+    },
+    'Jester': { 
+      moveFrequency: 1, movePattern: 'follow', speed: 'medium', powerLevel: 3,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 2) // 2-3 rounds
+    },
+    'Nutcracker': { 
+      moveFrequency: 2, movePattern: 'patrol', speed: 'slow', powerLevel: 3,
+      roundsToMove: () => 3 + Math.floor(Math.random() * 3) // 3-5 rounds
+    },
+    'Masked': { 
+      moveFrequency: 1, movePattern: 'mimic', speed: 'medium', powerLevel: 1,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 2) // 2-3 rounds
+    },
+    'Ghost Girl': {
+      moveFrequency: 1, movePattern: 'haunt', speed: 'fast', powerLevel: 2,
+      roundsToMove: () => 1 + Math.floor(Math.random() * 3) // 1-3 rounds
+    },
+    'Snare Flea': {
+      moveFrequency: 2, movePattern: 'ceiling_ambush', speed: 'medium', powerLevel: 1,
+      roundsToMove: () => 3 + Math.floor(Math.random() * 3) // 3-5 rounds
+    },
+    'Hygrodere': {
+      moveFrequency: 3, movePattern: 'slow_pursuit', speed: 'slow', powerLevel: 1,
+      roundsToMove: () => 4 + Math.floor(Math.random() * 2) // 4-5 rounds
+    },
+    'Eyeless Dog': { 
+      moveFrequency: 2, movePattern: 'hunt', speed: 'fast', powerLevel: 1,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 2) // 2-3 rounds
+    },
+    'Forest Keeper': { 
+      moveFrequency: 3, movePattern: 'patrol', speed: 'slow', powerLevel: 3,
+      roundsToMove: () => 4 + Math.floor(Math.random() * 2) // 4-5 rounds
+    },
+    'Baboon Hawk': { 
+      moveFrequency: 1, movePattern: 'aerial', speed: 'very_fast', powerLevel: 1,
+      roundsToMove: () => 1 + Math.floor(Math.random() * 2) // 1-2 rounds
+    },
+    'Earth Leviathan': { 
+      moveFrequency: 3, movePattern: 'burrow', speed: 'slow', powerLevel: 3,
+      roundsToMove: () => 4 + Math.floor(Math.random() * 2) // 4-5 rounds
+    },
+    'Manticoil': { 
+      moveFrequency: 1, movePattern: 'flee', speed: 'fast', powerLevel: 1,
+      roundsToMove: () => 1 + Math.floor(Math.random() * 2) // 1-2 rounds
+    },
+    'Circuit Bees': {
+      moveFrequency: 2, movePattern: 'territorial', speed: 'fast', powerLevel: 2,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 2) // 2-3 rounds
+    },
+    'Roaming Locust': {
+      moveFrequency: 1, movePattern: 'random', speed: 'medium', powerLevel: 1,
+      roundsToMove: () => 2 + Math.floor(Math.random() * 3) // 2-4 rounds
+    }
+  };
+
+  // Utility Functions
+  const formatTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+    return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const generateRandomValue = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const getRandomElement = (array) => array[Math.floor(Math.random() * array.length)];
+
+  const calculateCurrentPowerUsage = useCallback((entities, moonData) => {
+    let indoorPower = 0, outdoorPower = 0, daytimePower = 0;
+    entities.forEach(entity => {
+      // Use ENTITY_POWER_LEVELS as the primary source, fallback to ENTITY_BEHAVIORS
+      const powerLevel = ENTITY_POWER_LEVELS[entity.type] || ENTITY_BEHAVIORS[entity.type]?.powerLevel || 1;
+      if (entity.isOutdoor) {
+        if (moonData.entities.daytime.includes(entity.type)) {
+          daytimePower += powerLevel;
+        } else {
+          outdoorPower += powerLevel;
+        }
+      } else {
+        indoorPower += powerLevel;
       }
-      else {
-        temp.push(moons[i].weather[Math.floor(Math.random() * moons[i].weather.length)]);
+    });
+    return { indoor: indoorPower, outdoor: outdoorPower, daytime: daytimePower };
+  }, []);
+
+  const addAnnouncement = useCallback((message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setAnnouncements(prev => [...prev.slice(-4), { message, timestamp }]);
+  }, []);
+
+  const canSpawnEntity = useCallback((entityType, moonData, currentPower) => {
+    // Use ENTITY_POWER_LEVELS as the primary source for accurate power levels
+    const entityPowerLevel = ENTITY_POWER_LEVELS[entityType] || ENTITY_BEHAVIORS[entityType]?.powerLevel || 1;
+    
+    // Check if it's a daytime entity - these can only spawn during daytime hours
+    if (moonData.entities.daytime.includes(entityType)) {
+      return currentTime < moonData.nightStartTime && (currentPower.daytime + entityPowerLevel) <= moonData.powerLevels.maxDaytime;
+    }
+    
+    // Check if it's an outdoor entity - these can only spawn during nighttime OR eclipse
+    if (moonData.entities.outside.includes(entityType)) {
+      const isNightTime = currentTime >= moonData.nightStartTime;
+      const isEclipse = generatedFacility?.weather === 'Eclipsed';
+      
+      // Outdoor entities can only spawn at night OR during eclipse
+      if (!isNightTime && !isEclipse) {
+        return false;
       }
+      
+      return (currentPower.outdoor + entityPowerLevel) <= moonData.powerLevels.maxOutdoor;
     }
-
-    setWeather(temp);
-  }
-
-  const determineTraps = (currTraps, roomList, moon, index) => {
-    let trapCount = 0; //Set a max trap count per room.
-
-    for(let i = 0; i < 4; i++) {
-      const rand = Math.floor(Math.random() * 6);
-      if(rand <= 2 && trapCount < 2) {
-        if(i === 0 && currTraps[i] < moon.maxLandmines) {
-          roomList[index].landmine = true;
-          currTraps[0]++;
-          trapCount++;
-        }
-
-        if(i === 1 && currTraps[i] < moon.maxTurrets) {
-          roomList[index].turret = true;
-          currTraps[1]++;
-          trapCount++;
-        }
-
-        if(i === 2 && currTraps[i] < moon.maxSpikeTraps) {
-          roomList[index].spikeTrap = true;
-          currTraps[2]++;
-          trapCount++;
-        }
-
-        if(i === 3 && currTraps[i] < moon.maxLockedDoors) {
-          roomList[index].lockedDoor = true;
-          currTraps[3]++;
-          trapCount++;
-        }
-      }
+    
+    // Indoor entities can spawn at any time (as long as power allows)
+    if (moonData.entities.inside.includes(entityType)) {
+      return (currentPower.indoor + entityPowerLevel) <= moonData.powerLevels.maxIndoor;
     }
-  }
+    
+    return false;
+  }, [currentTime, generatedFacility]);
 
-  const determineScrap = (currScrap, maxScrap, roomList, moon, index) => {
-    if(currScrap === maxScrap) {
-      roomList[index].scraps = [];
-      return;
-    }
+  const spawnSpecificEntity = useCallback((entityType, isOutdoor) => {
+    if (!generatedFacility) return;
+    const spawnLocation = isOutdoor ? 
+      getRandomElement(['Outside - North', 'Outside - South', 'Outside - East', 'Outside - West']) :
+      getRandomElement(generatedFacility.rooms).id;
+    
+    // Use ENTITY_POWER_LEVELS as the primary source for accurate power levels
+    const entityPowerLevel = ENTITY_POWER_LEVELS[entityType] || ENTITY_BEHAVIORS[entityType]?.powerLevel || 1;
+    const behavior = ENTITY_BEHAVIORS[entityType];
+    
+    const newEntity = {
+      id: `entity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: entityType, location: spawnLocation, isOutdoor: isOutdoor, spawned: true,
+      moveCounter: 0, lastMoved: currentTime, state: 'active', spawnTime: currentTime,
+      powerLevel: entityPowerLevel,
+      roundsUntilMove: behavior ? behavior.roundsToMove() : 3, // Initialize with random rounds
+      roundsCounter: 0
+    };
+    
+    setGameEntities(prev => {
+      const newEntities = [...prev, newEntity];
+      // Immediately update power usage after adding the entity
+      const moonData = MOONS[selectedMoon];
+      const newPowerUsage = calculateCurrentPowerUsage(newEntities, moonData);
+      setCurrentPowerUsage(newPowerUsage);
+      return newEntities;
+    });
+    
+    addAnnouncement(`🚨 ENTITY SPAWN: ${entityType} (Power: ${entityPowerLevel}) detected ${isOutdoor ? 'outside facility' : `in Room ${spawnLocation}`}`);
+  }, [generatedFacility, currentTime, selectedMoon, calculateCurrentPowerUsage, addAnnouncement]);
 
-    const scrapList = [];
-
-    const scrapCount = Math.floor(Math.random() * 3);
-    for(let i = 0; i < scrapCount; i++) {
-      if(currScrap < maxScrap) {
-        let temp = Math.floor(Math.random() * 101); //0 to 100
-        let scrapToAdd = {};
-
-        for(let j = 1; j < moon.scrapSpawns.length; j++) {
-          if(temp <= moon.scrapSpawns[0].roll) {
-            for(let k = 0; k < scraps.length; k++) {
-              if(scraps[k].name.toUpperCase() === moon.scrapSpawns[0].name.toUpperCase()) {
-                scrapToAdd = {...scraps[k]};
-                const val = Math.floor((Math.random() * (scraps[k].maxVal - scraps[k].minVal) + scraps[k].minVal));
-                scrapToAdd.value = val;
-                scrapToAdd.grabbed = false;
-
-                const effectVal = Math.floor(Math.random() * 28);
-                switch(effectVal) {
-                  case 0:
-                    scrapToAdd.weight = scrapToAdd.weight + 20;
-                    scrapToAdd.color = '#7300ff';
-                    break;
-                  case 1:
-                    scrapToAdd.weight = scrapToAdd.weight - 20;
-                    if(scrapToAdd.weight < 0) scrapToAdd.weight = 0;
-                    scrapToAdd.color = '#ff00ae';
-                    break;
-                  case 2:
-                    scrapToAdd.color = '#ff0000';
-                    break;
-                  case 3:
-                    scrapToAdd.color = '#00e1ff';
-                    break;
-                  case 4:
-                    scrapToAdd.color = '#002aff';
-                    break;
-                  case 5:
-                    scrapToAdd.color = '#04ff00';
-                    scrapToAdd.value *= 2;
-                    break;
-                  case 6:
-                    scrapToAdd.color = '#ff9500';
-                    scrapToAdd.value /= 2;
-                    break;
-                  default:
-                    scrapToAdd.color = 'Black';
-                }
-              }
+  const moveEntities = useCallback(() => {
+    if (!generatedFacility) return;
+    
+    setGameEntities(prev => {
+      const updatedEntities = prev.map(entity => {
+        const behavior = ENTITY_BEHAVIORS[entity.type];
+        if (!behavior) return entity;
+        
+        // Create a new entity object to ensure React re-renders
+        const updatedEntity = { ...entity };
+        
+        // Increment round counter
+        updatedEntity.roundsCounter = (updatedEntity.roundsCounter || 0) + 1;
+        
+        // Check if it's time for this entity to move
+        if (updatedEntity.roundsCounter < updatedEntity.roundsUntilMove) {
+          return updatedEntity; // Not time to move yet
+        }
+        
+        // Reset counters and set next move time
+        updatedEntity.roundsCounter = 0;
+        updatedEntity.roundsUntilMove = behavior.roundsToMove();
+        updatedEntity.lastMoved = currentTime;
+        
+        // Handle outdoor entities differently
+        if (updatedEntity.isOutdoor) {
+          const outdoorAreas = ['Outside - North', 'Outside - South', 'Outside - East', 'Outside - West', 'Outside - Ship Area'];
+          const newLocation = getRandomElement(outdoorAreas);
+          
+          if (newLocation !== updatedEntity.location) {
+            updatedEntity.location = newLocation;
+            updatedEntity.state = 'moving';
+            addAnnouncement(`📍 ${updatedEntity.type} moved to ${newLocation}`);
+          }
+          return updatedEntity;
+        }
+        
+        // Indoor entity movement with door mechanics
+        const currentRoom = generatedFacility.rooms.find(room => room.id === updatedEntity.location);
+        if (!currentRoom) {
+          console.warn(`Entity ${updatedEntity.type} in unknown room ${updatedEntity.location}`);
+          return updatedEntity;
+        }
+        
+        // Find possible exits from current room
+        const possibleExits = [];
+        const directions = [
+          { dir: 'north', deltaRow: -1, deltaCol: 0 },
+          { dir: 'south', deltaRow: 1, deltaCol: 0 },
+          { dir: 'east', deltaRow: 0, deltaCol: 1 },
+          { dir: 'west', deltaRow: 0, deltaCol: -1 }
+        ];
+        
+        directions.forEach(({ dir, deltaRow, deltaCol }) => {
+          const doorType = currentRoom.doors[dir];
+          
+          // Check if entity can pass through this door
+          if (doorType === 'Wall') {
+            return; // Can't go through walls
+          }
+          
+          if (doorType === 'Security Door' || doorType === 'Locked Door') {
+            // Only certain entities can open secure doors
+            const canOpenSecureDoors = ['Nutcracker', 'Jester', 'Ghost Girl'];
+            if (!canOpenSecureDoors.includes(updatedEntity.type)) {
+              return; // Can't open secure doors
             }
           }
-          else if(temp > moon.scrapSpawns[j - 1].roll && temp <= moon.scrapSpawns[j].roll) {
-            for(let k = 0; k < scraps.length; k++) {
-              if(scraps[k].name.toUpperCase() === moon.scrapSpawns[j].name.toUpperCase()) {
-                scrapToAdd = {...scraps[k]};
-                const val = Math.floor((Math.random() * (scraps[k].maxVal - scraps[k].minVal) + scraps[k].minVal));
-                scrapToAdd.value = val;
-                scrapToAdd.grabbed = false;
-
-                const effectVal = Math.floor(Math.random() * 28);
-                switch(effectVal) {
-                  case 0:
-                    scrapToAdd.weight = scrapToAdd.weight + 20;
-                    scrapToAdd.color = '#7300ff';
-                    break;
-                  case 1:
-                    scrapToAdd.weight = scrapToAdd.weight - 20;
-                    if(scrapToAdd.weight < 0) scrapToAdd.weight = 0;
-                    scrapToAdd.color = '#ff00ae';
-                    break;
-                  case 2:
-                    scrapToAdd.color = '#ff0000';
-                    break;
-                  case 3:
-                    scrapToAdd.color = '#00e1ff';
-                    break;
-                  case 4:
-                    scrapToAdd.color = '#002aff';
-                    break;
-                  case 5:
-                    scrapToAdd.color = '#04ff00';
-                    scrapToAdd.value *= 2;
-                    break;
-                  case 6:
-                    scrapToAdd.color = '#ff9500';
-                    scrapToAdd.value /= 2;
-                    break;
-                  default:
-                    scrapToAdd.color = 'Black';
-                }
-              }
-            }
+          
+          // Find the room in this direction
+          const currentPos = currentRoom.position;
+          if (!currentPos) return;
+          
+          const targetPos = {
+            row: currentPos.row + deltaRow,
+            col: currentPos.col + deltaCol
+          };
+          
+          // Find room at target position
+          const targetRoom = generatedFacility.rooms.find(room => 
+            room.position && room.position.row === targetPos.row && room.position.col === targetPos.col
+          );
+          
+          if (targetRoom) {
+            possibleExits.push({
+              room: targetRoom,
+              direction: dir,
+              doorType: doorType
+            });
           }
+        });
+        
+        // If no valid exits, entity stays put
+        if (possibleExits.length === 0) {
+          updatedEntity.state = 'waiting';
+          return updatedEntity;
         }
-
-        scrapList.push(scrapToAdd);
-        currScrap++;
-      }
-    }
-
-    roomList[index].scraps = scrapList;
-    return currScrap;
-  }
-
-  const determineInsideEntity = (currEntityPower, maxEntityPower, roomList, moon, index, currentlySpawned) => {
-    roomList[index].entity = {};
-
-    if(currEntityPower >= maxEntityPower) {
-      roomList[index].entity = {};
-      return currEntityPower;
-    }
-
-    let temp = Math.floor(Math.random() * 101); //0 to 100
-    for(let i = 1; i < moon.insideEntities.length; i++) {
-      if(currEntityPower < maxEntityPower) {
-        if(temp <= moon.insideEntities[0].roll) {
-          for(let j = 0; j < insideEntities.length; j++) {
-            if(insideEntities[j].name === moon.insideEntities[0].name) {
-              if(currentlySpawned[insideEntities[j].name] === insideEntities[j].maxSpawned) {
-                i--;
-                temp = Math.floor(Math.random() * 101);
-              }
-              else {
-                currentlySpawned[insideEntities[j].name] = currentlySpawned[insideEntities[j].name] + 1;
-                currEntityPower = currEntityPower + insideEntities[j].power;
-                roomList[index].entity = insideEntities[j];
-                roomList[index].entity.spawned = false;
-                return currEntityPower;
-              }
+        
+        // Choose movement based on entity behavior
+        let targetRoom = null;
+        
+        switch (behavior.movePattern) {
+          case 'territorial': // Spiders - tend to stay in same area
+            // 70% chance to stay, 30% chance to move
+            if (Math.random() < 0.7) {
+              updatedEntity.state = 'guarding';
+              return updatedEntity;
             }
-          }
-        }
-        else if(temp <= moon.insideEntities[i].roll) {
-          for(let j = 0; j < insideEntities.length; j++) {
-            if(insideEntities[j].name === moon.insideEntities[i].name) {
-              if(currentlySpawned[insideEntities[j].name] === insideEntities[j].maxSpawned) {
-                i--;
-                temp = Math.floor(Math.random() * 101);
-              }
-              else {
-                currentlySpawned[insideEntities[j].name] = currentlySpawned[insideEntities[j].name] + 1;
-                currEntityPower = currEntityPower + insideEntities[j].power;
-                roomList[index].entity = insideEntities[j];
-                roomList[index].entity.spawned = false;
-                return currEntityPower;
-              }
+            targetRoom = getRandomElement(possibleExits).room;
+            break;
+            
+          case 'scavenger': // Hoarding Bug - seeks rooms with scrap
+            const scrapRooms = possibleExits.filter(exit => exit.room.scraps.length > 0);
+            if (scrapRooms.length > 0) {
+              targetRoom = getRandomElement(scrapRooms).room;
+            } else {
+              targetRoom = getRandomElement(possibleExits).room;
             }
-          }
-        }
-      }
-    }
-  }
-  
-  const determineRoomType = (roomList, currSpawned, index) => {
-    let roomType = Math.floor(Math.random() * rooms.length);
-
-    while(currSpawned[rooms[roomType].name] === rooms[roomType].maxSpawned) {
-      roomType = Math.floor(Math.random() * rooms.length);
-    }
-
-    currSpawned[rooms[roomType].name]++;
-
-    roomList[index].roomType = rooms[roomType].name;
-    roomList[index].roomNum = index;
-    roomList[index].placed = false;
-    roomList[index].connections = [];
-  }
-
-  const determineOutsideEntities = (moon, dayList, nightList) => {
-    //Day
-    for(let i = 0; i < 4; i++) {
-      if(moon.name === 'Offense') dayList.push(moon.daytimeEntities[0].name); //Super specific edge case.
-
-      const roll = Math.floor(Math.random() * 101);
-      for(let j = 1; j < moon.daytimeEntities.length; j++) {
-        if(roll <= moon.daytimeEntities[0].roll) {
-          dayList.push(moon.daytimeEntities[0].name);
-          break;
-        }
-        else if(roll > moon.daytimeEntities[j - 1].roll && roll <= moon.daytimeEntities[j].roll) {
-          dayList.push(moon.daytimeEntities[j].name);
-          break;
-        }
-      }
-    }
-
-    //Night
-    const maxSpawned = {};
-    let currPower = 0;
-    let currSpawned = 0;
-    const spawned = [...nightSpawned];
-
-    for(let i = 0; i < moon.nightEntities.length; i++) {
-      maxSpawned[moon.nightEntities[i].name] = 0;
-    }
-
-    while(currPower < moon.outdoorPower) {
-      const roll = Math.floor(Math.random() * 101);
-      for(let i = 1; i < moon.nightEntities.length; i++) {
-        if(roll <= moon.nightEntities[0].roll) {
-          for(let j = 0; j < nightEntities.length; j++) {
-            if(nightEntities[j].name === moon.nightEntities[0].name && maxSpawned[moon.nightEntities[0].name] < nightEntities[j].maxSpawned) {
-              nightEntities[j].shown = false;
-              nightList.push(nightEntities[j]);
-              currPower += nightEntities[j].power;
-              spawned.push(false);
-            }
-          }
-          break;
-        }
-        else if(roll > moon.nightEntities[i - 1].roll && roll <= moon.nightEntities[i].roll) {
-          for(let j = 0; j < nightEntities.length; j++) {
-            if(nightEntities[j].name === moon.nightEntities[i].name && maxSpawned[moon.nightEntities[i].name] < nightEntities[j].maxSpawned) {
-              nightEntities[j].shown = false;
-              nightList.push(nightEntities[j]);
-              currPower += nightEntities[j].power;
-              spawned.push(false);
-            }
-          }
-          break;
-        }
-      }
-
-      currSpawned++;
-    }
-
-    setNightSpawned(spawned);
-  }
-
-  const populateMoon = (moon, index) => {
-    const roomCount = mapSizes[index] + 1;
-    const roomList = [
-      {
-        entity: {},
-        landmine: false,
-        roomNum: 0,
-        roomType: 'Main Entrance',
-        scraps: [],
-        spikeTrap: false,
-        turret: false,
-        lockedDoor: false,
-        doorType: [false, false, false, false], //Door, Door Open?, Secure Door, Secure Door Open?
-        placed: false,
-        connections: [],
-        lightsOn: 5,
-        lightsOff: 5,
-        toxicity: 0,
-        explored: true,
-        doorConnections: ["", "", "", ""],
-        doorProcessed: false
-      }
-    ];
-    const maxScrap = Math.floor(Math.random() * (moon.maxScrap - moon.minScrap + 1) + moon.minScrap);
-    const maxEntityPower = moon.indoorPower;
-    const currentlyInsideSpawned = {};
-    const currentlySpawnedRooms = {};
-    const dayEntityList = [];
-    const nightEntityList = [];
-
-    let currTraps = [0, 0, 0, 0];
-    let currScrap = 0;
-    let currEntityPower = 0;
-
-    for(let i = 0; i < insideEntities.length; i++) {
-      currentlyInsideSpawned[insideEntities[i].name] = 0;
-    }
-
-    for(let i = 0; i < rooms.length; i++) {
-      currentlySpawnedRooms[rooms[i].name] = 0;
-    }
-
-    for(let i = 1; i < roomCount; i++) {
-      roomList[i] = {
-        entity: {},
-        landmine: false,
-        roomNum: 0,
-        roomType: 'Main Entrance',
-        scraps: [],
-        spikeTrap: false,
-        turret: false,
-        lockedDoor: false,
-        doorType: [false, false, false, false],
-        placed: false,
-        connections: [],
-        lightsOn: 5,
-        lightsOff: 5,
-        toxicity: 0,
-        explored: false,
-        doorConnections: ["", "", "", ""],
-        doorProcessed: false
-      }
-      determineTraps(currTraps, roomList, moon, i); //DONE
-      currScrap = determineScrap(currScrap, maxScrap, roomList, moon, i); //DONE
-      currEntityPower = determineInsideEntity(currEntityPower, maxEntityPower, roomList, moon, i, currentlyInsideSpawned); //DONE
-      determineRoomType(roomList, currentlySpawnedRooms, i);
-      const lightsOn = Math.floor(Math.random() * 5) + 3;
-      let lightsOff = lightsOn - 4;
-      if(lightsOff < 0) lightsOff = 0;
-      roomList[i].lightsOn = lightsOn;
-      roomList[i].lightsOff = lightsOff;
-
-      const toxicChance = Math.floor(Math.random() * 100) + 1;
-      if(toxicChance <= 85) roomList[i].toxicity = 0;
-      else if(toxicChance > 85 && toxicChance <= 90) roomList[i].toxicity = Math.floor(Math.random() * 3) + 1;
-      else if(toxicChance > 90 && toxicChance <= 95) roomList[i].toxicity = Math.floor(Math.random() * 3) + 4;
-      else if(toxicChance > 95 && toxicChance <= 99) roomList[i].toxicity = Math.floor(Math.random() * 3) + 7;
-      else roomList[i].toxicity = 10;
-
-      if(Math.floor(Math.random() * 101) <= 10) {
-        const effectVal = Math.floor(Math.random() * 28);
-        let color = "Black";
-        switch(effectVal) {
-          case 0:
-            color = '#7300ff';
             break;
-          case 1:
-            color = '#ff00ae';
+            
+          case 'quantum': // Coil-Head - special movement rules  
+            targetRoom = getRandomElement(possibleExits).room;
             break;
-          case 2:
-            color = '#ff0000';
-            break;
-          case 3:
-            color = '#00e1ff';
-            break;
-          case 4:
-            color = '#002aff';
-            break;
-          case 5:
-            color = '#04ff00';
-            break;
-          case 6:
-            color = '#ff9500';
-            break;
+            
+          case 'stealth': // Bracken - moves between rooms
+          case 'patrol': // Thumper, Nutcracker - systematic routes
+          case 'follow': // Jester - follows players
+          case 'mimic': // Masked - mimics behavior
+          case 'haunt': // Ghost Girl - haunts areas
+          case 'ceiling_ambush': // Snare Flea - ambush positions
+          case 'slow_pursuit': // Hygrodere - slow pursuit
           default:
-            color = 'Black';
-        }
-
-        roomList[i].scraps.push(
-          {
-            name: 'Key',
-            conductive: true,
-            twoHanded: false,
-            value: color === '#04ff00' ? 6 : color === '#ff9500' ? 1 : 3,
-            weight: color === '#7300ff' ? 20 : 0,
-            color: color
-          }
-        );
-      }
-    }
-
-    determineOutsideEntities(moon, dayEntityList, nightEntityList);
-
-    let count = 1;
-    for(let i = 0; i < roomList.length; i++) {
-      if(Object.keys(roomList[i].entity).length > 0) count++;
-    }
-    if(weather[index] === 'Eclipsed' || weather[index] === 'Eclipsed?') {
-      const eclipseEntityCount = Math.floor(Math.random() * 3) + 1;
-      for(let i = 0; i < eclipseEntityCount; i++) {
-        const insideEclipsed = Math.floor(Math.random() * moon.insideEntities.length);
-        for(let j = 0; j < insideEntities.length; j++) {
-          if(moon.insideEntities[insideEclipsed].name === insideEntities[j].name) {
-            roomList[count].entity = JSON.parse(JSON.stringify(insideEntities[j])); //Deep copy, break references.
-            roomList[count].entity.spawned = true;
-            count++;
+            targetRoom = getRandomElement(possibleExits).room;
             break;
+        }
+        
+        // Move to target room if different from current
+        if (targetRoom && targetRoom.id !== updatedEntity.location) {
+          const oldLocation = updatedEntity.location;
+          updatedEntity.location = targetRoom.id;
+          updatedEntity.state = 'moving';
+          
+          // Announce movement for dangerous entities
+          const dangerousEntities = ['Bracken', 'Thumper', 'Coil-Head', 'Jester', 'Nutcracker', 'Ghost Girl'];
+          if (dangerousEntities.includes(updatedEntity.type)) {
+            addAnnouncement(`🚶 ${updatedEntity.type} moved from Room ${oldLocation} to Room ${targetRoom.id}`);
+          }
+        } else {
+          updatedEntity.state = 'active';
+        }
+        
+        return updatedEntity;
+      });
+      
+      return updatedEntities;
+    });
+  }, [generatedFacility, currentTime, addAnnouncement]);
+
+  const advanceTime = useCallback(() => {
+    const newTime = currentTime + 15;
+    const moonData = MOONS[selectedMoon];
+    const currentWeather = generatedFacility?.weather;
+    const isCurrentlyEclipsed = currentWeather === 'Eclipsed';
+    setIsEclipsed(isCurrentlyEclipsed);
+    
+    // Move entities FIRST (before potential spawning)
+    moveEntities();
+    
+    // Spawn logic with power level checking
+    if (newTime >= nextEntitySpawn && generatedFacility) {
+      // Calculate current power usage before attempting to spawn
+      const currentPower = calculateCurrentPowerUsage(gameEntities, moonData);
+      
+      // Get all available entities for this moon
+      const availableEntities = [...moonData.entities.inside, ...moonData.entities.outside, ...moonData.entities.daytime];
+      
+      // Filter entities that can actually spawn based on power constraints
+      const spawnableEntities = availableEntities.filter(entityType => 
+        canSpawnEntity(entityType, moonData, currentPower)
+      );
+      
+      if (spawnableEntities.length > 0) {
+        const selectedEntityType = getRandomElement(spawnableEntities);
+        const isOutdoor = moonData.entities.outside.includes(selectedEntityType) || 
+                         moonData.entities.daytime.includes(selectedEntityType);
+        spawnSpecificEntity(selectedEntityType, isOutdoor);
+        addAnnouncement(`✅ Entity spawned successfully. Power usage updated.`);
+      } else {
+        addAnnouncement(`⚠️ Cannot spawn entities - Power limits reached! Indoor: ${currentPower.indoor}/${moonData.powerLevels.maxIndoor}, Outdoor: ${currentPower.outdoor}/${moonData.powerLevels.maxOutdoor}, Daytime: ${currentPower.daytime}/${moonData.powerLevels.maxDaytime}`);
+      }
+      
+      setNextEntitySpawn(nextEntitySpawn + (isCurrentlyEclipsed ? 30 : 45));
+    }
+    
+    setCurrentTime(newTime);
+    addAnnouncement(`Time advanced to ${formatTime(newTime)} - Entities moved`);
+  }, [currentTime, selectedMoon, generatedFacility, nextEntitySpawn, gameEntities, calculateCurrentPowerUsage, canSpawnEntity, spawnSpecificEntity, addAnnouncement, moveEntities]);
+
+  const generateFacility = useCallback(() => {
+    try {
+      const moonData = MOONS[selectedMoon];
+      const roomCount = generateRandomValue(moonData.roomCount.min, moonData.roomCount.max);
+      const rooms = [];
+
+      // Generate rooms first with simple layout
+      for (let i = 0; i < roomCount; i++) {
+        const roomType = i === 0 ? 'Main Entrance' : getRandomElement(ROOM_TYPES.filter(type => type !== 'Main Entrance'));
+        const room = {
+          id: i,
+          type: roomType,
+          position: { row: 0, col: 0 }, // Temporary position
+          doors: {
+            north: 'Wall', south: 'Wall', east: 'Wall', west: 'Wall'
+          },
+          entities: [], scraps: [], traps: [],
+          lighting: getRandomElement(['Bright', 'Dim', 'Dark']),
+          condition: getRandomElement(['Clean', 'Dusty', 'Damaged'])
+        };
+
+        // Generate scrap
+        if (Math.random() < 0.7) {
+          const scrapCount = generateRandomValue(1, 3);
+          for (let j = 0; j < scrapCount; j++) {
+            const scrapName = getRandomElement(Object.keys(SCRAPS));
+            const scrap = SCRAPS[scrapName];
+            room.scraps.push({
+              name: scrapName,
+              value: generateRandomValue(scrap.minValue, scrap.maxValue),
+              weight: scrap.weight,
+              rarity: scrap.rarity
+            });
           }
         }
-      }
-    }
 
-    setRoomData(roomList);
-    setChosenDayEntities(dayEntityList);
-    setChosenNightEntities(nightEntityList);
-  }
-
-  const handleMoonChange = (moon) => {
-    if(moon === currMoon) return;
-
-    setPrevMoon(currMoon);
-    setRoomData([]);
-    setCurrMoon(moon);
-    setTime({
-      minute: 0,
-      hour: 8
-    });
-    setEntityLocations([]);
-    setMapGenerated(false);
-    setGrid([]);
-    setRound(0);
-    setNightSpawned([]);
-    setFloodLevel(0);
-    setToxicLevels(Math.floor(Math.random() * 11));
-    setTargets([]);
-  }
-
-  const handleDayChange = () => {
-    if(day === -1) setDay(parseInt(day) + 2);
-    else setDay(parseInt(day) + 1);
-
-    setRoomData([]);
-    setTime({
-      minute: 0,
-      hour: 8
-    });
-    setEntityLocations([]);
-    setMapGenerated(false);
-    setGrid([]);
-    setRound(0);
-    setNightSpawned([]);
-    setWeather([]);
-    setPrevMoon(currMoon);
-    setFloodLevel(0);
-    setToxicLevels(Math.floor(Math.random() * 11));
-    setTargets([]);
-
-    //Add in when day advances, there is a 30% chance each piece of the ship loses 1 integrity.
-    const tempArr = [...shipIntegrity];
-    for(let i = 0; i < tempArr.length; i++) {
-      if(tempArr[i] > 0) {
-        const degradeChance = Math.floor(Math.random() * 100) + 1;
-        if(degradeChance <= 30) {
-          tempArr[i] = tempArr[i] - 1;
-          break;
+        // Generate traps
+        if (Math.random() < (0.1 + moonData.hazardLevel * 0.05)) {
+          room.traps.push(getRandomElement(TRAPS));
         }
+
+        rooms.push(room);
       }
-    }
-    setShipIntegrity(tempArr);
-  }
 
-  const handleRoundChange = (index, moon) => {
-    let currMin = time.minute;
-    let currHour = time.hour;
-
-    if(currMin + 15 >= 60) {
-      currMin = 0;
-
-      if(currHour + 1 > 24) {
-        currHour = 1;
+      // GUARANTEED CONNECTED layout generation
+      const gridSize = 7;
+      const grid = [];
+      for (let i = 0; i < gridSize; i++) {
+        const row = [];
+        for (let j = 0; j < gridSize; j++) {
+          row.push(null);
+        }
+        grid.push(row);
       }
-      else {
-        currHour++;
+      
+      const roomPositions = {};
+      
+      // Place entrance in center area
+      const entrance = rooms[0];
+      const entrancePos = { row: 3, col: 3 };
+      grid[entrancePos.row][entrancePos.col] = entrance;
+      roomPositions[entrance.id] = entrancePos;
+      entrance.position = entrancePos;
+      
+      // Track which rooms are connected to the network
+      const connectedRooms = new Set([entrance.id]);
+      const unplacedRooms = [...rooms.slice(1)];
+      
+      // Shuffle unplaced rooms for variety
+      for (let i = unplacedRooms.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [unplacedRooms[i], unplacedRooms[j]] = [unplacedRooms[j], unplacedRooms[i]];
       }
-    }
-    else {
-      currMin += 15;
-    }
-
-    //Entities
-    const currRound = round + 1;
-    const tempArr = [...entityLocations];
-
-    for(let i = 0; i < entityLocations.length - 4; i++) {
-      if(entityLocations[i].spawned) {
-        if(currRound % entityLocations[i].moves === 0) {
-          for(let j = 0; j < roomData.length; j++) {
-            if(roomData[j].roomNum === parseInt(entityLocations[i].roomNum)) {
-              const direction = Math.floor(Math.random() * roomData[j].connections.length);
-              tempArr[i].roomNum = roomData[j].connections[direction];
+      
+      // Adjacent directions (only orthogonal for guaranteed connections)
+      const orthogonalDirections = [
+        { row: -1, col: 0, dir: 'north', opposite: 'south' },
+        { row: 1, col: 0, dir: 'south', opposite: 'north' },
+        { row: 0, col: 1, dir: 'east', opposite: 'west' },
+        { row: 0, col: -1, dir: 'west', opposite: 'east' }
+      ];
+      
+      // Place each room ensuring it connects to an already placed room  
+      while (unplacedRooms.length > 0) {
+        let placed = false;
+        
+        // Get all rooms that are already connected
+        const placedConnectedRooms = rooms.filter(room => connectedRooms.has(room.id));
+        
+        // Shuffle the connected rooms to add variety
+        for (let i = placedConnectedRooms.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [placedConnectedRooms[i], placedConnectedRooms[j]] = [placedConnectedRooms[j], placedConnectedRooms[i]];
+        }
+        
+        // Try to place next room adjacent to any connected room
+        for (let connectedRoom of placedConnectedRooms) {
+          if (placed) break;
+          
+          const basePos = roomPositions[connectedRoom.id];
+          
+          // Shuffle directions for variety
+          const shuffledDirections = [...orthogonalDirections];
+          for (let i = shuffledDirections.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledDirections[i], shuffledDirections[j]] = [shuffledDirections[j], shuffledDirections[i]];
+          }
+          
+          for (let direction of shuffledDirections) {
+            const newPos = {
+              row: basePos.row + direction.row,
+              col: basePos.col + direction.col
+            };
+            
+            // Check if position is valid and empty
+            if (newPos.row >= 0 && newPos.row < gridSize && 
+                newPos.col >= 0 && newPos.col < gridSize && 
+                grid[newPos.row][newPos.col] === null) {
+              
+              // Place the room
+              const roomToPlace = unplacedRooms.shift();
+              grid[newPos.row][newPos.col] = roomToPlace;
+              roomPositions[roomToPlace.id] = newPos;
+              roomToPlace.position = newPos;
+              
+              // Create bidirectional door connection
+              const doorType = getRandomElement(['Open', 'Standard Door', 'Security Door']);
+              connectedRoom.doors[direction.dir] = doorType;
+              roomToPlace.doors[direction.opposite] = doorType;
+              
+              // Add to connected network
+              connectedRooms.add(roomToPlace.id);
+              placed = true;
               break;
             }
           }
         }
-      }
-    }
-
-    if(currRound % 3 === 0) {
-      let spawnCount = 0;
-      for(let i = 0; i < entityLocations.length - 4; i++) {
-        if(entityLocations[i].spawned) spawnCount++;
-      }
-
-      if(spawnCount < (entityLocations.length - 4)) {
-        let spawnTarget = Math.floor(Math.random() * (entityLocations.length - 4));
-        while(entityLocations[spawnTarget].spawned) {
-          spawnTarget = Math.floor(Math.random() * (entityLocations.length - 4));
+        
+        // If we couldn't place a room, we have a problem
+        if (!placed) {
+          console.error(`Could not place room - no valid adjacent positions available`);
+          addAnnouncement(`⚠️ Warning: Could not place ${unplacedRooms.length} rooms - insufficient space`);
+          break;
         }
-        tempArr[spawnTarget].spawned = true;
       }
-    }
-
-    let showCount = 0;
-    for(let i = 0; i < nightSpawned.length; i++) {
-      if(nightSpawned[i]) showCount++;
-    }
-
-    if(showCount < nightSpawned.length) {
-      if((weather[index] === 'Eclipsed' || weather[index] === 'Eclipsed?') && currMin === 0) {
-        let spawn = Math.floor(Math.random() * nightSpawned.length);
-        while(nightSpawned[spawn]) {
-          spawn = Math.floor(Math.random() * nightSpawned.length);
-        }
-        nightSpawned[spawn] = true;
-      }
-      else {
-        if(currHour >= moon.nightTime && currHour < 17 && currMin === 0) {
-          let spawn = Math.floor(Math.random() * nightSpawned.length);
-          while(nightSpawned[spawn]) {
-            spawn = Math.floor(Math.random() * nightSpawned.length);
+      
+      // Initialize all doors as walls first, then set connections
+      rooms.forEach(room => {
+        room.doors = { north: 'Wall', south: 'Wall', east: 'Wall', west: 'Wall' };
+      });
+      
+      // Set door connections for adjacent rooms
+      rooms.forEach(room => {
+        const pos = roomPositions[room.id];
+        if (!pos) return;
+        
+        orthogonalDirections.forEach(({ row: deltaRow, col: deltaCol, dir, opposite }) => {
+          const adjRow = pos.row + deltaRow;
+          const adjCol = pos.col + deltaCol;
+          
+          if (adjRow >= 0 && adjRow < gridSize && adjCol >= 0 && adjCol < gridSize) {
+            const adjacentRoom = grid[adjRow][adjCol];
+            
+            if (adjacentRoom && room.doors[dir] === 'Wall' && adjacentRoom.doors[opposite] === 'Wall') {
+              // Create matching doors between adjacent rooms
+              const doorType = getRandomElement(['Open', 'Standard Door', 'Security Door']);
+              room.doors[dir] = doorType;
+              adjacentRoom.doors[opposite] = doorType;
+            }
           }
-  
-          const chance = Math.floor(Math.random() * 4);
-          if(chance === 2) {
-            nightSpawned[spawn] = true;
-          }
-        }
-        else if(currHour >= 18 && currMin === 0) {
-          let spawn = Math.floor(Math.random() * nightSpawned.length);
-          while(nightSpawned[spawn]) {
-            spawn = Math.floor(Math.random() * nightSpawned.length);
-          }
-          nightSpawned[spawn] = true;
-        }
-      }
-    }
-
-    const attackTurns = [...attacking];
-    for(let i = 0; i < entityLocations.length; i++) {
-      if(entityLocations[i].name === 'Bracken' && entityLocations[i].spawned === true && entityLocations[i].alive === true) {
-        if(attackTurns[0] - 1 < 0) {
-          attackTurns[0] = 5;
-          alert('Bracken Attacks ' + targets[0]);
-        }
-        else attackTurns[0] = (attackTurns[0] - 1);
-      }
-      if(entityLocations[i].name === 'Ghost Girl' && entityLocations[i].spawned === true && entityLocations[i].alive === true) {
-        if(attackTurns[1] - 1 < 0) {
-          attackTurns[1] = 10;
-          alert('Ghost Girl Attacks ' + targets[1]);
-        }
-        else attackTurns[1] = attackTurns[1] - 1;
-      }
-    }
-
-    setAttacking(attackTurns);
-    setRound(currRound);
-    setTime({
-      minute: currMin,
-      hour: currHour
-    });
-    //Flooded
-    setFloodLevel(currHour - 8);
-    setEntityLocations(tempArr);
-  }
-
-  const generateEntityLocations = () => {
-    const temp = [];
-    const roomsToUpdate = [];
-
-    for(let i = 0; i < roomData.length; i++) {
-      if(Object.keys(roomData[i].entity).length > 0) {
-        temp.push({
-          name: roomData[i].entity.name,
-          spawned: roomData[i].entity.spawned,
-          moves: roomData[i].entity.moves,
-          roomNum: roomData[i].roomNum,
-          player: false,
-          alive: true
         });
-
-        roomsToUpdate.push(roomData[i].roomNum);
-      }
-    }
-
-    for(let i = 0; i < 4; i++) {
-      temp.push({
-        name: "Player " + (i + 1),
-        roomNum: 0,
-        player: true,
-        alive: true
-      })
-
-      roomsToUpdate.push(0);
-    }
-
-    setUpdatingRoom(roomsToUpdate);
-    setEntityLocations(temp);
-  }
-
-  const createMap = (remainingTiles, row, col, cameFrom) => {
-    if(remainingTiles < 0) {
-      return;
-    }
-  
-    //Place Tile
-    let mapPiece = Math.floor(Math.random() * roomData.length);
-    while(roomData[mapPiece].placed === true) {
-      mapPiece = Math.floor(Math.random() * roomData.length);
-    }
-  
-    //Down is 0[2], Left is 1[3], Up is 2[0], Right is 3[1]. So, move the opposite of cameFrom.
-    const previous = [row, col];
-    if(cameFrom === 0) {
-      if(row - 1 < 0) row = 8;
-      else row--;
-    }
-    if(cameFrom === 1) {
-      if(col + 1 > 8) col = 0;
-      else col++;
-    }
-    if(cameFrom === 2) {
-      if(row + 1 > 8) row = 0;
-      else row++;
-    }
-    if(cameFrom === 3) {
-      if(col - 1 < 0) col = 8;
-      else col--;
-    }
-  
-    if(grid[row][col] > -1) {
-      const shouldConnect = Math.floor(Math.random() * 4);
-      if(shouldConnect === 1) {
-        let curr, prev;
-        for(let i = 0; i < roomData.length; i++) {
-          if(roomData[i].roomNum === grid[row][col]) {
-            //This is the current room. Not the one selected earlier in the function.
-            curr = roomData[i];
-          }
-  
-          if(roomData[i].roomNum === grid[previous[0]][previous[1]]) {
-            prev = roomData[i];
-          }
+      });
+      
+      // Final verification - ensure every room has at least one connection
+      let isolatedCount = 0;
+      rooms.forEach(room => {
+        const hasConnection = Object.values(room.doors).some(door => door !== 'Wall');
+        if (!hasConnection) {
+          isolatedCount++;
+          console.error(`Room ${room.id} (${room.type}) has no connections!`);
         }
-  
-        let alreadyConnected = false;
-        for(let i = 0; i < curr.connections.length; i++) {
-          if(curr.connections[i] === prev.roomNum) {
-            alreadyConnected = true;
-          }
-        }
-  
-        if(!alreadyConnected) {
-          curr.connections.push(prev.roomNum);
-          prev.connections.push(curr.roomNum);
-        }
+      });
+      
+      if (isolatedCount === 0) {
+        addAnnouncement(`✅ All ${rooms.length} rooms successfully connected`);
+      } else {
+        addAnnouncement(`❌ ${isolatedCount} rooms are isolated - generation failed`);
       }
-      createMap(remainingTiles, row, col, cameFrom);
+
+      const totalValue = rooms.reduce((sum, room) => 
+        sum + room.scraps.reduce((scrapSum, scrap) => scrapSum + scrap.value, 0), 0);
+
+      const facility = {
+        moon: selectedMoon,
+        weather: getRandomElement(moonData.weather),
+        interiorType: 'Facility',
+        rooms: rooms,
+        totalValue: totalValue,
+        outsideEntities: [],
+        generatedAt: new Date().toLocaleString(),
+        mapSizeMultiplier: moonData.mapSizeMultiplier,
+        grid: grid,
+        roomPositions: roomPositions
+      };
+
+      setGeneratedFacility(facility);
+      setCurrentTime(420);
+      setGameEntities([]);
+      setNextEntitySpawn(465);
+      setAnnouncements([]);
+      setCurrentPowerUsage({ indoor: 0, outdoor: 0, daytime: 0 });
+      setIsEclipsed(facility.weather === 'Eclipsed');
+      addAnnouncement('New facility generated successfully - All systems nominal');
+    } catch (error) {
+      console.error('Error generating facility:', error);
+      addAnnouncement(`❌ Error generating facility: ${error.message}. Please try again.`);
     }
-    else {
-      roomData[mapPiece].placed = true;
-      grid[row][col] = roomData[mapPiece].roomNum;
-      roomData[mapPiece].connections.push(grid[previous[0]][previous[1]]);
-      //Add to the previous the current connection.
-      for(let i = 0; i < roomData.length; i++) {
-        if(grid[previous[0]][previous[1]] === roomData[i].roomNum) {
-          roomData[i].connections.push(roomData[mapPiece].roomNum);
-        }
-      }
-  
-      let i = (cameFrom + 1) % 4;
-  
-      if(remainingTiles === 2) {
-        const p1Size = Math.floor(Math.random() * remainingTiles);
-        const p2Size = Math.round(remainingTiles - p1Size);
-  
-        let out = Math.floor(Math.random() * 3);
-        if(out === 0) {
-          createMap(p1Size - 1, row, col, (i + 3) % 4);
-          createMap(p2Size - 1, row, col, (i + 4) % 4);
-        }
-        else if(out === 1) {
-          createMap(p1Size - 1, row, col, (i + 2) % 4);
-          createMap(p2Size - 1, row, col, (i + 4) % 4);
-        }
-        else {
-          createMap(p1Size - 1, row, col, (i + 3) % 4);
-          createMap(p2Size - 1, row, col, (i + 2) % 4);
-        }
-      }
-      else if(remainingTiles === 1) {
-        let chosen = Math.floor(Math.random() * 3);
-        if(chosen === 0) {
-          createMap(remainingTiles - 1, row, col, (i + 2) % 4);
-        }
-        else if(chosen === 1) {
-          createMap(remainingTiles - 1, row, col, (i + 3) % 4);
-        }
-        else {
-          createMap(remainingTiles - 1, row, col, (i + 4) % 4);
-        }
-      }
-      else {
-        const p1Size = Math.floor(Math.random() * remainingTiles);
-        const p2Size = Math.floor(Math.random() * (remainingTiles - p1Size));
-        const p3Size = Math.round(remainingTiles - p1Size - p2Size);
-  
-        let direction = Math.floor(Math.random() * 3);
-        if(direction === 0) {
-          createMap(p1Size - 1, row, col, (i + 2) % 4);
-          direction = Math.floor(Math.random() * 2);
-          if(direction === 0) {
-            createMap(p2Size - 1, row, col, (i + 3) % 4);
-            createMap(p3Size - 1, row, col, (i + 4) % 4);
-          }
-          else {
-            createMap(p3Size - 1, row, col, (i + 4) % 4);
-            createMap(p2Size - 1, row, col, (i + 3) % 4);
-          }
-        }
-        else if(direction === 1) {
-          createMap(p2Size - 1, row, col, (i + 3) % 4);
-          direction = Math.floor(Math.random() * 2);
-          if(direction === 0) {
-            createMap(p1Size - 1, row, col, (i + 2) % 4);
-            createMap(p3Size - 1, row, col, (i + 4) % 4);
-          }
-          else {
-            createMap(p3Size - 1, row, col, (i + 4) % 4);
-            createMap(p1Size - 1, row, col, (i + 2) % 4);
-          }
-        }
-        else {
-          createMap(p3Size - 1, row, col, (i + 4) % 4);
-          direction = Math.floor(Math.random() * 2);
-          if(direction === 0) {
-            createMap(p1Size - 1, row, col, (i + 2) % 4);
-            createMap(p2Size - 1, row, col, (i + 3) % 4);
-          }
-          else {
-            createMap(p2Size - 1, row, col, (i + 3) % 4);
-            createMap(p1Size - 1, row, col, (i + 2) % 4);
-          }
-        }
-      }
+  }, [selectedMoon, addAnnouncement]);
+
+  const getRarityColor = (rarity) => {
+    switch (rarity) {
+      case 'Common': return 'default';
+      case 'Uncommon': return 'primary';
+      case 'Rare': return 'secondary';
+      case 'Legendary': return 'warning';
+      default: return 'default';
     }
-  }
+  };
 
-  const finishMap = (moon, index) => {
-    if(mapGenerated || grid[4][4] === 0) return;
-
-    grid[4][4] = 0;
-
-    for(let i = 0; i < moons.size; i++) {
-
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'S': return 'info';
+      case 'D': return 'success';
+      case 'C': return 'info';
+      case 'B': return 'warning';
+      case 'A': case 'A+': return 'error';
+      default: return 'default';
     }
+  };
 
-    const mapSize = mapSizes[index];
-
-    const p1Size = Math.floor(Math.random() * mapSize);
-    const p2Size = Math.floor(Math.random() * (mapSize - p1Size));
-    const p3Size = Math.round(mapSize - p1Size - p2Size);
-
-    createMap(p1Size - 1, 4, 4, 3);
-    createMap(p2Size - 1, 4, 4, 0);
-    createMap(p3Size - 1, 4, 4, 1);
-
-    setMapGenerated(true);
-
-    const possibleRooms = [];
-    for(let i = 0; i < roomData.length; i++) {
-      if(roomData[i].connections.length < 4) {
-        possibleRooms.push(roomData[i].roomNum);
-      }
-    }
-
-    if(moon.name === 'March') {
-      for(let i = 0; i < 3; i++) {
-        let fireExit = Math.floor(Math.random() * possibleRooms.length);
-        while(roomData[possibleRooms[fireExit]].fireExit) {
-          fireExit = Math.floor(Math.random() * possibleRooms.length);
-        }
-        roomData[possibleRooms[fireExit]].fireExit = true;
-      }
-    }
-    else {
-      const fireExit = Math.floor(Math.random() * possibleRooms.length);
-      roomData[possibleRooms[fireExit]].fireExit = true;
-    }
-  }
-
-  const populateGrid = () => {
-    const tempGrid = [];
-    for(let i = 0; i < 9; i++) {
-      const tempArr = [];
-      for(let j = 0; j < 9; j++) {
-        tempArr.push(-1);
-      }
-      tempGrid.push(tempArr);
-    }
-
-    const temp = [...roomData];
-    temp[0].placed = true;
-    setRoomData(temp);
-    setGrid(tempGrid);
-  }
-
-  const DisplayOutsideEntities = () => {
-    let entities = [];
-    if(chosenDayEntities.length === 0) {
-      entities = [...chosenNightEntities];
-    }
-    else {
-      entities = [...chosenDayEntities, ...chosenNightEntities];
-    }
-
-    return (
-      <Box>
-        <Stack direction='row' gap={1} flexWrap='wrap'>
-          {entities.map((data, index) => {
-            return (
-              <Box>
-                {data.soak !== undefined ? 
-                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
-                    <NightEntity data={data}/>
-                    {chosenDayEntities.length === 0 ?
-                      nightSpawned[index] ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>
-                    :
-                      nightSpawned[index - 4] ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>
-                    }
-                  </Card>
-                : 
-                  <Card sx={{width: {xs: '25%', md: '100px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '120px'}}>
-                    <Typography textAlign='center' sx={{fontWeight: 'bold'}}>{data}</Typography>
-                    <Checkbox checked disabled />
-                  </Card>
-                }
-              </Box>
-            )
-          })}
-        </Stack>
-      </Box>
-    )
-  }
-
-  const DisplayFloodLevel = () => {
-    if(floodLevel >= 10 && floodLevel < 15) {
-      return <Typography>Flood Level {floodLevel}/16. Difficulty {floodLevel - 9} to traverse.</Typography>
-    }
-    else if(floodLevel === 15 || floodLevel === 16) {
-      return <Typography>Flood Level {floodLevel}/16. Impossible to traverse.</Typography>
-    }
-    else {
-      return <Typography>Flood Level {floodLevel}/16.</Typography>
-    }
-  }
-
-  const DisplayFogLevel = () => {
-    if(time.hour >= 8 && time.hour <= 12) {
-      const fogLevel = Math.floor(Math.random() * 3);
-      return <Typography>Fog Level: {fogLevel}</Typography>
-    }
-    else if(time.hour > 12 && time.hour <= 16) {
-      const fogLevel = Math.floor(Math.random() * 3) + 1;
-      return <Typography>Fog Level: {fogLevel}</Typography>
-    }
-    else if(time.hour > 16 && time.hour <= 20) {
-      const fogLevel = Math.floor(Math.random() * 3) + 2;
-      return <Typography>Fog Level: {fogLevel}</Typography>
-    }
-    else {
-      const fogLevel = Math.floor(Math.random() * 3) + 3;
-      return <Typography>Fog Level: {fogLevel}</Typography>
-    }
-  }
-
-  const handleEntityDeath = (index) => {
-    const newLocations = [...entityLocations];
-    newLocations[index].alive = newLocations[index].alive ? false : true;
-    setEntityLocations(newLocations);
-  }
-
-  const handleRoomUpdate = (e, index) => {
-    const tempArr = [...updatingRoom];
-    tempArr[index] = e.target.value;
-    
-    setUpdatingRoom(tempArr);
-  }
-
-  const updateRoomNumber = (index, roomCount) => {
-    if(updatingRoom[index] < 0 || updatingRoom[index] > roomCount) {
-      alert('Cannot be less than 0 or more than the amount of rooms on the map.');
-      return;
-    }
-
-    let movement = -1;
-    for(let i = 0; i < entityLocations.length; i++) {
-      if(entityLocations[i].name === 'Bracken' && targets[0] === entityLocations[index].name) {
-        movement = i;
-        break;
-      }
-      if(entityLocations[i].name === 'Ghost Girl' && targets[1] === entityLocations[index].name) {
-        movement = i; 
-        break;
-      }
-    }
-
-    const tempArr = [...entityLocations];
-    tempArr[index].roomNum = updatingRoom[index];
-    if(movement > -1) tempArr[movement].roomNum = updatingRoom[index];
-    if(tempArr[index].player) {
-      const tempRoomDataArr = [...roomData];
-      tempRoomDataArr[updatingRoom[index]].explored = true;
-      setRoomData(tempRoomDataArr);
-    }
-    setEntityLocations(tempArr);
-  }
-
-  const handleOpen = (index) => {
-    const tempArr = [...open];
-    tempArr[index] = true;
-    setOpen(tempArr);
-  }
-
-  const handleClose = (index) => {
-    const tempArr = [...open];
-    tempArr[index] = false;
-    setOpen(tempArr);
-  }
-
-  const handleIntegrityReset = (index) => {
-    const tempArr = [...shipIntegrity];
-    tempArr[index] = 3;
-    setShipIntegrity(tempArr);
-  }
-
-  const toggleGrabbed = (scrap, index) => {
-    const temp = [...roomData];
-    for(let i = 0; i < temp[entityLocations[index].roomNum].scraps.length; i++) {
-      if(scrap.name === temp[entityLocations[index].roomNum].scraps[i].name) {
-        temp[entityLocations[index].roomNum].scraps[i].grabbed = !temp[entityLocations[index].roomNum].scraps[i].grabbed;
-      }
-    }
-    setRoomData(temp);
-  }
-
-  const toggleTrap = (trap, index) => {
-    const temp = [...roomData];
-    temp[index][trap] = !temp[index][trap];
-    setRoomData(temp);
-  }
-
-  const selectDoor = (data, index) => {
-    if(data.connections.length === 0) return;
-
-    const selection = data.connections[Math.floor(Math.random() * data.connections.length)]
-    const temp = [...roomData];
-
-    let doorType = '';
-    if(Math.floor(Math.random() * 101) <= 33) {
-      if(Math.floor(Math.random() * 101) <= 50) {
-        temp[index].doorType[2] = true;
-        doorType = 'Closed Secure';
-      }
-      else {
-        temp[index].doorType[3] = true;
-        doorType = 'Open Secure';
-      }
-    }
-    else {
-      if(Math.floor(Math.random() * 101) <= 50) {
-        temp[index].doorType[0] = true;
-        doorType = 'Locked';
-      }
-      else {
-        temp[index].doorType[1] = true;
-        doorType = 'Unlocked';
-      }
-    }
-
-    //doorType = [Locked Door, Unlocked Door, Closed Secure Door, Open Secure Door]
-    let door = 0;
-    for(let i = 0; i < 4; i++) {
-      if(temp[index].doorType[i]) {
-        if(temp[index].doorConnections[i] === '') {
-          temp[index].doorConnections[i] = doorType + '[' + selection + ']';
-        }
-        else {
-          if(!temp[selection].doorConnections[door].includes('[' + index + ']')) {
-            temp[index].doorConnections[i] += '[' + selection + ']';
-          }
-        }
-
-        door = i;
-        break;
-      }
-    }
-    temp[index].doorProcessed = true;
-
-    if(temp[selection].doorType[door] === true && !temp[selection].doorConnections[door].includes('[' + index + ']')) {
-      temp[selection].doorConnections[door] += '[' + index + ']';
-    }
-    else temp[selection].doorConnections[door] = doorType + '[' + index + ']';
-
-    temp[selection].doorType[door] = true;
-
-    setRoomData(temp);
-  }
-
-  const Moon = () => {
-    const shipPieces = ['Teleporter', 'Inverse Teleporter', 'Console', 'Navigation System'];
-
-    return (
-      <Box>
-        <Drawer open={moonList} onClick={() => setMoonList(false)} anchor="top" sx={{width: {xs: '20%', md: '12%'}}}>
-          <Box>
-            <Button variant="contained" onClick={handleDayChange}>Advance Day</Button>
-            <Divider />
-            <Stack direction='row' flexWrap='wrap' spacing={2}>
-              {moons.map((moon, index) => (
-                <Button onClick={() => handleMoonChange(moon.name, "n")} sx={{color: 'black'}} key={index}>{moon.name + " (" + weather[index] + ") [" + moon.cost + "]"}</Button>
-              ))}
-            </Stack>
-          </Box>
-        </Drawer>
-
-        <Box sx={{ flexGrow: 1, p: 3 }}>
-          {moons.map((moon, index) => {
-            return (
-              moon.name === currMoon ?
-                <Box key={index}>
-                  {shipIntegrity.length === 0 ? setShipIntegrity([3, 3, 3, 3]) : ''}
-                  <Stack direction='row' spacing={2}>
-                    <Box>
-                      <Button variant="contained" onClick={() => setMoonList(true)}>Show moons</Button>
-                      {shop.length === 0 ? getShopData() : <DisplayShop />}
-                      <Typography variant="h2">{moon.name}</Typography>
-                      <Typography variant="h2">({weather[index]})</Typography>
-                      {time.hour ? 
-                        <Typography variant="h5">Current time: {time.hour > 12 ? time.hour - 12 : time.hour}:{time.minute === 0 ? "00" : time.minute} {time.hour >= 12 && time.hour < 24 ? "PM" : "AM"}</Typography>
-                      :
-                        ""
-                      }
-                      {day % 3 === 0 ? <Typography variant="h5">Day: {day} (Quota Deadline)</Typography> : <Typography variant="h5">Day: {day < 0 ? 0 : day}</Typography>}
-                      <Typography>Current Quota: {day < 0 ? quotas[0] : quotas[Math.floor((day - 1) / 3)]}</Typography>
-                      <Typography>Corrosion level: {toxicLevels}</Typography>
-                      {weather[index] === 'Flooded' || weather[index] === 'Flooded?' ? <DisplayFloodLevel /> : ""}
-                      {weather[index] === 'Foggy' || weather[index] === 'Foggy?' ? <DisplayFogLevel /> : ""}
-                      <Button variant="contained" onClick={() => handleRoundChange(index, moon)}>Advance Round</Button>
-                      <br />
-                      <br />
-                      <Divider>Ship Integrity</Divider>
-                      {shipIntegrity.map((part, index) => {
-                        return (
-                          <Stack direction='row' key={index} justifyContent='space-between'>
-                            <Typography key={index}>{shipPieces[index]}: {part}</Typography>
-                            <Button onClick={() => handleIntegrityReset(index)} variant="outlined" size="small">Repair</Button>
-                          </Stack>
-                        )
-                      })}
-                    </Box>
-                    <Box width='33%'>
-                      <Divider>Outside Entities</Divider>
-                      <br />
-                      <DisplayOutsideEntities />
-                    </Box>
-                    {mapGenerated ? <DisplayMap /> : grid.length !== 0 ? finishMap(moon, index) : ""}
-                  </Stack>
-                  
-                  {insideEntities.length === 0 ? 
-                    <>
-                      {getData('Rooms')}
-                      {getData('InsideEntities')}
-                      {getData('Scraps')}
-                      {getData('NightEntities')}
-                    </>
-                  :
-                    <>
-                      {roomData.length === 0 ?
-                        <Box>
-                          {populateMoon(moon, index)}
-                        </Box>
-                      :
-                        <Box>
-                          {grid.length === 0 ? populateGrid() : ""}
-                            <Box overflow='auto'>
-                              {entityLocations.length === 0 ? generateEntityLocations() :
-                                <Box>
-                                  <br />
-                                  <Divider>Entity Locations</Divider>
-                                  <br />
-                                  <Stack direction='row' gap={1} flexWrap='wrap'>
-                                    {entityLocations.map((loc, index) => {
-                                      return (
-                                        <Box key={index}>
-                                          {loc.player ?
-                                            <Box>
-                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '310px', padding: 2}}>
-                                                <Typography><b>{loc.name}</b></Typography>
-                                                <br />
-                                                <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
-                                                <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
-                                                <Stack direction='row'>
-                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]}></TextField>
-                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
-                                                </Stack>
-                                                <br />
-                                                <Divider>Toggles</Divider>
-                                                <br />
-                                                <Stack direction='row'>
-                                                  {roomData[loc.roomNum].scraps.map((scrap) => {
-                                                    return (
-                                                      scrap.name === 'Key' ?
-                                                        "" 
-                                                      :
-                                                        <Button variant="outlined" key={index} color={scrap.grabbed ? 'success' : 'error'} onClick={() => toggleGrabbed(scrap, index)} size="small" sx={{width: '50%'}}>{scrap.name}</Button>
-                                                    )
-                                                  })}
-                                                </Stack>
-                                                <Stack direction='row'>
-                                                  <Stack width='50%'>
-                                                    <Button variant="outlined" color={roomData[loc.roomNum].landmine ? 'success' : 'error'} onClick={() => toggleTrap('landmine', loc.roomNum)} size="small">Landmine</Button>
-                                                    <Button variant="outlined" color={roomData[loc.roomNum].turret ? 'success' : 'error'} onClick={() => toggleTrap('turret', loc.roomNum)} size="small">Turret</Button>
-                                                  </Stack>
-                                                  <Stack width='50%'>
-                                                    <Button variant="outlined" color={roomData[loc.roomNum].spikeTrap ? 'success' : 'error'} onClick={() => toggleTrap('spikeTrap', loc.roomNum)} size="small">Spikes</Button>
-                                                  </Stack>
-                                                </Stack>
-                                              </Card>
-                                            </Box>
-                                          :
-                                            <Box>
-                                              <Card sx={{width: {xs: '25%', md: '250px'}, textAlign: 'center', border: '1px solid black', overflow: 'auto', height: '310px', padding: 2}}>
-                                                <Button onClick={() => handleOpen(index)}>{roomData[index + 1].entity.name}</Button>
-                                                <Dialog open={open[index]} onClose={() => handleClose(index)}>
-                                                  <InsideEntity data={roomData[index + 1]}/>
-                                                </Dialog>
-                                                <Typography textAlign='center'>Room: <b>{loc.roomNum}</b></Typography>
-                                                <Typography>Spawned:{loc.spawned ? <Checkbox checked disabled></Checkbox> : <Checkbox disabled></Checkbox>}</Typography>
-                                                <Typography>Alive:{loc.alive ? <Checkbox checked onClick={() => handleEntityDeath(index)}></Checkbox> : <Checkbox onClick={() => handleEntityDeath(index)}></Checkbox>}</Typography>
-                                                <Stack direction='row'>
-                                                  <TextField label='Update Room' type="number" onChange={(e) => handleRoomUpdate(e, index)} value={updatingRoom[index]}></TextField>
-                                                  <Button variant="outlined" onClick={() => updateRoomNumber(index, moon.size)}>Update</Button>
-                                                </Stack>
-                                                <br />
-                                                {loc.name === 'Bracken' ?
-                                                  <Stack direction='row'>
-                                                    {targets[0] === undefined ? setTargets(['Player ' + (Math.floor(Math.random() * 4) + 1).toString(), targets[1]]) : ''}
-                                                    {attacking[0] === undefined ? setAttacking([5, attacking[1]]) : ''}
-                                                    <TextField label='Current Target' onChange={(e) => setTargets(['Player ' + e.target.value, targets[1]])} value={targets[0]}></TextField>
-                                                    <Typography>Turns till attack: {attacking[0]}</Typography>
-                                                  </Stack>
-                                                :
-                                                  ''
-                                                }
-                                                {loc.name === 'Ghost Girl' ?
-                                                  <Stack direction='row'>
-                                                    {targets[1] === undefined ? setTargets([targets[0], 'Player ' + (Math.floor(Math.random() * 4) + 1).toString()]) : ''}
-                                                    {attacking[1] === undefined ? setAttacking([attacking[0], 10]) : ''}
-                                                    <TextField label='Current Target' onChange={(e) => setTargets([targets[0], 'Player ' + e.target.value])} value={targets[1]}></TextField>
-                                                    <Typography>Turns till attack: {attacking[1]}</Typography>
-                                                  </Stack>
-                                                :
-                                                  ''
-                                                }
-                                              </Card>
-                                            </Box>
-                                          }
-                                        </Box>
-                                      )
-                                    })}
-                                  </Stack>
-                                </Box>
-                              }
-                            </Box>
-                          <br />
-                          <Box border='1px solid black' width='35%' padding={2}>
-                            <Divider>Scrap Color Key</Divider>
-                            <Typography color='#7300ff'>Increase weight by 20.</Typography>
-                            <Typography color='#ff00ae'>Reduce weight by 20.</Typography>
-                            <Typography color='#ff0000'>Take 1d6 wounds and 1d4 strain upon pickup.</Typography>
-                            <Typography color='#00e1ff'>Heal 1d6 wounds and 1d4 strain upon pickup.</Typography>
-                            <Typography color='#002aff'>The scrap has a 5% chance to explode upon pickup dealing 10 wounds and destroying the scrap.</Typography>
-                            <Typography color='#04ff00'>Double the value.</Typography>
-                            <Typography color='#ff9500'>Halve the value.</Typography>
-                          </Box>
-                          <br />
-                          <Stack direction='row' flexWrap='wrap' gap={1}>
-                            {roomData.map((data, index) => {
-                              {data.lockedDoor === true && data.doorProcessed === false ? selectDoor(data, index) : ''}
-                              return <Room data={data}/>
-                            })}
-                          </Stack>
-                        </Box>
-                      }
-                    </>
-                  }
-                </Box>
-              :
-                ""
-            )
-          })}
-        </Box>
-      </Box>
-    )
-  }
-
-  const DisplayShop = () => {
-    const variables = [];
-    const staticItems = [];
-
-    for(let i = 0; i < shop.length; i++) {
-      if(shop[i].type === 'variable') {
-        variables.push(shop[i]);
-      }
-      else {
-        staticItems.push(shop[i]);
-      }
-    }
-
-    if((day - 1) % 3 !== 0) {
-      return <Shop static={staticItems} variable={variables}/>
-    }
-
-    if(prevMoon !== currMoon) {
-      return <Shop static={staticItems} variable={variables}/>
-    }
-
-    for(let i = 0; i < shop.length; i++) {
-      shop[i].shown = false;
-    }
-
-    for(let i = 0; i < 4; i++) {
-      let chosenItem = Math.floor(Math.random() * variables.length);
-      while(variables[chosenItem].shown) {
-        chosenItem = Math.floor(Math.random() * variables.length);
-      }
-      variables[chosenItem].shown = true;
-    }
-
-    return <Shop static={staticItems} variable={variables}/>
-  }
-
-  const DisplayMap = () => {
-    return (
-      <Box maxWidth='750px'>
-        <Table sx={{border: '1px solid black'}}>
-          <TableBody>
-            {grid.map((piece) => {
-              return (
-                <TableRow>
-                  {piece.map((p) => {
-                    return (
-                      p === -1 ? 
-                        <TableCell sx={{background: 'black', color: 'black', border: '1px solid white', width: '25px', height: '25px'}}></TableCell>
-                      :
-                        p === 0 ?
-                          <TableCell sx={{background: 'green', color: 'white', border: '1px solid black', width: '25px', height: '25px'}}>{p}</TableCell>
-                        :
-                          <TableCell sx={{background: 'white', color: 'black', border: '1px solid black', width: '25px', height: '25px'}}>{p}</TableCell>
-                    )
-                  })}
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </Box>
-    )
-  }
-
-  const updateLocalStorage = () => {
-    if(roomData.length === 0 || grid.length === 0) return;
-
-    localStorage.setItem("currMoon", currMoon);
-    localStorage.setItem("prevMoon", prevMoon);
-    localStorage.setItem("weather", JSON.stringify(weather));
-    localStorage.setItem("roomData", JSON.stringify(roomData));
-    localStorage.setItem("chosenNightEntities", JSON.stringify(chosenNightEntities));
-    localStorage.setItem("chosenDayEntities", JSON.stringify(chosenDayEntities));
-    localStorage.setItem("grid", JSON.stringify(grid));
-    localStorage.setItem("time", JSON.stringify(time));
-    localStorage.setItem("day", day);
-    localStorage.setItem("round", round);
-    localStorage.setItem("entityLocations", JSON.stringify(entityLocations));
-    localStorage.setItem("shop", JSON.stringify(shop));
-    localStorage.setItem("mapGenerated", mapGenerated);
-    localStorage.setItem("nightSpawned", JSON.stringify(nightSpawned));
-    localStorage.setItem('toxicLevels', toxicLevels);
-    localStorage.setItem('targets', JSON.stringify(targets));
-    localStorage.setItem('attacks', JSON.stringify(attacking));
-    localStorage.setItem('shipIntegrity', JSON.stringify(shipIntegrity));
-  }
-
-  const retrieveLocalStorage = () => {
-    if(dataRetrieved) return;
-
-    if(localStorage.getItem("currMoon") !== null && currMoon === "") setCurrMoon(localStorage.getItem("currMoon"));
-    if(localStorage.getItem("prevMoon") !== null && prevMoon === "") setPrevMoon(localStorage.getItem("prevMoon"));
-    if(localStorage.getItem("day") !== null && day === -1) setDay(localStorage.getItem("day"));
-    if(localStorage.getItem("round") !== null && round === -1) setRound(localStorage.getItem("round"));
-    if(localStorage.getItem('toxicLevels') !== null && toxicLevels === -1) setToxicLevels(localStorage.getItem('toxicLevels'))
-    if(JSON.parse(localStorage.getItem("grid")) !== null && grid.length === 0) {
-      setGrid(JSON.parse(localStorage.getItem("grid")));
-      setMapGenerated(localStorage.getItem("mapGenerated"));
-    }
-    if(JSON.parse(localStorage.getItem("entityLocations")) !== null && entityLocations.length === 0) setEntityLocations(JSON.parse(localStorage.getItem("entityLocations")));
-    if(JSON.parse(localStorage.getItem("shop")) !== null && shop.length === 0) setShop(JSON.parse(localStorage.getItem("shop")));
-    if(JSON.parse(localStorage.getItem("nightSpawned")) !== null && nightSpawned.length === 0) setNightSpawned(JSON.parse(localStorage.getItem("nightSpawned")));
-    if(JSON.parse(localStorage.getItem("time")) !== null && Object.keys(time).length === 0) setTime(JSON.parse(localStorage.getItem("time")));
-    if(JSON.parse(localStorage.getItem("weather")) !== null && weather.length === 0) setWeather(JSON.parse(localStorage.getItem("weather")));
-    if(JSON.parse(localStorage.getItem("roomData")) !== null && roomData.length === 0) setRoomData(JSON.parse(localStorage.getItem("roomData")));
-    if(JSON.parse(localStorage.getItem("chosenDayEntities")) !== null && chosenDayEntities.length === 0) setChosenDayEntities(JSON.parse(localStorage.getItem("chosenDayEntities")));
-    if(JSON.parse(localStorage.getItem("chosenNightEntities")) !== null && chosenNightEntities.length === 0) setChosenNightEntities(JSON.parse(localStorage.getItem("chosenNightEntities")));
-    if(JSON.parse(localStorage.getItem("targets")) !== null && targets.length === 0) setTargets(JSON.parse(localStorage.getItem("targets")));
-    if(JSON.parse(localStorage.getItem("attacks")) !== null && attacking.length === 0) setAttacking(JSON.parse(localStorage.getItem("attacks")));
-    if(JSON.parse(localStorage.getItem("shipIntegrity")) !== null && shipIntegrity.length === 0) setShipIntegrity(JSON.parse(localStorage.getItem("shipIntegrity")));
-
-    if(dataRetrieved === false) setDataRetrieved(true);
-  }
+  const getPowerLevelProgress = (current, max) => Math.min((current / max) * 100, 100);
+  const getPowerLevelColor = (current, max) => {
+    const percentage = (current / max) * 100;
+    if (percentage >= 90) return 'error';
+    if (percentage >= 70) return 'warning';
+    if (percentage >= 50) return 'info';
+    return 'success';
+  };
 
   return (
-    <>
-      {moons.length === 0 ? 
-        getData('Moons')
-      :
-        <>
-          {weather.length === 0 ? getWeather() : ""}
-          {retrieveLocalStorage()}
-          <Moon />
-        </>
-      }
-      {updateLocalStorage()}
-    </>
-  )
+    <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      <AppBar position="static" sx={{ bgcolor: '#d32f2f' }}>
+        <Toolbar>
+          <Security sx={{ mr: 2 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Lethal Company - Enhanced Genesys RPG
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="xl" sx={{ mt: 3, mb: 3 }}>
+        <Grid container spacing={3}>
+          {/* Mission Control */}
+          <Grid item xs={12}>
+            <Card sx={{ bgcolor: 'white', boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h5" gutterBottom color="primary">Mission Control</Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <FormControl sx={{ minWidth: 250 }}>
+                    <InputLabel>Select Moon</InputLabel>
+                    <Select value={selectedMoon} onChange={(e) => setSelectedMoon(e.target.value)}>
+                      <MenuItem disabled sx={{ fontWeight: 'bold', color: 'primary.main' }}>Free Moons</MenuItem>
+                      {Object.entries(MOONS).filter(([moon, data]) => data.cost === 0).map(([moon, data]) => (
+                        <MenuItem key={moon} value={moon}>
+                          {moon} - Difficulty {data.difficulty}
+                        </MenuItem>
+                      ))}
+                      <MenuItem disabled sx={{ fontWeight: 'bold', color: 'warning.main', mt: 1 }}>Paid Moons</MenuItem>
+                      {Object.entries(MOONS).filter(([moon, data]) => data.cost > 0).map(([moon, data]) => (
+                        <MenuItem key={moon} value={moon}>
+                          {moon} - Difficulty {data.difficulty} ({data.cost} credits)
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button variant="contained" color="primary" startIcon={<Map />} onClick={generateFacility} size="large">
+                    Generate Facility
+                  </Button>
+                  {generatedFacility && (
+                    <Button variant="outlined" startIcon={<Refresh />} onClick={generateFacility}>
+                      Regenerate
+                    </Button>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Time Control Panel */}
+          {generatedFacility && (
+            <Grid item xs={12}>
+              <Card sx={{ bgcolor: '#1a1a1a', boxShadow: 3, border: isEclipsed ? '2px solid #9c27b0' : '2px solid #d32f2f' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ color: isEclipsed ? '#9c27b0' : '#d32f2f', display: 'flex', alignItems: 'center' }}>
+                    <Security sx={{ mr: 1 }} />
+                    {isEclipsed ? '🌑 ECLIPSE MODE - Enhanced Monitoring' : 'Mission Timeline Control'}
+                  </Typography>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#2a2a2a', borderRadius: 2 }}>
+                        <Typography variant="h4" sx={{ color: '#00ff00', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                          {formatTime(currentTime)}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#ffffff' }}>Current Time</Typography>
+                        {isEclipsed && (
+                          <Typography variant="caption" sx={{ color: '#9c27b0', fontWeight: 'bold' }}>
+                            ECLIPSE ACTIVE
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Button
+                          variant="contained"
+                          color={isEclipsed ? "secondary" : "warning"}
+                          size="large"
+                          onClick={advanceTime}
+                          sx={{ mb: 1, fontSize: '1.1rem', minWidth: '200px' }}
+                        >
+                          Advance Time (+15 min)
+                        </Button>
+                        <Typography variant="caption" display="block" sx={{ color: '#ffffff' }}>
+                          Next Spawn: {formatTime(nextEntitySpawn)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ p: 2, bgcolor: '#2a2a2a', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" sx={{ color: '#ffffff', mb: 2 }}>
+                          Entity Power Levels
+                        </Typography>
+                        <Box sx={{ mb: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              Indoor: {currentPowerUsage.indoor}/{MOONS[selectedMoon].powerLevels.maxIndoor}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              {Math.round(getPowerLevelProgress(currentPowerUsage.indoor, MOONS[selectedMoon].powerLevels.maxIndoor))}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={getPowerLevelProgress(currentPowerUsage.indoor, MOONS[selectedMoon].powerLevels.maxIndoor)}
+                            color={getPowerLevelColor(currentPowerUsage.indoor, MOONS[selectedMoon].powerLevels.maxIndoor)}
+                            sx={{ height: 8, borderRadius: 4 }}
+                          />
+                        </Box>
+                        <Box sx={{ mb: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              Outdoor: {currentPowerUsage.outdoor}/{MOONS[selectedMoon].powerLevels.maxOutdoor}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              {Math.round(getPowerLevelProgress(currentPowerUsage.outdoor, MOONS[selectedMoon].powerLevels.maxOutdoor))}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={getPowerLevelProgress(currentPowerUsage.outdoor, MOONS[selectedMoon].powerLevels.maxOutdoor)}
+                            color={getPowerLevelColor(currentPowerUsage.outdoor, MOONS[selectedMoon].powerLevels.maxOutdoor)}
+                            sx={{ height: 8, borderRadius: 4 }}
+                          />
+                        </Box>
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              Daytime: {currentPowerUsage.daytime}/{MOONS[selectedMoon].powerLevels.maxDaytime}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#ffffff' }}>
+                              {Math.round(getPowerLevelProgress(currentPowerUsage.daytime, MOONS[selectedMoon].powerLevels.maxDaytime))}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={getPowerLevelProgress(currentPowerUsage.daytime, MOONS[selectedMoon].powerLevels.maxDaytime)}
+                            color={getPowerLevelColor(currentPowerUsage.daytime, MOONS[selectedMoon].powerLevels.maxDaytime)}
+                            sx={{ height: 8, borderRadius: 4 }}
+                          />
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                  
+                  {/* System Announcements */}
+                  {announcements.length > 0 && (
+                    <Box sx={{ mt: 2, p: 2, bgcolor: '#0a0a0a', borderRadius: 2, border: '1px solid #444' }}>
+                      <Typography variant="subtitle2" sx={{ color: '#00ff00', mb: 1 }}>
+                        📻 SYSTEM ALERTS
+                      </Typography>
+                      {announcements.slice(-3).map((announcement, index) => (
+                        <Typography key={index} variant="body2" sx={{ color: '#ffffff', fontSize: '0.85rem', mb: 0.5 }}>
+                          <span style={{ color: '#888' }}>[{announcement.timestamp}]</span> {announcement.message}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          {/* Main Content Tabs */}
+          {generatedFacility && (
+            <Grid item xs={12}>
+              <Card sx={{ bgcolor: 'white', boxShadow: 3 }}>
+                <CardContent>
+                  <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+                    <Tab label="Facility Overview" />
+                    <Tab label="Room Details" />
+                    <Tab label="Entity Stats" />
+                    <Tab label="Scrap Database" />
+                    <Tab label="Weather Rules" />
+                  </Tabs>
+
+                  {/* Tab 0: Facility Overview */}
+                  {activeTab === 0 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="h6" gutterBottom color="primary">
+                        {generatedFacility.moon} Facility - {generatedFacility.interiorType}
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Alert severity={isEclipsed ? "error" : "info"} sx={{ mb: 2 }}>
+                            <strong>Weather:</strong> {generatedFacility.weather} | 
+                            <strong> Total Rooms:</strong> {generatedFacility.rooms.length} | 
+                            <strong> Estimated Value:</strong> ${generatedFacility.totalValue}
+                          </Alert>
+                          
+                          {/* Active Entities Display */}
+                          {gameEntities.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography variant="subtitle1" gutterBottom color="error">
+                                Active Spawned Entities ({gameEntities.length}):
+                              </Typography>
+                              <Box sx={{ maxHeight: 650, overflowY: 'auto', p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                            {gameEntities.map((entity) => (
+                              <Box key={entity.id} sx={{ mb: 1, p: 1, bgcolor: 'white', borderRadius: 1, border: '1px solid #ddd' }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                                  {entity.type} (Power: {entity.powerLevel})
+                                </Typography>
+                                <Typography variant="caption" display="block">
+                                  Location: {entity.isOutdoor ? entity.location : `Room ${entity.location}`}
+                                </Typography>
+                                <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                                  State: {entity.state} | Spawned: {formatTime(entity.spawnTime)}
+                                </Typography>
+                              </Box>
+                            ))}
+                              </Box>
+                            </Box>
+                          )}
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle1" gutterBottom color="text.primary">
+                            Facility Map Layout:
+                          </Typography>
+                          <Box sx={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(7, 1fr)', 
+                            gap: 2,
+                            maxWidth: 630,
+                            mx: 'auto',
+                            p: 2,
+                            border: '2px solid #ddd',
+                            borderRadius: 2,
+                            bgcolor: '#f9f9f9'
+                          }}>
+                            {generatedFacility.grid.flat().map((room, index) => {
+                              const row = Math.floor(index / 7);
+                              const col = index % 7;
+                              
+                              if (!room) {
+                                // Empty grid cell
+                                return (
+                                  <Box
+                                    key={`empty-${row}-${col}`}
+                                    sx={{
+                                      minHeight: 70,
+                                      bgcolor: '#f0f0f0',
+                                      borderRadius: 1,
+                                      border: '1px dashed #ccc',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}
+                                  >
+                                    <Typography variant="caption" sx={{ color: '#999', fontSize: '0.7rem' }}>
+                                      {row},{col}
+                                    </Typography>
+                                  </Box>
+                                );
+                              }
+
+                              const entitiesInRoom = gameEntities.filter(entity => 
+                                !entity.isOutdoor && entity.location === room.id
+                              );
+                              
+                              let backgroundColor = '#757575';
+                              let borderColor = '2px solid #666';
+                              
+                              if (room.type === 'Main Entrance') {
+                                backgroundColor = '#1976d2';
+                                borderColor = '3px solid #0d47a1';
+                              } else if (entitiesInRoom.length > 0) {
+                                backgroundColor = '#d32f2f';
+                                borderColor = '2px solid #b71c1c';
+                              } else if (room.scraps.length > 0) {
+                                backgroundColor = '#388e3c';
+                                borderColor = '2px solid #2e7d32';
+                              }
+                              
+                              return (
+                                <Tooltip
+                                  key={room.id}
+                                  title={`Room ${room.id}: ${room.type}
+                                  Position: Row ${room.position?.row || 0}, Col ${room.position?.col || 0}
+                                  Entities: ${entitiesInRoom.length}, Scraps: ${room.scraps.length}
+                                  Doors: N:${room.doors.north}, S:${room.doors.south}, E:${room.doors.east}, W:${room.doors.west}`}
+                                >
+                                  <Card
+                                    sx={{
+                                      minHeight: 70,
+                                      cursor: 'pointer',
+                                      bgcolor: backgroundColor,
+                                      color: 'white',
+                                      border: borderColor,
+                                      '&:hover': { opacity: 0.8, transform: 'scale(1.05)' },
+                                      position: 'relative',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onClick={() => setSelectedRoom(room)}
+                                  >
+                                    <CardContent sx={{ p: 1, textAlign: 'center', width: '100%' }}>
+                                      <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', lineHeight: 1 }}>
+                                        {room.id}
+                                      </Typography>
+                                      <Typography variant="caption" display="block" sx={{ color: 'white', fontSize: '0.65rem', mb: 0.5 }}>
+                                        {room.type.length > 10 ? room.type.split(' ')[0] : room.type}
+                                      </Typography>
+                                      
+                                      {entitiesInRoom.length > 0 && (
+                                        <Typography variant="caption" display="block" sx={{ color: '#ffcdd2', fontSize: '0.6rem', fontWeight: 'bold' }}>
+                                          👹 {entitiesInRoom.length}
+                                        </Typography>
+                                      )}
+                                      
+                                      {room.scraps.length > 0 && (
+                                        <Typography variant="caption" display="block" sx={{ color: '#c8e6c9', fontSize: '0.6rem' }}>
+                                          💰 {room.scraps.length}
+                                        </Typography>
+                                      )}
+                                      
+                                      {/* Door indicators with better positioning */}
+                                      {room.doors.north !== 'Wall' && (
+                                        <Box sx={{ 
+                                          position: 'absolute', 
+                                          top: 1, 
+                                          left: '50%', 
+                                          transform: 'translateX(-50%)',
+                                          width: 12, 
+                                          height: 3, 
+                                          bgcolor: room.doors.north === 'Open' ? '#4caf50' : '#fff',
+                                          borderRadius: '2px'
+                                        }} />
+                                      )}
+                                      {room.doors.south !== 'Wall' && (
+                                        <Box sx={{ 
+                                          position: 'absolute', 
+                                          bottom: 1, 
+                                          left: '50%', 
+                                          transform: 'translateX(-50%)',
+                                          width: 12, 
+                                          height: 3, 
+                                          bgcolor: room.doors.south === 'Open' ? '#4caf50' : '#fff',
+                                          borderRadius: '2px'
+                                        }} />
+                                      )}
+                                      {room.doors.west !== 'Wall' && (
+                                        <Box sx={{ 
+                                          position: 'absolute', 
+                                          left: 1, 
+                                          top: '50%', 
+                                          transform: 'translateY(-50%)',
+                                          width: 3, 
+                                          height: 12, 
+                                          bgcolor: room.doors.west === 'Open' ? '#4caf50' : '#fff',
+                                          borderRadius: '2px'
+                                        }} />
+                                      )}
+                                      {room.doors.east !== 'Wall' && (
+                                        <Box sx={{ 
+                                          position: 'absolute', 
+                                          right: 1, 
+                                          top: '50%', 
+                                          transform: 'translateY(-50%)',
+                                          width: 3, 
+                                          height: 12, 
+                                          bgcolor: room.doors.east === 'Open' ? '#4caf50' : '#fff',
+                                          borderRadius: '2px'
+                                        }} />
+                                      )}
+                                    </CardContent>
+                                  </Card>
+                                </Tooltip>
+                              );
+                            })}
+                          </Box>
+                          <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.secondary', textAlign: 'center' }}>
+                            🔵 Blue: Main Entrance | 🔴 Red: Entities Present | 🟢 Green: Scrap Present | ⚫ Gray: Empty<br />
+                            Door indicators: 🟢 Green = Open, ⚪ White = Door/Security, None = Wall
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  )}
+
+                  {/* Tab 1: Room Details */}
+                  {activeTab === 1 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="h6" gutterBottom color="primary">Room Details</Typography>
+                      <Grid container spacing={2}>
+                        {generatedFacility.rooms.map((room) => {
+                          const entitiesInRoom = gameEntities.filter(entity => 
+                            !entity.isOutdoor && entity.location === room.id
+                          );
+                          
+                          return (
+                            <Grid item xs={12} md={6} lg={4} key={room.id}>
+                              <Card sx={{ 
+                                bgcolor: entitiesInRoom.length > 0 ? '#ffebee' : '#fafafa', 
+                                height: '100%', 
+                                boxShadow: 2,
+                                border: entitiesInRoom.length > 0 ? '2px solid #d32f2f' : 'none'
+                              }}>
+                                <CardContent>
+                                  <Typography variant="h6" gutterBottom color="primary">
+                                    Room {room.id}: {room.type}
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                                    Lighting: {room.lighting} | Condition: {room.condition}
+                                  </Typography>
+                                  
+                                  {/* Active Spawned Entities in Room */}
+                                  {entitiesInRoom.length > 0 && (
+                                    <Box sx={{ mb: 2, p: 1, bgcolor: '#ffcdd2', borderRadius: 1 }}>
+                                      <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                                        ⚠️ ACTIVE ENTITIES ({entitiesInRoom.length}):
+                                      </Typography>
+                                      {entitiesInRoom.map((entity, index) => (
+                                        <Chip
+                                          key={index}
+                                          label={`${entity.type} (P:${entity.powerLevel}, ${entity.state})`}
+                                          size="small"
+                                          color="error"
+                                          sx={{ mr: 1, mb: 1 }}
+                                          onClick={() => setSelectedEntity(entity.type)}
+                                        />
+                                      ))}
+                                    </Box>
+                                  )}
+
+                                  {room.scraps.length > 0 && (
+                                    <Box sx={{ mb: 2 }}>
+                                      <Typography variant="subtitle2" color="success.main">
+                                        Scrap Items:
+                                      </Typography>
+                                      {room.scraps.map((scrap, index) => (
+                                        <Chip
+                                          key={index}
+                                          label={`${scrap.name} (${scrap.value})`}
+                                          size="small"
+                                          color={getRarityColor(scrap.rarity)}
+                                          sx={{ mr: 1, mb: 1 }}
+                                        />
+                                      ))}
+                                    </Box>
+                                  )}
+
+                                  {room.traps.length > 0 && (
+                                    <Box>
+                                      <Typography variant="subtitle2" color="warning.main">
+                                        Traps:
+                                      </Typography>
+                                      {room.traps.map((trap, index) => (
+                                        <Typography key={index} variant="caption" display="block">
+                                          {trap.name} (Damage: {trap.damage}, Difficulty: {trap.difficulty})
+                                        </Typography>
+                                      ))}
+                                    </Box>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+                  )}
+
+                  {/* Tab 2: Entity Stats */}
+                  {activeTab === 2 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="h6" gutterBottom>
+                        Entity Adversary Stats (Genesys RPG)
+                      </Typography>
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Power levels determine spawn limits: Indoor entities cannot exceed {MOONS[selectedMoon].powerLevels.maxIndoor} total power, 
+                        Outdoor entities cannot exceed {MOONS[selectedMoon].powerLevels.maxOutdoor} total power.
+                      </Alert>
+                      <TableContainer component={Paper} sx={{ bgcolor: '#2e2e2e' }}>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ color: 'white' }}>Entity</TableCell>
+                              <TableCell sx={{ color: 'white' }}>Power Level</TableCell>
+                              <TableCell sx={{ color: 'white' }}>Characteristics</TableCell>
+                              <TableCell sx={{ color: 'white' }}>Combat Stats</TableCell>
+                              <TableCell sx={{ color: 'white' }}>Special Abilities</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {Object.entries(ENTITIES).map(([name, stats]) => {
+                              const powerLevel = ENTITY_POWER_LEVELS[name] || 1;
+                              return (
+                                <TableRow key={name}>
+                                  <TableCell sx={{ color: 'white' }}>
+                                    <Typography variant="subtitle2">{name}</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {stats.description}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell sx={{ color: 'white' }}>
+                                    <Chip 
+                                      label={`Power: ${powerLevel}`} 
+                                      color={powerLevel >= 3 ? 'error' : powerLevel === 2 ? 'warning' : 'success'}
+                                      size="small"
+                                    />
+                                  </TableCell>
+                                  <TableCell sx={{ color: 'white' }}>
+                                    <Typography variant="caption" display="block">
+                                      BR: {stats.brawn} | AG: {stats.agility} | INT: {stats.intellect}
+                                    </Typography>
+                                    <Typography variant="caption" display="block">
+                                      CUN: {stats.cunning} | WIL: {stats.willpower} | PR: {stats.presence}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell sx={{ color: 'white' }}>
+                                    <Typography variant="caption" display="block">
+                                      Soak: {stats.soak} | Wounds: {stats.wounds} | Strain: {stats.strain}
+                                    </Typography>
+                                    <Typography variant="caption" display="block">
+                                      Defense: {stats.defense.melee}/{stats.defense.ranged}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell sx={{ color: 'white' }}>
+                                    <Typography variant="caption">
+                                      {stats.abilities.slice(0, 2).join('; ')}
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  )}
+
+                  {/* Tab 3: Scrap Database */}
+                  {activeTab === 3 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="h6" gutterBottom>Enhanced Scrap Item Database</Typography>
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Scrap spawning uses weighted rarity system. Higher-tier moons have increased chances for rare items.
+                        Current moon tier: {MOONS[selectedMoon].hazardLevel}/5
+                      </Alert>
+                      <Grid container spacing={2}>
+                        {Object.entries(SCRAPS).map(([name, scrap]) => (
+                          <Grid item xs={12} sm={6} md={4} lg={3} key={name}>
+                            <Card sx={{ bgcolor: '#fafafa', height: '100%', boxShadow: 2 }}>
+                              <CardContent>
+                                <Typography variant="h6" gutterBottom color="primary">{name}</Typography>
+                                <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                                  <Chip label={scrap.rarity} color={getRarityColor(scrap.rarity)} size="small" />
+                                  <Chip label={scrap.weight} variant="outlined" size="small" />
+                                  <Chip label={`Weight: ${scrap.rarityWeight || 10}`} variant="outlined" size="small" color="info" />
+                                </Box>
+                                <Typography variant="body2" color="success.main" sx={{ fontWeight: 'bold' }}>
+                                  Value: ${scrap.minValue} - ${scrap.maxValue}
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  )}
+
+                  {/* Tab 4: Weather Rules */}
+                  {activeTab === 4 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="h6" gutterBottom>Weather Conditions & Effects</Typography>
+                      <Alert severity="info" sx={{ mb: 3 }}>
+                        Weather conditions affect the entire mission and apply various mechanical effects to player actions. 
+                        {generatedFacility && (
+                          <>The current facility weather is: <strong>{generatedFacility.weather}</strong></>
+                        )}
+                      </Alert>
+                      <Grid container spacing={3}>
+                        {Object.entries(WEATHER_EFFECTS).map(([weatherType, effects]) => (
+                          <Grid item xs={12} key={weatherType}>
+                            <Card sx={{ 
+                              bgcolor: generatedFacility?.weather === weatherType ? 
+                                (weatherType === 'Eclipsed' ? '#f3e5f5' : '#e3f2fd') : '#fafafa',
+                              border: generatedFacility?.weather === weatherType ? 
+                                (weatherType === 'Eclipsed' ? '2px solid #9c27b0' : '2px solid #1976d2') : 'none',
+                              boxShadow: 2 
+                            }}>
+                              <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                  <Typography variant="h5" color="primary" sx={{ flexGrow: 1 }}>
+                                    {weatherType} {weatherType === 'Eclipsed' && ' 🌑'}
+                                  </Typography>
+                                  {generatedFacility?.weather === weatherType && (
+                                    <Chip
+                                      label="Current Weather"
+                                      color={weatherType === 'Eclipsed' ? 'secondary' : 'primary'}
+                                      variant="filled"
+                                    />
+                                  )}
+                                </Box>
+                                
+                                <Typography variant="body1" paragraph color="text.secondary">
+                                  {effects.description}
+                                </Typography>
+                                
+                                <Grid container spacing={2}>
+                                  <Grid item xs={12} md={6}>
+                                    <Typography variant="h6" gutterBottom color="secondary">Environmental Effects</Typography>
+                                    <Typography variant="subtitle2" gutterBottom>Narrative Effects:</Typography>
+                                    {effects.effects.map((effect, index) => (
+                                      <Typography key={index} variant="body2" sx={{ mb: 1 }}>• {effect}</Typography>
+                                    ))}
+                                  </Grid>
+                                  <Grid item xs={12} md={6}>
+                                    <Typography variant="h6" gutterBottom color="secondary">Mechanical Effects</Typography>
+                                    <Alert 
+                                      severity={weatherType === 'Clear' ? 'success' : 
+                                               weatherType === 'Eclipsed' ? 'error' : 'warning'}
+                                      sx={{ mb: 2 }}
+                                    >
+                                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                        {effects.mechanicalEffects}
+                                      </Typography>
+                                    </Alert>
+                                  </Grid>
+                                </Grid>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          {/* Moon Information Panel */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: 'white', boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Moon Information: {selectedMoon}
+                </Typography>
+                
+                <Typography variant="body2" paragraph color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  {MOONS[selectedMoon].description}
+                </Typography>
+                
+                <Box sx={{ mb: 2 }}>
+                  <Chip
+                    label={`Difficulty: ${MOONS[selectedMoon].difficulty}`}
+                    color={getDifficultyColor(MOONS[selectedMoon].difficulty)}
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                  <Chip
+                    label={`Hazard Level: ${MOONS[selectedMoon].hazardLevel}`}
+                    color="warning"
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                  <Chip
+                    label={`Cost: ${MOONS[selectedMoon].cost} credits`}
+                    color={MOONS[selectedMoon].cost === 0 ? 'success' : 'error'}
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                  <Chip
+                    label={`Map Size: x${MOONS[selectedMoon].mapSizeMultiplier}`}
+                    variant="outlined"
+                    sx={{ mr: 1, mb: 1 }}
+                  />
+                </Box>
+                
+                <Typography variant="subtitle2" gutterBottom>Power Limits:</Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                  <Chip label={`Indoor: ${MOONS[selectedMoon].powerLevels.maxIndoor}`} color="info" size="small" />
+                  <Chip label={`Outdoor: ${MOONS[selectedMoon].powerLevels.maxOutdoor}`} color="warning" size="small" />
+                  <Chip label={`Daytime: ${MOONS[selectedMoon].powerLevels.maxDaytime}`} color="success" size="small" />
+                </Box>
+                
+                <Typography variant="subtitle2" gutterBottom>Weather Conditions:</Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                  {MOONS[selectedMoon].weather.map((weather, index) => (
+                    <Chip
+                      key={index}
+                      label={weather}
+                      variant="outlined"
+                      size="small"
+                      color={weather === 'Eclipsed' ? 'secondary' : 'default'}
+                    />
+                  ))}
+                </Box>
+
+                <Typography variant="subtitle2" gutterBottom>
+                  Expected Scrap: ${MOONS[selectedMoon].minScrapValue} - ${MOONS[selectedMoon].maxScrapValue} 
+                  ({MOONS[selectedMoon].scrapSpawnRange.min}-{MOONS[selectedMoon].scrapSpawnRange.max} items)
+                </Typography>
+
+                <Typography variant="subtitle2" gutterBottom>
+                  <strong>Night Start Time:</strong> {formatTime(MOONS[selectedMoon].nightStartTime)}
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ color: 'text.secondary', mb: 2 }}>
+                  Outdoor entities (except daytime) can only spawn after {formatTime(MOONS[selectedMoon].nightStartTime)} or during Eclipse
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Statistics Panel */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ bgcolor: 'white', boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom color="primary">Enhanced Session Statistics</Typography>
+                
+                {generatedFacility ? (
+                  <Box>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Current Facility:</strong> {generatedFacility.moon}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Generated:</strong> {generatedFacility.generatedAt}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Mission Time:</strong> {formatTime(currentTime)}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Weather:</strong> {generatedFacility.weather} {isEclipsed && '🌑'}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Active Entities:</strong> {gameEntities.length}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Total Scrap Items:</strong> {generatedFacility.rooms.reduce((sum, room) => sum + room.scraps.length, 0)}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Estimated Total Value:</strong> ${generatedFacility.totalValue}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Next Entity Spawn:</strong> {formatTime(nextEntitySpawn)}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Alert severity="info">Generate a facility to see statistics</Alert>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Entity Tracking Panel */}
+          {generatedFacility && gameEntities.length > 0 && (
+            <Grid item xs={12}>
+              <Card sx={{ bgcolor: '#1a1a1a', boxShadow: 3, border: isEclipsed ? '2px solid #9c27b0' : '2px solid #ff6b6b' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ color: isEclipsed ? '#9c27b0' : '#ff6b6b' }}>
+                    {isEclipsed ? '🌑 Eclipse Entity Tracking System' : '🚨 Entity Tracking System'}
+                  </Typography>
+                  <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                    {gameEntities.map((entity) => (
+                      <Card key={entity.id} sx={{ mb: 1, bgcolor: '#2a2a2a', border: '1px solid #444' }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ color: isEclipsed ? '#9c27b0' : '#ff6b6b', fontWeight: 'bold' }}>
+                              {entity.type} (Power: {entity.powerLevel})
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Chip 
+                                label={entity.state} 
+                                size="small" 
+                                color={entity.state === 'moving' ? 'warning' : 'error'}
+                                sx={{ color: 'white' }}
+                              />
+                              <Chip 
+                                label={entity.isOutdoor ? 'Outdoor' : 'Indoor'}
+                                size="small"
+                                color={entity.isOutdoor ? 'info' : 'secondary'}
+                                sx={{ color: 'white' }}
+                              />
+                            </Box>
+                          </Box>
+                          <Typography variant="body2" sx={{ color: '#ffffff' }}>
+                            <strong>Location:</strong> {entity.isOutdoor ? entity.location : `Room ${entity.location}`}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#bbbbbb' }}>
+                            <strong>Spawned:</strong> {formatTime(entity.spawnTime)} | 
+                            <strong> Last Activity:</strong> {formatTime(entity.lastMoved)}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+        </Grid>
+      </Container>
+
+      {/* Entity Details Dialog */}
+      <Dialog open={!!selectedEntity} onClose={() => setSelectedEntity(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Entity Details: {selectedEntity}</DialogTitle>
+        <DialogContent>
+          {selectedEntity && ENTITIES[selectedEntity] && (
+            <Box>
+              <Typography variant="body1" paragraph>
+                {ENTITIES[selectedEntity].description}
+              </Typography>
+              
+              <Typography variant="h6" gutterBottom>Characteristics</Typography>
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid item xs={6}>
+                  <Typography variant="body2">Brawn: {ENTITIES[selectedEntity].brawn}</Typography>
+                  <Typography variant="body2">Agility: {ENTITIES[selectedEntity].agility}</Typography>
+                  <Typography variant="body2">Intellect: {ENTITIES[selectedEntity].intellect}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2">Cunning: {ENTITIES[selectedEntity].cunning}</Typography>
+                  <Typography variant="body2">Willpower: {ENTITIES[selectedEntity].willpower}</Typography>
+                  <Typography variant="body2">Presence: {ENTITIES[selectedEntity].presence}</Typography>
+                </Grid>
+              </Grid>
+              
+              <Typography variant="h6" gutterBottom>Combat Statistics</Typography>
+              <Typography variant="body2">Soak Value: {ENTITIES[selectedEntity].soak}</Typography>
+              <Typography variant="body2">Wound Threshold: {ENTITIES[selectedEntity].wounds}</Typography>
+              <Typography variant="body2">Strain Threshold: {ENTITIES[selectedEntity].strain}</Typography>
+              <Typography variant="body2">
+                Defense: {ENTITIES[selectedEntity].defense.melee} Melee / {ENTITIES[selectedEntity].defense.ranged} Ranged
+              </Typography>
+              
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Special Abilities</Typography>
+              {ENTITIES[selectedEntity].abilities.map((ability, index) => (
+                <Typography key={index} variant="body2" sx={{ mb: 1 }}>• {ability}</Typography>
+              ))}
+              
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  <strong>Power Level:</strong> {ENTITY_POWER_LEVELS[selectedEntity] || 1}
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedEntity(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Room Details Dialog */}
+      <Dialog open={!!selectedRoom} onClose={() => setSelectedRoom(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Room {selectedRoom?.id}: {selectedRoom?.type}</DialogTitle>
+        <DialogContent>
+          {selectedRoom && (
+            <Box>
+              <Typography variant="h6" gutterBottom>Room Conditions</Typography>
+              <Typography variant="body2">Lighting: {selectedRoom.lighting}</Typography>
+              <Typography variant="body2">Condition: {selectedRoom.condition}</Typography>
+              
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Door Connections</Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={6}>
+                  <Typography variant="body2">North: {selectedRoom.doors.north}</Typography>
+                  <Typography variant="body2">South: {selectedRoom.doors.south}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2">East: {selectedRoom.doors.east}</Typography>
+                  <Typography variant="body2">West: {selectedRoom.doors.west}</Typography>
+                </Grid>
+              </Grid>
+              
+              {selectedRoom.scraps.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom>Scrap Items</Typography>
+                  {selectedRoom.scraps.map((scrap, index) => (
+                    <Box key={index} sx={{ mb: 1 }}>
+                      <Chip 
+                        label={`${scrap.name} - ${scrap.value}`} 
+                        color={getRarityColor(scrap.rarity)} 
+                        sx={{ mr: 1 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {scrap.weight} weight, {scrap.rarity} rarity
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              
+              {selectedRoom.traps.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom>Traps</Typography>
+                  {selectedRoom.traps.map((trap, index) => (
+                    <Alert key={index} severity="warning" sx={{ mb: 1 }}>
+                      <Typography variant="body2">
+                        <strong>{trap.name}</strong> - Damage: {trap.damage}, Difficulty: {trap.difficulty}
+                      </Typography>
+                    </Alert>
+                  ))}
+                </Box>
+              )}
+              
+              {/* Show active entities in this room */}
+              {gameEntities.filter(entity => !entity.isOutdoor && entity.location === selectedRoom.id).length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom color="error">Active Entities in Room</Typography>
+                  {gameEntities
+                    .filter(entity => !entity.isOutdoor && entity.location === selectedRoom.id)
+                    .map((entity, index) => (
+                      <Alert key={index} severity="error" sx={{ mb: 1 }}>
+                        <Typography variant="body2">
+                          <strong>{entity.type}</strong> (Power: {entity.powerLevel}) - State: {entity.state}
+                        </Typography>
+                      </Alert>
+                    ))}
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedRoom(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 }
+
+export default LethalCompanyRPG;
