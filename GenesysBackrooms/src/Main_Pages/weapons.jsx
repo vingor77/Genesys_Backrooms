@@ -1,48 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-  Chip,
-  IconButton,
-  Collapse,
-  Badge,
-  Fab,
-  Snackbar,
-  Alert,
-  alpha,
-  useTheme,
-  useMediaQuery,
-  AppBar,
-  Toolbar,
-  Fade
-} from "@mui/material";
-import {
-  Search,
-  FilterList,
-  Clear,
-  Add,
-  ExpandMore,
-  ExpandLess,
-  Tune,
-  ArrowBack,
-  Security
-} from '@mui/icons-material';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import WeaponItem from "../Components/weaponItem";
 import NotLoggedIn from "../Components/notLoggedIn";
+
+// Toast notification component
+const Toast = ({ message, severity, isOpen, onClose }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const severityClasses = {
+    success: 'bg-emerald-500 border-emerald-400',
+    error: 'bg-red-500 border-red-400',
+    warning: 'bg-amber-500 border-amber-400',
+    info: 'bg-blue-500 border-blue-400'
+  };
+
+  const icons = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ'
+  };
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-down">
+      <div className={`${severityClasses[severity]} text-white px-6 py-4 rounded-lg border shadow-xl flex items-center space-x-3 min-w-80`}>
+        <div className="text-xl font-bold">{icons[severity]}</div>
+        <span className="flex-1">{message}</span>
+        <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function Weapons() {
   const [weapons, setWeapons] = useState([]);
@@ -55,19 +57,14 @@ export default function Weapons() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
-  const [showDetails, setShowDetails] = useState(false);
-  const [selectedWeapon, setSelectedWeapon] = useState(null);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const data = [];
 
   const showToast = (message, severity = 'success') => {
     setToast({ open: true, message, severity });
   };
 
-  const hideToast = (event, reason) => {
-    if (reason === 'clickaway') return;
+  const hideToast = () => {
     setToast({ ...toast, open: false });
   };
 
@@ -110,7 +107,6 @@ export default function Weapons() {
       setWeapons(queryData);
       setLoading(false);
     });
-
     return () => { unsub(); };
   };
 
@@ -177,370 +173,233 @@ export default function Weapons() {
     return count;
   };
 
-  const getFilteredCount = () => {
-    return getFilteredWeapons().length;
-  };
-
-  const handleWeaponSelect = (weapon) => {
-    setSelectedWeapon(weapon);
-    if (isMobile) {
-      setShowDetails(true);
-    }
-  };
-
-  const handleBackToList = () => {
-    setShowDetails(false);
-  };
-
-  const getSkillColor = (skill) => {
-    const skillColors = {
-      'melee': 'error',
-      'ranged': 'primary',
-      'brawl': 'warning',
-      'lightsaber': 'secondary',
-      'gunnery': 'info',
-      'thrown': 'success'
-    };
-    return skillColors[skill?.toLowerCase()] || 'default';
-  };
-
   const DisplayItems = () => {
     const filteredWeapons = getFilteredWeapons();
 
     return (
-      <Box sx={{ mt: 3 }}>
+      <div className="space-y-6">
         {filteredWeapons.length === 0 ? (
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              p: 4, 
-              textAlign: 'center', 
-              borderRadius: 3,
-              bgcolor: alpha(theme.palette.info.main, 0.05),
-              border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`
-            }}
-          >
-            <Search sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No weapons found
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Try adjusting your search criteria to find more weapons
-            </Typography>
-          </Paper>
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12 text-center">
+            <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
+            <h3 className="text-xl font-semibold text-white mb-2">No weapons found</h3>
+            <p className="text-gray-400 mb-4">Try adjusting your search criteria to find more weapons</p>
+            <button
+              onClick={clearAllFilters}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Clear All Filters
+            </button>
+          </div>
         ) : (
-          <Box>
-            <Typography variant="h6" gutterBottom sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              Found {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''}
-            </Typography>
-            <Stack direction="row" flexWrap="wrap" gap={2}>
+          <div className="space-y-4">
+            {/* Results Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <svg className="w-6 h-6 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 className="text-xl font-bold text-white">
+                  Found {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''}
+                </h2>
+              </div>
+              <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm font-bold">
+                {weapons.length} total
+              </span>
+            </div>
+
+            {/* Weapons Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {filteredWeapons.map((weapon, index) => (
-                <WeaponItem key={index} currWeapon={weapon} />
+                <div key={index} className="bg-black/20 backdrop-blur-lg rounded-xl border border-white/10 p-1 hover:bg-black/30 transition-all duration-300">
+                  <WeaponItem currWeapon={weapon} />
+                </div>
               ))}
-            </Stack>
-          </Box>
+            </div>
+          </div>
         )}
-      </Box>
+      </div>
     );
   };
 
-  const renderFilterSection = () => (
-    <Box>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="price-label">Price Range</InputLabel>
-            <Select
-              labelId="price-label"
-              label="Price Range"
-              onChange={(e) => setPrice(e.target.value)}
-              value={price}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="-1">Any Price</MenuItem>
-              <MenuItem value="0">Free (0)</MenuItem>
-              <MenuItem value="1">Budget (1)</MenuItem>
-              <MenuItem value="2">Cheap (2)</MenuItem>
-              <MenuItem value="3">Affordable (3)</MenuItem>
-              <MenuItem value="4">Moderate (4)</MenuItem>
-              <MenuItem value="5">Standard (5)</MenuItem>
-              <MenuItem value="6">Premium (6)</MenuItem>
-              <MenuItem value="7">Expensive (7)</MenuItem>
-              <MenuItem value="8">Luxury (8)</MenuItem>
-              <MenuItem value="9">Elite (9)</MenuItem>
-              <MenuItem value="10">Legendary (10+)</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
+  const FilterChip = ({ label, onDelete }) => (
+    <div className="inline-flex items-center space-x-2 bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30">
+      <span>{label}</span>
+      <button
+        onClick={onDelete}
+        className="text-purple-400 hover:text-purple-200 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  );
 
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="rarity-label">Rarity Level</InputLabel>
-            <Select
-              labelId="rarity-label"
-              label="Rarity Level"
-              onChange={(e) => setRarity(e.target.value)}
-              value={rarity}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="-1">Any Rarity</MenuItem>
-              <MenuItem value="0">Common (0)</MenuItem>
-              <MenuItem value="1">Uncommon (1)</MenuItem>
-              <MenuItem value="2">Rare (2)</MenuItem>
-              <MenuItem value="3">Epic (3)</MenuItem>
-              <MenuItem value="4">Legendary (4)</MenuItem>
-              <MenuItem value="5">Mythic (5)</MenuItem>
-              <MenuItem value="6">Divine (6)</MenuItem>
-              <MenuItem value="7">Cosmic (7)</MenuItem>
-              <MenuItem value="8">Transcendent (8)</MenuItem>
-              <MenuItem value="9">Omnipotent (9)</MenuItem>
-              <MenuItem value="10">Absolute (10)</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="set-label">Set Bonus</InputLabel>
-            <Select
-              labelId="set-label"
-              label="Set Bonus"
-              onChange={(e) => setSetBonus(e.target.value)}
-              value={setBonus}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="-">No Set Filter</MenuItem>
-              <MenuItem value="None">No Set Bonus</MenuItem>
-              {getSetBonusList().map(bonus => (
-                <MenuItem key={bonus} value={bonus}>{bonus}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="skill-label">Weapon Skill</InputLabel>
-            <Select
-              labelId="skill-label"
-              label="Weapon Skill"
-              onChange={(e) => setSkillFilter(e.target.value)}
-              value={skillFilter}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="">Any Skill</MenuItem>
-              {getUniqueSkills().map(skill => (
-                <MenuItem key={skill} value={skill}>{skill}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="range-label">Range Type</InputLabel>
-            <Select
-              labelId="range-label"
-              label="Range Type"
-              onChange={(e) => setRangeFilter(e.target.value)}
-              value={rangeFilter}
-              sx={{ borderRadius: 2 }}
-            >
-              <MenuItem value="">Any Range</MenuItem>
-              {getUniqueRanges().map(range => (
-                <MenuItem key={range} value={range}>{range}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={2}>
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={clearAllFilters}
-            startIcon={<Clear />}
-            disabled={getActiveFilterCount() === 0}
-            sx={{ 
-              borderRadius: 2,
-              py: 1.5
-            }}
+  const FilterSection = () => (
+    <div className="space-y-6">
+      {/* Advanced Filters Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Price Range</label>
+          <select
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           >
-            Clear Filters
-          </Button>
-        </Grid>
-      </Grid>
+            <option value="-1" className="bg-gray-800">Any Price</option>
+            <option value="0" className="bg-gray-800">Free (0)</option>
+            <option value="1" className="bg-gray-800">Budget (1)</option>
+            <option value="2" className="bg-gray-800">Cheap (2)</option>
+            <option value="3" className="bg-gray-800">Affordable (3)</option>
+            <option value="4" className="bg-gray-800">Moderate (4)</option>
+            <option value="5" className="bg-gray-800">Standard (5)</option>
+            <option value="6" className="bg-gray-800">Premium (6)</option>
+            <option value="7" className="bg-gray-800">Expensive (7)</option>
+            <option value="8" className="bg-gray-800">Luxury (8)</option>
+            <option value="9" className="bg-gray-800">Elite (9)</option>
+            <option value="10" className="bg-gray-800">Legendary (10+)</option>
+          </select>
+        </div>
 
-      {/* Active Filters Display */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Rarity Level</label>
+          <select
+            value={rarity}
+            onChange={(e) => setRarity(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          >
+            <option value="-1" className="bg-gray-800">Any Rarity</option>
+            <option value="0" className="bg-gray-800">Common (0)</option>
+            <option value="1" className="bg-gray-800">Uncommon (1)</option>
+            <option value="2" className="bg-gray-800">Rare (2)</option>
+            <option value="3" className="bg-gray-800">Epic (3)</option>
+            <option value="4" className="bg-gray-800">Legendary (4)</option>
+            <option value="5" className="bg-gray-800">Mythic (5)</option>
+            <option value="6" className="bg-gray-800">Divine (6)</option>
+            <option value="7" className="bg-gray-800">Cosmic (7)</option>
+            <option value="8" className="bg-gray-800">Transcendent (8)</option>
+            <option value="9" className="bg-gray-800">Omnipotent (9)</option>
+            <option value="10" className="bg-gray-800">Absolute (10)</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Set Bonus</label>
+          <select
+            value={setBonus}
+            onChange={(e) => setSetBonus(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          >
+            <option value="-" className="bg-gray-800">No Set Filter</option>
+            <option value="None" className="bg-gray-800">No Set Bonus</option>
+            {getSetBonusList().map(bonus => (
+              <option key={bonus} value={bonus} className="bg-gray-800">{bonus}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Weapon Skill</label>
+          <select
+            value={skillFilter}
+            onChange={(e) => setSkillFilter(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          >
+            <option value="" className="bg-gray-800">Any Skill</option>
+            {getUniqueSkills().map(skill => (
+              <option key={skill} value={skill} className="bg-gray-800">{skill}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Range Type</label>
+          <select
+            value={rangeFilter}
+            onChange={(e) => setRangeFilter(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          >
+            <option value="" className="bg-gray-800">Any Range</option>
+            {getUniqueRanges().map(range => (
+              <option key={range} value={range} className="bg-gray-800">{range}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Actions</label>
+          <button
+            onClick={clearAllFilters}
+            disabled={getActiveFilterCount() === 0}
+            className="w-full bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 disabled:from-gray-600/20 disabled:to-gray-700/20 text-red-300 disabled:text-gray-500 font-medium px-4 py-3 rounded-lg border border-red-500/30 disabled:border-gray-500/30 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+            </svg>
+            <span>Clear Filters</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Active Filters */}
       {getActiveFilterCount() > 0 && (
-        <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Active Filters:
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-300">Active Filters:</h3>
+            <button
+              onClick={clearAllFilters}
+              className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors flex items-center space-x-1"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+              </svg>
+              <span>Clear All</span>
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
             {name && (
-              <Chip
+              <FilterChip
                 label={`Search: "${name}"`}
                 onDelete={() => setName('')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
             {price !== '-1' && (
-              <Chip
+              <FilterChip
                 label={`Price: ${price === '10' ? '10+' : price}`}
                 onDelete={() => setPrice('-1')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
             {rarity !== '-1' && (
-              <Chip
+              <FilterChip
                 label={`Rarity: ${rarity}`}
                 onDelete={() => setRarity('-1')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
             {setBonus !== '-' && (
-              <Chip
+              <FilterChip
                 label={`Set: ${setBonus}`}
                 onDelete={() => setSetBonus('-')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
             {skillFilter && (
-              <Chip
+              <FilterChip
                 label={`Skill: ${skillFilter}`}
                 onDelete={() => setSkillFilter('')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
             {rangeFilter && (
-              <Chip
+              <FilterChip
                 label={`Range: ${rangeFilter}`}
                 onDelete={() => setRangeFilter('')}
-                color="primary"
-                variant="outlined"
-                size="small"
               />
             )}
-          </Stack>
-        </Box>
+          </div>
+        </div>
       )}
-    </Box>
+    </div>
   );
-
-  const renderWeaponsList = () => {
-    const filteredWeapons = getFilteredWeapons();
-
-    if (filteredWeapons.length === 0) {
-      return (
-        <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            {getActiveFilterCount() > 0 ? 
-              'No weapons match your filters' : 'No weapons found'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Try adjusting your search or filters
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Stack spacing={1} sx={{ p: 2 }}>
-        {filteredWeapons.map((weapon, index) => {
-          const isSelected = selectedWeapon?.name === weapon.name;
-          
-          return (
-            <Card 
-              key={`weapon-${weapon.name}-${index}`}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                border: isSelected ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.12)',
-                transform: isSelected ? 'scale(1.01)' : 'scale(1)',
-                boxShadow: isSelected ? 3 : 1,
-                '&:hover': {
-                  transform: 'scale(1.01)',
-                  boxShadow: 2,
-                },
-                '&:active': {
-                  transform: 'scale(0.99)',
-                },
-                backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.04)' : 'white'
-              }}
-              onClick={() => handleWeaponSelect(weapon)}
-            >
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Box sx={{ flex: 1, pr: 1 }}>
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 'bold',
-                        color: isSelected ? 'primary.main' : 'text.primary',
-                        mb: 0.5
-                      }}
-                    >
-                      {weapon.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {weapon.skill && `${weapon.skill} weapon`}
-                      {weapon.damage && ` • Damage: ${weapon.damage}`}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={0.5} flexShrink={0}>
-                    {weapon.skill && (
-                      <Chip 
-                        label={weapon.skill}
-                        color={getSkillColor(weapon.skill)}
-                        size="small"
-                        variant="filled"
-                        sx={{ fontSize: '0.7rem', height: '24px' }}
-                      />
-                    )}
-                    {weapon.rarity !== undefined && (
-                      <Chip 
-                        label={`R${weapon.rarity}`}
-                        color="secondary"
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem', height: '24px' }}
-                      />
-                    )}
-                  </Stack>
-                </Box>
-                
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ 
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {weapon.description || weapon.specials || 'No description available'}
-                </Typography>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Stack>
-    );
-  };
 
   useEffect(() => {
     if (localStorage.getItem("loggedIn") !== 'false') {
@@ -552,342 +411,160 @@ export default function Weapons() {
     return <NotLoggedIn />;
   }
 
-  // Mobile view
-  if (isMobile) {
-    return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-        {/* Mobile App Bar */}
-        <AppBar position="sticky" elevation={2}>
-          <Toolbar>
-            {showDetails ? (
-              <>
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  onClick={handleBackToList}
-                  sx={{ mr: 2 }}
-                >
-                  <ArrowBack />
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  {selectedWeapon?.name || 'Weapon Details'}
-                </Typography>
-              </>
-            ) : (
-              <>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  Weapons ({getFilteredCount()})
-                </Typography>
-                <IconButton
-                  color="inherit"
-                  onClick={() => setFiltersOpen(!filtersOpen)}
-                >
-                  <Badge badgeContent={getActiveFilterCount()} color="error">
-                    <Tune />
-                  </Badge>
-                </IconButton>
-                {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-                  <IconButton color="inherit" onClick={addData}>
-                    <Add />
-                  </IconButton>
-                )}
-              </>
-            )}
-          </Toolbar>
-        </AppBar>
-
-        {/* Mobile Content */}
-        {showDetails ? (
-          <Box sx={{ p: 2 }}>
-            <Fade in={true} timeout={500}>
-              <Box>
-                {selectedWeapon && <WeaponItem currWeapon={selectedWeapon} />}
-              </Box>
-            </Fade>
-          </Box>
-        ) : (
-          <Box>
-            {/* Collapsible Filters */}
-            <Collapse in={filtersOpen}>
-              <Paper elevation={1} sx={{ borderRadius: 0, p: 2 }}>
-                <Box sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Search by name, set bonus, or description..."
-                    variant="outlined"
-                    InputProps={{
-                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
-                      endAdornment: name && (
-                        <IconButton size="small" onClick={() => setName('')}>
-                          <Clear />
-                        </IconButton>
-                      ),
-                    }}
-                    size="small"
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                  />
-                </Box>
-                {renderFilterSection()}
-              </Paper>
-            </Collapse>
-
-            {/* Weapons List */}
-            <Box sx={{ pb: 8 }}>
-              {renderWeaponsList()}
-            </Box>
-          </Box>
-        )}
-
-        {/* Mobile FAB for filters */}
-        {!filtersOpen && !showDetails && (
-          <Fab
-            color="primary"
-            sx={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
-            }}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <Badge badgeContent={getActiveFilterCount()} color="error">
-              <FilterList />
-            </Badge>
-          </Fab>
-        )}
-      </Box>
-    );
-  }
-
-  // Desktop view
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
-      {/* Header */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          mb: 4, 
-          borderRadius: 3, 
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #FF5722 0%, #FF8A50 100%)',
-          color: 'white'
-        }}
-      >
-        <Box sx={{ 
-          p: { xs: 2, sm: 3 }
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Weapon Arsenal
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Browse and search through available weapons
-              </Typography>
-            </Box>
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
+      <div className="max-w-full mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-900/50 to-red-900/50 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Weapon Arsenal</h1>
+                <p className="text-orange-300">Browse and search through available weapons</p>
+              </div>
+            </div>
+            
             {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-              <Button 
+              <button 
                 onClick={addData}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)'
-                  }
-                }}
+                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center space-x-2"
               >
-                Add Data
-              </Button>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"></path>
+                </svg>
+                <span>Add Data</span>
+              </button>
             )}
-          </Box>
-        </Box>
-      </Paper>
+          </div>
+        </div>
 
-      <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 3 }}>
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
-            <Typography variant="h6" color="text.secondary">
-              Loading weapon arsenal...
-            </Typography>
-          </Box>
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mb-4"></div>
+              <h3 className="text-xl font-semibold text-white mb-2">Loading weapon arsenal...</h3>
+              <p className="text-gray-400">Please wait while we fetch the data</p>
+            </div>
+          </div>
         ) : weapons.length > 0 ? (
-          <Box>
+          <>
             {/* Search and Filter Section */}
-            <Card elevation={3} sx={{ borderRadius: 3, mb: 3 }}>
-              <CardHeader
-                title={
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Tune color="primary" />
-                      <Typography variant="h6" fontWeight="bold">
-                        Search & Filter
-                      </Typography>
-                      {getActiveFilterCount() > 0 && (
-                        <Chip 
-                          label={`${getActiveFilterCount()} active`} 
-                          color="primary" 
-                          size="small"
-                        />
-                      )}
-                    </Box>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Chip 
-                        label={`${getFilteredCount()} weapons`} 
-                        color="success" 
-                        variant="outlined"
-                        size="small"
-                      />
-                      <IconButton 
-                        onClick={() => setFiltersOpen(!filtersOpen)}
-                        sx={{ 
-                          display: { xs: 'flex', md: 'none' },
-                          bgcolor: alpha(theme.palette.primary.main, 0.1)
-                        }}
-                      >
-                        <Badge badgeContent={getActiveFilterCount()} color="error">
-                          {filtersOpen ? <ExpandLess /> : <ExpandMore />}
-                        </Badge>
-                      </IconButton>
-                    </Box>
-                  </Box>
-                }
-                sx={{ pb: 1 }}
-              />
-              <CardContent>
+            <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 7v10a2 2 0 002 2h14l-2-2H5V7h14V5a2 2 0 00-2-2H5a2 2 0 00-2 2v2z"></path>
+                      <path d="M21 7H3v2h18V7z"></path>
+                    </svg>
+                    <h2 className="text-xl font-bold text-white">Search & Filter</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <span className="bg-purple-500/30 text-purple-300 px-2 py-1 rounded-full text-xs font-bold">
+                        {getActiveFilterCount()} active
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm font-bold">
+                      {getFilteredWeapons().length} shown
+                    </span>
+                    <button 
+                      onClick={() => setFiltersOpen(!filtersOpen)}
+                      className="md:hidden bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 p-2 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
                 {/* Search Bar - Always Visible */}
-                <Box sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name, set bonus, or description..."
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Search by name, set bonus, or description..."
-                    variant="outlined"
-                    InputProps={{
-                      startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
-                      endAdornment: name && (
-                        <IconButton size="small" onClick={() => setName('')}>
-                          <Clear />
-                        </IconButton>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
-                        },
-                        '&.Mui-focused': {
-                          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
-                        }
-                      }
-                    }}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
                   />
-                </Box>
+                  {name && (
+                    <button
+                      onClick={() => setName('')}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
 
-                {/* Filters - Collapsible on Mobile */}
-                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                  {renderFilterSection()}
-                </Box>
+                {/* Advanced Filters - Collapsible on Mobile */}
+                <div className="hidden md:block">
+                  <FilterSection />
+                </div>
                 
-                <Collapse in={filtersOpen} sx={{ display: { xs: 'block', md: 'none' } }}>
-                  {renderFilterSection()}
-                </Collapse>
-              </CardContent>
-            </Card>
+                {filtersOpen && (
+                  <div className="md:hidden">
+                    <FilterSection />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Results */}
             <DisplayItems />
-          </Box>
+          </>
         ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
-            <Typography variant="h6" color="text.secondary">
-              No weapon data available
-            </Typography>
-          </Box>
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <svg className="w-16 h-16 text-gray-500 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h3 className="text-xl font-semibold text-white mb-2">No weapon data available</h3>
+              <p className="text-gray-400">There are currently no weapons in the database</p>
+            </div>
+          </div>
         )}
-      </Box>
 
-      {/* Mobile Filter Fab */}
-      <Fab
-        color="primary"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          display: { xs: 'flex', md: 'none' }
-        }}
-        onClick={() => setFiltersOpen(!filtersOpen)}
-      >
-        <Badge badgeContent={getActiveFilterCount()} color="error">
-          <FilterList />
-        </Badge>
-      </Fab>
-
-      {/* Toast Notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={hideToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={hideToast}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: '100%', borderRadius: 2 }}
+        {/* Mobile Filter Fab */}
+        <button
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110"
         >
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <div className="relative">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+            </svg>
+            {getActiveFilterCount() > 0 && (
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {getActiveFilterCount()}
+              </div>
+            )}
+          </div>
+        </button>
+      </div>
+
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message}
+        severity={toast.severity} 
+        isOpen={toast.open} 
+        onClose={hideToast} 
+      />
+    </div>
   );
 }
-
-/*
-[{"name":"Axe","description":"A typical single-blade axe with a wooden handle","skill":"Melee","damage":3,"crit":3,"range":"Engaged","encumbrance":2,"price":2,"rarity":1,"specials":"Vicious 1/Dual-wield","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Greataxe","description":"A double sided metallic axe with a wooden handle","skill":"Melee","damage":4,"crit":3,"range":"Engaged","encumbrance":4,"price":5,"rarity":4,"specials":"Cumbersome 3/Pierce 2/Vicious 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Halberd","description":"A polearm with a blade at the tip and side of the tip","skill":"Melee","damage":3,"crit":3,"range":"Engaged","encumbrance":5,"price":4,"rarity":3,"specials":"Defensive 1/Pierce 3/Reach","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Knife","description":"A simple steel knife that looks like its used to cut steak.","skill":"Melee","damage":1,"crit":3,"range":"Engaged","encumbrance":1,"price":2,"rarity":1,"specials":"None","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Tear Gas","description":"A small cannister that releases visible smoke when the pin is pulled.","skill":"Ranged","damage":2,"crit":0,"range":"Short","encumbrance":1,"price":3,"rarity":2,"specials":"Blast 3/Stun Damage/Disorient 2/Limited Ammo 1/Burn 3/Breaking","durability":1,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Alchemist"},
-    {"name":"Bola","description":"A group of 3 stone balls attacked by a long and slender rope.","skill":"Ranged","damage":5,"crit":3,"range":"Short","encumbrance":1,"price":5,"rarity":4,"specials":"Knockdown/Accurate 2/Ensnare/Limited Ammo 1/Unwieldy 3","durability":5,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Weaver"},
-    {"name":"Boomerang","description":"A curved piece of wood that upon being thrown, will return to the thrower.","skill":"Ranged","damage":3,"crit":2,"range":"Medium","encumbrance":0,"price":2,"rarity":1,"specials":"Vicious 2/Stun 2/Limited Ammo 1/Concussive 1/Unwieldy 4","durability":4,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Crossbow","description":"A mechanism with a short bow affixed to a stock.","skill":"Ranged","damage":7,"crit":2,"range":"Medium","encumbrance":3,"price":5,"rarity":4,"specials":"Pierce 2/Prepare 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Longbow","description":"A large bow","skill":"Ranged","damage":8,"crit":3,"range":"Long","encumbrance":3,"price":5,"rarity":4,"specials":"Unwieldy 3","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Flame Thrower","description":"A backpack with two tanks full of gasoline and a nozel connected that spews flames","skill":"Ranged","damage":4,"crit":0,"range":"Short","encumbrance":3,"price":9,"rarity":8,"specials":"Auto-Fire/Burn 5/Limited Ammo 50","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"Yes","repairSkill":"Blacksmith"},
-    {"name":"Crude Club","description":"A heavy stick","skill":"Melee","damage":2,"crit":3,"range":"Engaged","encumbrance":2,"price":1,"rarity":0,"specials":"Concussive 1/Inferior/Breaking","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Spear","description":"A long wooden shaft with a sharp metal point","skill":"Melee","damage":2,"crit":4,"range":"Engaged","encumbrance":2,"price":2,"rarity":1,"specials":"Defensive 1/Accurate 1/Reach","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Pike","description":"A long heavy wooden shaft with a small leaf-shaped steel point","skill":"Melee","damage":4,"crit":3,"range":"Short","encumbrance":5,"price":6,"rarity":5,"specials":"Pierce 2/Defense 1/Innacurate 1/Cumbersome 4","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Sword","description":"A straightened metal blade with a wide base and a pointy tip","skill":"Melee","damage":3,"crit":2,"range":"Engaged","encumbrance":1,"price":3,"rarity":2,"specials":"Defensive 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Saber","description":"A thin metal blade with a piercing tip","skill":"Melee","damage":2,"crit":2,"range":"Engaged","encumbrance":1,"price":3,"rarity":2,"specials":"Pierce 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Tomahawk","description":"A smaller single-sided hatchet. It can be thrown.","skill":"Melee","damage":2,"crit":3,"range":"Engaged","encumbrance":1,"price":2,"rarity":1,"specials":"None","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Grenade","description":"A small, usually green, egg-shaped device with a pin","skill":"Ranged","damage":8,"crit":3,"range":"Short","encumbrance":1,"price":7,"rarity":6,"specials":"Blast 5/Burn 1/Limited Ammo 1","durability":1,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Bazooka","description":"A large tube with two handles","skill":"Gunnery","damage":20,"crit":2,"range":"Extreme","encumbrance":8,"price":10,"rarity":9,"specials":"Blast 10/Breach 2/Cumbersome 3/Guided 3/Limited Ammo 1/Prepare 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"Yes","repairSkill":"Blacksmith"},
-    {"name":"Blowgun","description":"A small bamboo tube","skill":"Ranged","damage":2,"crit":5,"range":"Short","encumbrance":0,"price":1,"rarity":0,"specials":"None","durability":1,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Carpenter"},
-    {"name":"Carbine","description":"A light, short-barelled rifle.","skill":"Ranged","damage":8,"crit":3,"range":"Long","encumbrance":2,"price":5,"rarity":4,"specials":"Accurate 1/Limited Ammo 2","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Pistol","description":"A small black barrel with a grip and a trigger","skill":"Ranged","damage":6,"crit":3,"range":"Medium","encumbrance":1,"price":4,"rarity":3,"specials":"None","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Revolver","description":"Similar to a pistol but with a cylinder that rotates","skill":"Ranged","damage":6,"crit":4,"range":"Medium","encumbrance":2,"price":5,"rarity":4,"specials":"Accurate 1/Limited Ammo 6","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Shotgun","description":"A smoothbore shoulder weapon that fires multiple pellets","skill":"Ranged","damage":8,"crit":3,"range":"Short","encumbrance":3,"price":4,"rarity":3,"specials":"Blast 4/Knockdown/Vicious 2","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"AK-47","description":"A shoulder weapon with a wooden handle and stock and a long curved metal casing for ammunition","skill":"Ranged","damage":8,"crit":3,"range":"Long","encumbrance":4,"price":8,"rarity":7,"specials":"Auto-fire","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Browning Automatic Rifle","description":"A large rifle with a stand at the tip of the barrel and a metallic clip","skill":"Gunnery","damage":10,"crit":3,"range":"Long","encumbrance":6,"price":7,"rarity":6,"specials":"Auto-fire/Cumbersome 2/Pierce 2/Vicious 2","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Uzi","description":"A compact automatic weapon","skill":"Ranged","damage":5,"crit":3,"range":"Medium","encumbrance":2,"price":7,"rarity":6,"specials":"Auto-fire","durability":2,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Blacksmith"},
-    {"name":"Antimatter Rifle","description":"A rifle about the same size as a bazooka complete with blue-ish symbols plastered on the sides","skill":"Gunnery","damage":20,"crit":3,"range":"Extreme","encumbrance":5,"price":10,"rarity":9,"specials":"Auto-fire/Burn 6/Limited Ammo 24/Breach 1/Prepare 3","durability":5,"spawnLocations":"All","setBonus":"None","anomalousEffect":"If the weapon does not kill the target, the target takes an extra 10 strain damage.","hidden":"Yes","repairSkill":"Blacksmith"},
-    {"name":"Laser Pistol","description":"A pistol with glowing blue stripes","skill":"Ranged","damage":6,"crit":3,"range":"Short","encumbrance":2,"price":8,"rarity":7,"specials":"Accurate 1/Burn 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Goldsmith"},
-    {"name":"Laser Rifle","description":"An AK-47 with glowing blue stripes","skill":"Ranged","damage":8,"crit":3,"range":"Medium","encumbrance":4,"price":8,"rarity":7,"specials":"Accurate 1/Burn 1","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Goldsmith"},
-    {"name":"Retributor","description":"A simple old-style handgun, similar to a revolver","skill":"Ranged","damage":4,"crit":2,"range":"Short","encumbrance":0,"price":250,"rarity":10,"specials":"Breach 1/Stun 6","durability":100,"spawnLocations":"None","setBonus":"Holy Set","anomalousEffect":"Ammunition is not required for this weapon to fire. In addition, whenever this weapon deals the killing blow, it steals the soul and converts it into a physical soul bottle.","hidden":"Yes","repairSkill":"None"},
-    {"name":"Red Knight's Replica Sword","description":"A subtle red glow surrounding a blood red blade","skill":"Melee","damage":10,"crit":2,"range":"Engaged","encumbrance":1,"price":6000,"rarity":10,"specials":"Pierce 4/Defensive 2/Superior/Vicious 4","durability":100,"spawnLocations":"None","setBonus":"Red Knight Replica Set","anomalousEffect":"When an attack is successful, a triumph may be spent to open a rift near the target. The target must then succeed on a difficulty 4 Athletics or Coordination check to not be sucked in, dying immediately. On a success however, the target loses something of the attacker's choosing whether it be a non-essential body part, a piece of gear, or some kind of memory.","hidden":"Yes","repairSkill":"None"},
-    {"name":"Chechov's Gun","description":"A wooden-colored single shot rifle","skill":"Ranged","damage":8,"crit":3,"range":"Long","encumbrance":4,"price":30,"rarity":10,"specials":"Limited Ammo 1","durability":5,"spawnLocations":"None","setBonus":"None","anomalousEffect":"Ammunition is not required to fire this weapon. The firing mechanism is completely silent. This weapon only appears when near death and as it appears, a single shot that does 30 unsoakable wound damage is loaded.","hidden":"Yes","repairSkill":"Blacksmith"},
-    {"name":"Shield","description":"A small circular piece of wood with a metal plate in the center.","skill":"Melee","damage":0,"crit":6,"range":"Engaged","encumbrance":2,"price":1,"rarity":0,"specials":"Defensive 1/Deflection 1/Inaccurate 1/Knockdown","durability":3,"spawnLocations":"All","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"Armorer"},
-    {"name":"Red Knight's Replica Shield","description":"A bulky crimson red tower shield with spiky pieces of metal pointing outwards. This may not be dual-wielded","skill":"Melee","damage":5,"crit":0,"range":"Engaged","encumbrance":3,"price":6000,"rarity":10,"specials":"Defensive 1/Deflection 1/Superior/Knockdown","durability":100,"spawnLocations":"None","setBonus":"Red Knight Replica Set","anomalousEffect":"While wielding this shield, whenever an attack is failed against you, you may spend your out-of-turn-incidental to attack.","hidden":"Yes","repairSkill":"None"},
-    {"name":"Plastic Hammer","description":"A large mallet-like hammer made entirely of hardened plastic.","skill":"Melee","damage":6,"crit":3,"range":"Engaged","encumbrance":3,"price":4,"rarity":3,"specials":"Concussive 1","durability":2,"spawnLocations":"None","setBonus":"None","anomalousEffect":"None","hidden":"No","repairSkill":"None"},
-    {"name":"Static Grenade Launcher","description":"A bright and unstable piece of unknown weaponry that constantly shifts with the similar feature always being a trigger, a grip, and a barrel.","skill":"Ranged","damage":41,"crit":3,"range":"Medium","encumbrance":0,"price":0,"rarity":10,"specials":"Blast 5/Burn 1/Limited Ammo 6","durability":100,"spawnLocations":"None","setBonus":"Glitched Set","anomalousEffect":"After shooting with this weapon, the area where it exploded becomes a glitchy mess. All checks made within the area automatically recieves a despair.","hidden":"Yes","repairSkill":"None"},
-    {"name":"Sword of Static","description":"A bright and unstable sword that changes forms constantly yet the blade remains the same length.","skill":"Melee","damage":34,"crit":1,"range":"Engaged","encumbrance":0,"price":0,"rarity":10,"specials":"Breach 2/Disorient 4/Stun Damage/Stun 6/Superior/Vicious 4","durability":100,"spawnLocations":"None","setBonus":"Glitched Set","anomalousEffect":"Whenever you hit with this weapon, the target gains the Glitched phenomenon permanently. If the target already has this effect, instead inflict a despair on its next check.","hidden":"Yes","repairSkill":"None"},
-    {"name":"Magicked Brush and Palette","description":"A pure white brush with a fine tip where the bristles meet and a long wooden handle roughly 3 feet long accompanied by a light brown tray full of colored paints that never seem to run out.","skill":"None","damage":0,"crit":0,"range":"Short","encumbrance":2,"price":2500,"rarity":10,"specials":"Breaking","durability":100,"spawnLocations":"None","setBonus":"None","anomalousEffect":"As an action, this brush may summon any entity of difficulty 1 or lower to help fight. This entity has half of its wounds and strain and deals stun damage only. While paired with the infinite bucket of paint, up to a difficulty 2 entity may be summoned and the health totals are not halved. There may only be 1 entity summoned at a time, 2 with the infinite bucket of paint.","hidden":"Yes","repairSkill":"Carpenter"},
-    {"name":"Umbrella Gunsword","description":"A standard umbrella with white dots scattered on a blue base. Two small switches sit on the handle.","skill":"Melee or Ranged","damage":10,"crit":2,"range":"Medium","encumbrance":2,"price":5,"rarity":4,"specials":"Vicious 2/Sneak","durability":2,"spawnLocations":"None","setBonus":"None","anomalousEffect":"None","hidden":"Yes","repairSkill":"Weaver"},
-    {"name":"Golden Axe","description":"A purely gold double sided war axe with symbols etched into the handle.","skill":"Melee","damage":10,"crit":1,"range":"Engaged","encumbrance":0,"price":100,"rarity":10,"specials":"Vicious 5/AutoHit/Anomalous","durability":100,"spawnLocations":"None","setBonus":"Golden Set","anomalousEffect":"The axe has a diety within it assisting in all attacks. Automatcally apply a critical injury whenever an attack hits.","hidden":"Yes","repairSkill":"Medicine"}]
-    
-*/

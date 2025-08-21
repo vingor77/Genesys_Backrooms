@@ -1,15 +1,192 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box,Button,Card,CardContent,CardHeader,Divider,Grid,Paper,Stack,Typography,Chip,Snackbar,Alert,alpha,useTheme,FormControl,InputLabel,Select,MenuItem,TextField,InputAdornment } from "@mui/material";
-import { Add,LocationOn,Group,Search,Public,Assignment,Home,Tune } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import QuestItem from '../Components/questItem';
 import NotLoggedIn from "../Components/notLoggedIn";
 
+// Toast notification component
+const Toast = ({ message, severity, isOpen, onClose }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const severityClasses = {
+    success: 'bg-emerald-500 border-emerald-400',
+    error: 'bg-red-500 border-red-400',
+    warning: 'bg-amber-500 border-amber-400',
+    info: 'bg-blue-500 border-blue-400'
+  };
+
+  const icons = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ'
+  };
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-down">
+      <div className={`${severityClasses[severity]} text-white px-6 py-4 rounded-lg border shadow-xl flex items-center space-x-3 min-w-80`}>
+        <div className="text-xl font-bold">{icons[severity]}</div>
+        <span className="flex-1">{message}</span>
+        <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Individual Outpost Card Component
+const OutpostCard = ({ outpost, quests, questsLoading, onClick }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const relevantQuests = quests.filter(quest => 
+    quest.acquisition === outpost.name || quest.turnInLocation === outpost.name
+  );
+
+  const getLevelTheme = (level) => {
+    if (level <= 2) return { gradient: 'from-green-600 to-emerald-700', icon: '🌱' };
+    if (level <= 4) return { gradient: 'from-blue-600 to-cyan-700', icon: '🏘️' };
+    if (level <= 6) return { gradient: 'from-purple-600 to-indigo-700', icon: '🏰' };
+    if (level <= 8) return { gradient: 'from-orange-600 to-red-700', icon: '🏛️' };
+    return { gradient: 'from-yellow-600 to-orange-700', icon: '👑' };
+  };
+
+  const levelTheme = getLevelTheme(outpost.level);
+
+  return (
+    <div className={`w-full rounded-xl shadow-lg border transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br ${levelTheme.gradient} border-white/20 ${isExpanded ? 'h-auto' : 'h-80'}`}>
+      
+      {/* Header */}
+      <div className="p-4 text-white relative">
+        {/* Expand button */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+        >
+          <span className={`text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+        </button>
+
+        {/* Outpost Icon & Title */}
+        <div className="flex items-start space-x-3 mb-3">
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm flex-shrink-0">
+            {levelTheme.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-lg leading-tight mb-1">{outpost.name}</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-white/20 text-white px-2 py-1 rounded-full text-xs font-medium border border-white/20">
+                Level {outpost.level}
+              </span>
+              {outpost.group && (
+                <span className="bg-white/20 text-white px-2 py-1 rounded-full text-xs font-medium border border-white/20">
+                  👥 {outpost.group}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 pb-4 flex-1 flex flex-col bg-black/20 backdrop-blur-sm">
+        
+        {/* Basic Info - Always Visible */}
+        <div className="space-y-2 mb-3">
+          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+            <p className="text-gray-200 text-sm leading-relaxed line-clamp-2">
+              {outpost.description || 'No description available'}
+            </p>
+          </div>
+          
+          {/* Quest count */}
+          <div className="flex items-center text-gray-300 text-sm">
+            <span className="text-yellow-400 mr-2">📜</span>
+            <span>{relevantQuests.length} related quest{relevantQuests.length !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+
+        {/* Expanded Content */}
+        {isExpanded && (
+          <div className="space-y-4 animate-fadeIn">
+            
+            {/* Full Description */}
+            <div>
+              <h4 className="text-white font-semibold mb-2 flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                Full Description
+              </h4>
+              <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-gray-200 text-sm leading-relaxed">
+                  {outpost.description || 'No description available'}
+                </p>
+              </div>
+            </div>
+
+            {/* Amenities */}
+            {outpost.amenities && outpost.amenities.length > 0 && (
+              <div>
+                <h4 className="text-white font-semibold mb-2 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Amenities ({outpost.amenities.length})
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {outpost.amenities.map((amenity, index) => (
+                    <span key={index} className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm border border-green-500/30">
+                      {amenity}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Related Quests */}
+            {relevantQuests.length > 0 && (
+              <div>
+                <h4 className="text-white font-semibold mb-2 flex items-center">
+                  <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                  Related Quests
+                </h4>
+                {questsLoading ? (
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <p className="text-gray-400 text-sm">Loading quests...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {relevantQuests.map((quest, index) => (
+                      <div key={index} className="transform scale-90 origin-top-left">
+                        <QuestItem currQuest={quest} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Decorative accent bar */}
+      <div className="h-1 bg-white/30" />
+    </div>
+  );
+};
+
 export default function Outposts() {
   const [outposts, setOutposts] = useState([]);
   const [quests, setQuests] = useState([]);
-  const [selectedOutpost, setSelectedOutpost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [questsLoading, setQuestsLoading] = useState(true);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
@@ -17,15 +194,13 @@ export default function Outposts() {
   const [groupFilter, setGroupFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
 
-  const theme = useTheme();
   const data = [];
 
   const showToast = (message, severity = 'success') => {
     setToast({ open: true, message, severity });
   };
 
-  const hideToast = (event, reason) => {
-    if (reason === 'clickaway') return;
+  const hideToast = () => {
     setToast({ ...toast, open: false });
   };
 
@@ -56,10 +231,6 @@ export default function Outposts() {
       });
       setOutposts(queryData);
       setLoading(false);
-      // Auto-select first outpost if none selected
-      if (queryData.length > 0 && !selectedOutpost) {
-        setSelectedOutpost(queryData[0]);
-      }
     });
 
     return () => { unsub(); };
@@ -101,343 +272,85 @@ export default function Outposts() {
     });
   };
 
-  const getRelevantQuests = (outpostName) => {
-    return quests.filter(quest => 
-      quest.acquisition === outpostName || quest.turnInLocation === outpostName
-    );
+  const FilterChip = ({ label, onDelete }) => (
+    <div className="inline-flex items-center space-x-2 bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm border border-blue-500/30">
+      <span>{label}</span>
+      <button
+        onClick={onDelete}
+        className="text-blue-400 hover:text-blue-200 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  );
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (searchTerm !== '') count++;
+    if (groupFilter !== '') count++;
+    if (levelFilter !== '') count++;
+    return count;
   };
 
-  const OutpostDetails = () => {
-    if (!selectedOutpost) {
-      return (
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 4, 
-            textAlign: 'center', 
-            borderRadius: 3,
-            bgcolor: alpha(theme.palette.info.main, 0.05),
-            border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`,
-            minHeight: 400
-          }}
-        >
-          <Home sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Select an outpost
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Choose an outpost from the table to view its details
-          </Typography>
-        </Paper>
-      );
-    }
-
-    const relevantQuests = getRelevantQuests(selectedOutpost.name);
-
-    return (
-      <Card elevation={3} sx={{ borderRadius: 3, minHeight: 400 }}>
-        <CardHeader
-          title={
-            <Box display="flex" alignItems="center" gap={2}>
-              <LocationOn color="primary" />
-              <Typography variant="h5" fontWeight="bold">
-                {selectedOutpost.name}
-              </Typography>
-              <Chip 
-                label={`Level ${selectedOutpost.level}`} 
-                color="primary" 
-                size="small"
-              />
-              {selectedOutpost.group && (
-                <Chip 
-                  label={selectedOutpost.group} 
-                  color="secondary" 
-                  size="small"
-                  icon={<Group />}
-                />
-              )}
-            </Box>
-          }
-          sx={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            '& .MuiChip-root': {
-              color: 'white',
-              bgcolor: 'rgba(255,255,255,0.2)',
-              '& .MuiChip-icon': {
-                color: 'white'
-              }
-            },
-            '& .MuiSvgIcon-root': {
-              color: 'white'
-            }
-          }}
-        />
-        <CardContent sx={{ p: 3 }}>
-          {/* Description Section */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Public color="primary" />
-              Description
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {selectedOutpost.description || 'No description available'}
-            </Typography>
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Amenities Section */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Home color="primary" />
-              Amenities
-            </Typography>
-            {selectedOutpost.amenities && selectedOutpost.amenities.length > 0 ? (
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {selectedOutpost.amenities.map((amenity, index) => (
-                  <Chip 
-                    key={index} 
-                    label={amenity} 
-                    variant="outlined" 
-                    color="primary"
-                  />
-                ))}
-              </Stack>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No amenities listed (may need to be crafted manually)
-              </Typography>
-            )}
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Relevant Quests Section */}
-          <Box>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Assignment color="primary" />
-              Relevant Quests ({relevantQuests.length})
-            </Typography>
-            {questsLoading ? (
-              <Typography variant="body2" color="text.secondary">
-                Loading quests...
-              </Typography>
-            ) : relevantQuests.length > 0 ? (
-              <Stack direction="row" flexWrap="wrap" gap={2}>
-                {relevantQuests.map((quest, index) => (
-                  <QuestItem key={index} currQuest={quest} />
-                ))}
-              </Stack>
-            ) : (
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  textAlign: 'center', 
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.grey[500], 0.05)
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  No quests available for this outpost
-                </Typography>
-              </Paper>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
-    );
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setGroupFilter('');
+    setLevelFilter('');
+    showToast('All filters cleared');
   };
 
-  const OutpostGrid = () => {
+  const DisplayItems = () => {
     const filteredOutposts = getFilteredOutposts();
 
     return (
-      <Card elevation={3} sx={{ borderRadius: 3 }}>
-        <CardHeader
-          title={
-            <Box display="flex" alignItems="center" gap={2}>
-              <Tune color="primary" />
-              <Typography variant="h6" fontWeight="bold">
-                Outpost Directory
-              </Typography>
-              <Chip 
-                label={`${filteredOutposts.length} outposts`} 
-                color="success" 
-                variant="outlined"
-                size="small"
-              />
-            </Box>
-          }
-        />
-        <CardContent>
-          {/* Filters */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search outposts..."
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Group</InputLabel>
-                <Select
-                  value={groupFilter}
-                  onChange={(e) => setGroupFilter(e.target.value)}
-                  label="Group"
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="">All Groups</MenuItem>
-                  {getUniqueGroups().map(group => (
-                    <MenuItem key={group} value={group}>{group}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Level</InputLabel>
-                <Select
-                  value={levelFilter}
-                  onChange={(e) => setLevelFilter(e.target.value)}
-                  label="Level"
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="">All Levels</MenuItem>
-                  {getUniqueLevels().map(level => (
-                    <MenuItem key={level} value={level}>{level}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+      <div className="space-y-6">
+        {filteredOutposts.length === 0 ? (
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12 text-center">
+            <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
+            <h3 className="text-xl font-semibold text-white mb-2">No outposts found</h3>
+            <p className="text-gray-400 mb-4">Try adjusting your search criteria to find more outposts</p>
+            <button
+              onClick={clearAllFilters}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Results Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
+                </svg>
+                <h2 className="text-xl font-bold text-white">
+                  Found {filteredOutposts.length} outpost{filteredOutposts.length !== 1 ? 's' : ''}
+                </h2>
+              </div>
+              <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-bold">
+                {outposts.length} total
+              </span>
+            </div>
 
-          {/* Outpost Cards Grid */}
-          <Box sx={{ maxHeight: 600, overflow: 'auto', pr: 1 }}>
-            {filteredOutposts.length === 0 ? (
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 4, 
-                  textAlign: 'center', 
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.info.main, 0.05),
-                  border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`
-                }}
-              >
-                <Search sx={{ fontSize: 40, color: 'grey.300', mb: 1 }} />
-                <Typography variant="body1" color="text.secondary">
-                  No outposts match your search criteria
-                </Typography>
-              </Paper>
-            ) : (
-              <Grid container spacing={2}>
-                {filteredOutposts.map((outpost, index) => (
-                  <Grid item xs={12} key={index}>
-                    <Card
-                      elevation={selectedOutpost?.name === outpost.name ? 4 : 1}
-                      sx={{
-                        borderRadius: 2,
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        border: selectedOutpost?.name === outpost.name 
-                          ? `2px solid ${theme.palette.primary.main}` 
-                          : '2px solid transparent',
-                        background: selectedOutpost?.name === outpost.name
-                          ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`
-                          : 'white',
-                        '&:hover': {
-                          elevation: 3,
-                          transform: 'translateY(-2px)',
-                          boxShadow: theme.shadows[4],
-                          borderColor: alpha(theme.palette.primary.main, 0.5)
-                        }
-                      }}
-                      onClick={() => setSelectedOutpost(outpost)}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                          <Box display="flex" alignItems="center" gap={2}>
-                            <Box
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 2,
-                                background: selectedOutpost?.name === outpost.name
-                                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                  : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              <LocationOn 
-                                sx={{ 
-                                  color: selectedOutpost?.name === outpost.name 
-                                    ? 'white' 
-                                    : theme.palette.primary.main,
-                                  fontSize: 20
-                                }} 
-                              />
-                            </Box>
-                            <Box>
-                              <Typography 
-                                variant="h6" 
-                                sx={{ 
-                                  fontWeight: selectedOutpost?.name === outpost.name ? 'bold' : 'medium',
-                                  color: selectedOutpost?.name === outpost.name ? 'primary.main' : 'text.primary'
-                                }}
-                              >
-                                {outpost.name}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {outpost.description ? 
-                                  `${outpost.description.substring(0, 60)}${outpost.description.length > 60 ? '...' : ''}` 
-                                  : 'No description available'
-                                }
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <Box display="flex" flexDirection="column" alignItems="end" gap={1}>
-                            <Chip 
-                              label={`Level ${outpost.level}`} 
-                              color={selectedOutpost?.name === outpost.name ? "primary" : "default"}
-                              size="small" 
-                              variant={selectedOutpost?.name === outpost.name ? "filled" : "outlined"}
-                            />
-                            {outpost.group && (
-                              <Chip 
-                                label={outpost.group} 
-                                color="secondary" 
-                                size="small"
-                                variant="outlined"
-                                icon={<Group sx={{ fontSize: 14 }} />}
-                              />
-                            )}
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+            {/* Outposts Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredOutposts.map((outpost, index) => (
+                <OutpostCard 
+                  key={index} 
+                  outpost={outpost} 
+                  quests={quests}
+                  questsLoading={questsLoading}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -453,187 +366,203 @@ export default function Outposts() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', py: 4 }}>
-      {/* Header */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          mb: 4, 
-          mx: 3,
-          borderRadius: 3, 
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white'
-        }}
-      >
-        <Box sx={{ 
-          p: { xs: 2, sm: 3 }
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Outpost Directory
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Explore and manage outpost locations and their details
-              </Typography>
-            </Box>
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
+      <div className="max-w-full mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-900/50 to-indigo-900/50 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Outpost Directory</h1>
+                <p className="text-blue-300">Explore and manage outpost locations and their details</p>
+              </div>
+            </div>
             {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-              <Button 
+              <button 
                 onClick={addData}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)'
-                  }
-                }}
+                className="bg-white/20 hover:bg-white/30 text-white font-medium px-6 py-3 rounded-lg border border-white/30 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center space-x-2"
               >
-                Add Data
-              </Button>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"></path>
+                </svg>
+                <span>Add Data</span>
+              </button>
             )}
-          </Box>
-        </Box>
-      </Paper>
+          </div>
+        </div>
 
-      <Box sx={{ px: 3, pb: 3 }}>
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-            <Typography variant="h6" color="text.secondary">
-              Loading outpost directory...
-            </Typography>
-          </Box>
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mb-4"></div>
+              <h3 className="text-xl font-semibold text-white mb-2">Loading outpost directory...</h3>
+              <p className="text-gray-400">Please wait while we fetch the data</p>
+            </div>
+          </div>
         ) : outposts.length > 0 ? (
-          <Grid container spacing={3}>
-            {/* Outpost Grid */}
-            <Grid item xs={12} lg={6}>
-              <OutpostGrid />
-            </Grid>
-            
-            {/* Outpost Details */}
-            <Grid item xs={12} lg={6}>
-              <OutpostDetails />
-            </Grid>
-          </Grid>
-        ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-            <Typography variant="h6" color="text.secondary">
-              No outpost data available
-            </Typography>
-          </Box>
-        )}
-      </Box>
+          <>
+            {/* Search and Filter Section */}
+            <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 7v10a2 2 0 002 2h14l-2-2H5V7h14V5a2 2 0 00-2-2H5a2 2 0 00-2 2v2z"></path>
+                      <path d="M21 7H3v2h18V7z"></path>
+                    </svg>
+                    <h2 className="text-xl font-bold text-white">Search & Filter</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <span className="bg-blue-500/30 text-blue-300 px-2 py-1 rounded-full text-xs font-bold">
+                        {getActiveFilterCount()} active
+                      </span>
+                    )}
+                  </div>
+                  <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-bold">
+                    {getFilteredOutposts().length} shown
+                  </span>
+                </div>
+              </div>
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={hideToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={hideToast}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: '100%', borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+              <div className="p-6 space-y-6">
+                {/* Search Bar */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search outposts by name or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Group</label>
+                    <select
+                      value={groupFilter}
+                      onChange={(e) => setGroupFilter(e.target.value)}
+                      className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="" className="bg-gray-800">All Groups</option>
+                      {getUniqueGroups().map(group => (
+                        <option key={group} value={group} className="bg-gray-800">{group}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Level</label>
+                    <select
+                      value={levelFilter}
+                      onChange={(e) => setLevelFilter(e.target.value)}
+                      className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    >
+                      <option value="" className="bg-gray-800">All Levels</option>
+                      {getUniqueLevels().map(level => (
+                        <option key={level} value={level} className="bg-gray-800">Level {level}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Actions</label>
+                    <button
+                      onClick={clearAllFilters}
+                      disabled={getActiveFilterCount() === 0}
+                      className="w-full bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 disabled:from-gray-600/20 disabled:to-gray-700/20 text-red-300 disabled:text-gray-500 font-medium px-4 py-3 rounded-lg border border-red-500/30 disabled:border-gray-500/30 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                      <span>Clear Filters</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Active Filters */}
+                {getActiveFilterCount() > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-gray-300">Active Filters:</h3>
+                      <button
+                        onClick={clearAllFilters}
+                        className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors flex items-center space-x-1"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                        </svg>
+                        <span>Clear All</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {searchTerm && (
+                        <FilterChip
+                          label={`Search: "${searchTerm}"`}
+                          onDelete={() => setSearchTerm('')}
+                        />
+                      )}
+                      {groupFilter && (
+                        <FilterChip
+                          label={`Group: ${groupFilter}`}
+                          onDelete={() => setGroupFilter('')}
+                        />
+                      )}
+                      {levelFilter && (
+                        <FilterChip
+                          label={`Level: ${levelFilter}`}
+                          onDelete={() => setLevelFilter('')}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Results */}
+            <DisplayItems />
+          </>
+        ) : (
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <svg className="w-16 h-16 text-gray-500 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
+              </svg>
+              <h3 className="text-xl font-semibold text-white mb-2">No outpost data available</h3>
+              <p className="text-gray-400">There are currently no outposts in the database</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message}
+        severity={toast.severity} 
+        isOpen={toast.open} 
+        onClose={hideToast} 
+      />
+    </div>
   );
 }
-
-/*
-  Major Explorer Group:
-    Beta (Level 11) holds the Ouija Board (Object 31).
-    Beta (Level 11) has Agrugua Fruit (Object 85) traders.
-    Beta (Level 11) has The Everything Machine (Object 97) in it.
-    Aries Station (Level 158) has Agrugua Fruit (Object 85) traders.
-    Pisces Station (Level 158) has Agrugua Fruit (Object 85) traders.
-    Omega (Level 4) has the Object Way-Back Machine (Object 22) in it.
-    Epsilon (Level 283) has the Object Tarot Deck (Object 43).
-
-  Backrooms Robotics:
-    A1 (Level 271) holds the Reality Lag Machine (Object 86).
-    A1 (Level 271) holds the Objects Lamps (Object 8) in it.
-    A2 (Level 271) holds the Objects Lamps (Object 8) in it.
-    Skyscraper (Level 522) holds the Objects Lamps (Object 8) in it.
-  
-  Visionaries of Berry:
-    Cat Post (Level 181) holds Berry's Necklace (Custom Object).
-  
-  Followers of Jerry:
-    Blue Salvation (Level 3) holds Jerry's Feather (Custom Object).
-    Jerry's Salvation (Level 11) holds Jerry's Feather (Custom Object).
-  
-  Backrooms Non-aligned Trading Group:
-    All bases hold the Object Candy for sale (Object 5).
-    All bases hold the Object Potion of Sanity Stall (Custom Object).
-    All bases hold the Object Deuclidators (Object 4) for sale.
-    Recourse Station (Level 10) has Agrugua Fruit (Object 85) traders.
-    El3A (Level 2) has the Object Way-Back Machine (Object 22) in it.
-    Floor 283 (Level 13) has the Object Way-Back Machine (Object 22) in it.
-    Trader's Keep (Level 1) has the Object Leviathan's Tooth (Object 66).
-
-  The Unbound:
-    Tunnels (Level 76) has the Object Hermes Device (Object 99) in it.
-
-  The Masked Maidens:
-    Station 1 (Level 994) has the Object Wall Mask (Object 24) in it.
-    Station 2 (Level 67) has the Object Wall Mask (Object 24) in it.
-    Station 3 (Level 153) has the Object Wall Mask (Object 24) in it.
-
-
-
-  [{"name":"A1","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
-    {"name":"A2","description":null,"level":271,"group":"Backrooms Robotics","amenities":null},
-    {"name":"Skyscraper","description":null,"level":522,"group":"Backrooms Robotics","amenities":null},
-    {"name":"Trader's Keep","description":null,"level":1,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Office Space EL3A","description":null,"level":2,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Trader's Guild","description":null,"level":230,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Recourse Station","description":null,"level":10,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Resource Extraction Camp","description":null,"level":283,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Plastic Mine","description":null,"level":24,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Unit 230","description":null,"level":230,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"The Arena","description":null,"level":998.2,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Floor 283","description":null,"level":283,"group":"The Backrooms Non-Aligned Trade Group","amenities":null},
-    {"name":"Watchers","description":null,"level":11,"group":"The Eyes of Argos","amenities":null},
-    {"name":"Hideout","description":null,"level":11,"group":"The Iron Fist","amenities":null},
-    {"name":"Blue Salvation","description":null,"level":3,"group":"The Followers of Jerry","amenities":null},
-    {"name":"Jerry's Salvation","description":null,"level":11,"group":"The Followers of Jerry","amenities":null},
-    {"name":"Jerry's Winged Travelers","description":null,"level":'The Hub',"group":"The Followers of Jerry","amenities":null},
-    {"name":"Jerry's Room","description":null,"level":274,"group":"The Followers of Jerry","amenities":null},
-    {"name":"The Institute","description":null,"level":11,"group":"The Kalag Institute","amenities":null},
-    {"name":"Alpha","description":null,"level":1,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Omega","description":null,"level":4,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Gamma","description":null,"level":3,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Beta","description":null,"level":11,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Epsilon","description":null,"level":283,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Delta","description":null,"level":230,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Hollow Nest","description":null,"level":8,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Darkness Rangers","description":null,"level":64,"group":"The Major Explorer Group","amenities":null},
-    {"name":"De-Aciders","description":null,"level":44,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Corridor","description":null,"level":1.1,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Frozen City","description":null,"level":159,"group":"The Major Explorer Group","amenities":null},
-    {"name":"Station 1","description":null,"level":994,"group":"The Masked Maidens","amenities":null},
-    {"name":"Station 2","description":null,"level":67,"group":"The Masked Maidens","amenities":null},
-    {"name":"Station 3","description":null,"level":153,"group":"The Masked Maidens","amenities":null},
-    {"name":"UEC 76","description":null,"level":76,"group":"The Unbound Explorers Coalition","amenities":null},
-    {"name":"UEC 831","description":null,"level":831,"group":"The Unbound Explorers Coalition","amenities":null},
-    {"name":"UEC 466","description":null,"level":466,"group":"The Unbound Explorers Coalition","amenities":null},
-    {"name":"UEC 502","description":null,"level":502,"group":"The Unbound Explorers Coalition","amenities":null},
-    {"name":"General Headquarters","description":null,"level":11,"group":"Backrooms Bureau of Administration and Research","amenities":null},
-    {"name":"Institute of Research and Technology","description":null,"level":11,"group":"Backrooms Bureau of Administration and Research","amenities":null},
-    {"name":"Main Agency","description":null,"level":11,"group":"The Backrooms Travel Agency","amenities":null},
-    {"name":"Secondary Agency","description":null,"level":1,"group":"The Backrooms Travel Agency","amenities":null},
-    {"name":"The Hotel Office","description":null,"level":5,"group":"The Backrooms Travel Agency","amenities":null},
-    {"name":"The Concrete Office","description":null,"level":162,"group":"The Backrooms Travel Agency","amenities":null},
-    {"name":"Astra","description":null,"level":147,"group":"Coalition of Backrooms Survivors","amenities":null},
-    {"name":"Tgochi Heaven","description":null,"level":4,"group":"The Completionists","amenities":null},
-    {"name":"The Museum","description":null,"level":216,"group":"The Interdimensional Museum of Backrooms History","amenities":null},
-    {"name":"VOB Caverns","description":null,"level":181,"group":"The Visionaries of Berry","amenities":null}]
-*/

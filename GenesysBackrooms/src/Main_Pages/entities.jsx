@@ -1,10 +1,50 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Box,Button,Typography,Paper,Grid,Card,CardContent,Chip,TextField,InputAdornment,Fade,Stack,MenuItem,Select,FormControl,InputLabel,IconButton,AppBar,Toolbar,Badge,Fab,Collapse,alpha,useTheme,useMediaQuery } from '@mui/material';
-import { Search,Add,FilterList,ArrowBack,Menu as MenuIcon,Clear,Tune, } from '@mui/icons-material';
 import { collection, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import db from '../Components/firebase';
 import EntityItem from "../Components/entityItem";
 import NotLoggedIn from "../Components/notLoggedIn";
+
+// Toast notification component
+const Toast = ({ message, severity, isOpen, onClose }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const severityClasses = {
+    success: 'bg-emerald-500 border-emerald-400',
+    error: 'bg-red-500 border-red-400',
+    warning: 'bg-amber-500 border-amber-400',
+    info: 'bg-blue-500 border-blue-400'
+  };
+
+  const icons = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ'
+  };
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-down">
+      <div className={`${severityClasses[severity]} text-white px-6 py-4 rounded-lg border shadow-xl flex items-center space-x-3 min-w-80`}>
+        <div className="text-xl font-bold">{icons[severity]}</div>
+        <span className="flex-1">{message}</span>
+        <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function Entities() {
   const [entities, setEntities] = useState([]);
@@ -15,38 +55,14 @@ export default function Entities() {
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [showDetails, setShowDetails] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const data = [];
+  const showToast = (message, severity = 'success') => {
+    setToast({ open: true, message, severity });
+  };
 
-  const addData = async () => {
-    try {
-      for(let i = 0; i < data.length; i++) {
-        await setDoc(doc(db, 'Entities', data[i].name), {
-          name: data[i].name,
-          description: data[i].description,
-          stats: data[i].stats,
-          soak: data[i].soak,
-          wounds: data[i].wounds,
-          strain: data[i].strain,
-          defenses: data[i].defenses,
-          skills: data[i].skills,
-          talents: data[i].talents,
-          abilities: data[i].abilities,
-          actions: data[i].actions,
-          equipment: data[i].equipment,
-          drops: data[i].drops,
-          difficulty: data[i].difficulty,
-          spawnLocations: data[i].spawnLocations,
-          type: data[i].type,
-          behavior: data[i].behavior,
-          fear: data[i].fear
-        });
-      }
-    } catch (error) {
-      console.error('Error adding data:', error);
-    }
+  const hideToast = () => {
+    setToast({ ...toast, open: false });
   };
 
   const getFromDB = () => {
@@ -71,19 +87,19 @@ export default function Entities() {
 
   // Helper functions for styling
   const getDifficultyColor = (difficulty) => {
-    if (difficulty < 2) return { color: 'primary', label: 'Easy' };
-    if (difficulty < 4) return { color: 'success', label: 'Medium' };
-    if (difficulty < 6) return { color: 'warning', label: 'Hard' };
-    if(difficulty < 8) return {color: 'error', label: 'Very Hard'}
-    return { color: 'secondary', label: 'Extreme' };
+    if (difficulty < 2) return { color: 'bg-green-500/20 text-green-300 border-green-500/30', label: 'Easy' };
+    if (difficulty < 4) return { color: 'bg-blue-500/20 text-blue-300 border-blue-500/30', label: 'Medium' };
+    if (difficulty < 6) return { color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', label: 'Hard' };
+    if (difficulty < 8) return { color: 'bg-orange-500/20 text-orange-300 border-orange-500/30', label: 'Very Hard' };
+    return { color: 'bg-red-500/20 text-red-300 border-red-500/30', label: 'Extreme' };
   };
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'Minion': return { color: 'default', bgColor: '#e3f2fd' };
-      case 'Rival': return { color: 'primary', bgColor: '#f3e5f5' };
-      case 'Nemesis': return { color: 'error', bgColor: '#ffebee' };
-      default: return { color: 'default', bgColor: '#f5f5f5' };
+      case 'Minion': return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+      case 'Rival': return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+      case 'Nemesis': return 'bg-red-500/20 text-red-300 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
     }
   };
 
@@ -107,6 +123,7 @@ export default function Entities() {
     setSearchTerm('');
     setFilterType('All');
     setDifficultyFilter('All');
+    showToast('All filters cleared');
   };
 
   // Filtered entities based on search, type filter, and difficulty filter
@@ -123,245 +140,224 @@ export default function Entities() {
 
   const handleEntitySelect = (entityName) => {
     setCurrEntity(entityName);
-    if (isMobile) {
-      setShowDetails(true);
-    }
+    setShowDetails(true);
   };
 
   const handleBackToList = () => {
     setShowDetails(false);
   };
 
-  const FilterSection = () => (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <TextField
-          placeholder="Search entities..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start"><Search /></InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm('')}>
-                  <Clear />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          fullWidth
-          size="small"
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 3,
-            }
-          }}
-        />
-        
-        <Box>
-          <Typography variant="subtitle2" gutterBottom color="text.secondary">
-            Entity Type
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {['All', 'Minion', 'Rival', 'Nemesis'].map((type) => (
-              <Chip
-                key={type}
-                label={type}
-                onClick={() => setFilterType(type)}
-                color={filterType === type ? 'primary' : 'default'}
-                variant={filterType === type ? 'filled' : 'outlined'}
-                size="small"
-              />
-            ))}
-          </Stack>
-        </Box>
+  const FilterChip = ({ label, onDelete }) => (
+    <div className="inline-flex items-center space-x-2 bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30">
+      <span>{label}</span>
+      <button
+        onClick={onDelete}
+        className="text-purple-400 hover:text-purple-200 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  );
 
-        <FormControl fullWidth size="small">
-          <InputLabel>Difficulty</InputLabel>
-          <Select
+  const FilterSection = () => (
+    <div className="space-y-6">
+      {/* Filter Controls Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Entity Type</label>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          >
+            <option value="All" className="bg-gray-800">All Types</option>
+            <option value="Minion" className="bg-gray-800">Minion</option>
+            <option value="Rival" className="bg-gray-800">Rival</option>
+            <option value="Nemesis" className="bg-gray-800">Nemesis</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Difficulty</label>
+          <select
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
-            label="Difficulty"
-            sx={{ borderRadius: 2 }}
+            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           >
-            <MenuItem value="All">All Difficulties</MenuItem>
-            <MenuItem value="Easy">Easy (0-1)</MenuItem>
-            <MenuItem value="Medium">Medium (2-3)</MenuItem>
-            <MenuItem value="Hard">Hard (4-5)</MenuItem>
-            <MenuItem value="Very Hard">Very Hard (6-7)</MenuItem>
-            <MenuItem value="Extreme">Extreme (8+)</MenuItem>
-          </Select>
-        </FormControl>
+            <option value="All" className="bg-gray-800">All Difficulties</option>
+            <option value="Easy" className="bg-gray-800">Easy (0-1)</option>
+            <option value="Medium" className="bg-gray-800">Medium (2-3)</option>
+            <option value="Hard" className="bg-gray-800">Hard (4-5)</option>
+            <option value="Very Hard" className="bg-gray-800">Very Hard (6-7)</option>
+            <option value="Extreme" className="bg-gray-800">Extreme (8+)</option>
+          </select>
+        </div>
 
-        <Box sx={{ pt: 1, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="body2" color="text.secondary">
-              {filteredEntities.length} of {entities.length} entities
-            </Typography>
-            <Button
-              size="small"
+        <div className="sm:col-span-2 space-y-2">
+          <label className="text-sm font-medium text-gray-300">Actions</label>
+          <button
+            onClick={clearAllFilters}
+            disabled={getActiveFilterCount() === 0}
+            className="w-full bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 disabled:from-gray-600/20 disabled:to-gray-700/20 text-red-300 disabled:text-gray-500 font-medium px-4 py-3 rounded-lg border border-red-500/30 disabled:border-gray-500/30 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+            </svg>
+            <span>Clear Filters</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Active Filters */}
+      {getActiveFilterCount() > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-300">Active Filters:</h3>
+            <button
               onClick={clearAllFilters}
-              disabled={getActiveFilterCount() === 0}
-              startIcon={<Clear />}
+              className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors flex items-center space-x-1"
             >
-              Clear
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Active Filters */}
-        {getActiveFilterCount() > 0 && (
-          <Box>
-            <Typography variant="subtitle2" gutterBottom color="text.secondary">
-              Active Filters:
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {searchTerm && (
-                <Chip
-                  label={`Search: "${searchTerm}"`}
-                  onDelete={() => setSearchTerm('')}
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                />
-              )}
-              {filterType !== 'All' && (
-                <Chip
-                  label={`Type: ${filterType}`}
-                  onDelete={() => setFilterType('All')}
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                />
-              )}
-              {difficultyFilter !== 'All' && (
-                <Chip
-                  label={`Difficulty: ${difficultyFilter}`}
-                  onDelete={() => setDifficultyFilter('All')}
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                />
-              )}
-            </Stack>
-          </Box>
-        )}
-      </Stack>
-    </Box>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+              </svg>
+              <span>Clear All</span>
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {searchTerm && (
+              <FilterChip
+                label={`Search: "${searchTerm}"`}
+                onDelete={() => setSearchTerm('')}
+              />
+            )}
+            {filterType !== 'All' && (
+              <FilterChip
+                label={`Type: ${filterType}`}
+                onDelete={() => setFilterType('All')}
+              />
+            )}
+            {difficultyFilter !== 'All' && (
+              <FilterChip
+                label={`Difficulty: ${difficultyFilter}`}
+                onDelete={() => setDifficultyFilter('All')}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 
   const EntityList = () => {
     if (filteredEntities.length === 0) {
       return (
-        <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            {searchTerm || filterType !== 'All' || difficultyFilter !== 'All' ? 
-              'No entities match your filters' : 'No entities found'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Try adjusting your search or filters
-          </Typography>
-        </Box>
+        <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12 text-center">
+          <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+          </svg>
+          <h3 className="text-xl font-semibold text-white mb-2">No entities found</h3>
+          <p className="text-gray-400 mb-4">Try adjusting your search criteria to find more entities</p>
+          <button
+            onClick={clearAllFilters}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            Clear All Filters
+          </button>
+        </div>
       );
     }
 
     return (
-      <Stack spacing={1} sx={{ p: 2 }}>
-        {filteredEntities.map((entity) => {
-          const difficultyInfo = getDifficultyColor(entity.difficulty);
-          const typeInfo = getTypeColor(entity.type);
-          const isSelected = currEntity === entity.name;
-          
-          return (
-            <Card 
-              key={entity.name}
-              sx={{ 
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                border: isSelected ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.12)',
-                transform: isSelected ? 'scale(1.01)' : 'scale(1)',
-                boxShadow: isSelected ? 3 : 1,
-                '&:hover': {
-                  transform: 'scale(1.01)',
-                  boxShadow: 2,
-                },
-                '&:active': {
-                  transform: 'scale(0.99)',
-                },
-                backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.04)' : 'white'
-              }}
-              onClick={() => handleEntitySelect(entity.name)}
-            >
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 'bold',
-                      color: isSelected ? 'primary.main' : 'text.primary',
-                      flex: 1,
-                      pr: 1
-                    }}
-                  >
+      <div className="space-y-4">
+        {/* Results Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2 className="text-xl font-bold text-white">
+              Found {filteredEntities.length} entit{filteredEntities.length !== 1 ? 'ies' : 'y'}
+            </h2>
+          </div>
+          <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-bold">
+            {entities.length} total
+          </span>
+        </div>
+
+        {/* Entities Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+          {filteredEntities.map((entity) => {
+            const difficultyInfo = getDifficultyColor(entity.difficulty);
+            const typeColor = getTypeColor(entity.type);
+            const isSelected = currEntity === entity.name;
+            
+            return (
+              <div 
+                key={entity.name}
+                onClick={() => handleEntitySelect(entity.name)}
+                className={`bg-black/20 backdrop-blur-lg rounded-xl border ${isSelected ? 'border-purple-400 ring-2 ring-purple-400/50' : 'border-white/10'} p-4 hover:bg-black/30 transition-all duration-300 cursor-pointer transform hover:scale-105 min-h-[200px] flex flex-col`}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className={`font-bold text-base ${isSelected ? 'text-purple-300' : 'text-white'} leading-tight flex-1 pr-2`}>
                     {entity.name}
-                  </Typography>
-                  <Stack direction="row" spacing={0.5} flexShrink={0}>
-                    <Chip 
-                      label={entity.type}
-                      color={typeInfo.color}
-                      size="small"
-                      variant="filled"
-                      sx={{ fontSize: '0.7rem', height: '24px' }}
-                    />
-                    <Chip 
-                      label={entity.difficulty}
-                      color={difficultyInfo.color}
-                      size="small"
-                      sx={{ fontSize: '0.7rem', height: '24px' }}
-                    />
-                  </Stack>
-                </Box>
+                  </h3>
+                  <div className="flex flex-col space-y-1 flex-shrink-0">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${typeColor} whitespace-nowrap`}>
+                      {entity.type}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${difficultyInfo.color} whitespace-nowrap`}>
+                      Diff: {entity.difficulty}
+                    </span>
+                  </div>
+                </div>
                 
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ 
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {entity.description || 'No description available'}
-                </Typography>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Stack>
+                {/* Description */}
+                <div className="flex-1 mb-3">
+                  <p className="text-gray-400 text-sm line-clamp-3 leading-relaxed">
+                    {entity.description || 'No description available'}
+                  </p>
+                </div>
+                
+                {/* Stats Preview */}
+                <div className="pt-3 border-t border-white/10 mt-auto">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded px-2 py-1 text-center">
+                      <div className="text-red-400 font-medium">Wounds</div>
+                      <div className="text-red-300 font-bold">{entity.wounds}</div>
+                    </div>
+                    <div className="bg-green-500/10 border border-green-500/20 rounded px-2 py-1 text-center">
+                      <div className="text-green-400 font-medium">Soak</div>
+                      <div className="text-green-300 font-bold">{entity.soak}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     );
   };
 
   const DisplayEntity = () => {
     const entity = entities.find(e => e.name === currEntity);
     if (!entity) return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Typography variant="h6" color="text.secondary">
-          Select an entity from the list to view details
-        </Typography>
-      </Box>
+      <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12 text-center">
+        <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3 className="text-xl font-semibold text-white mb-2">Select an entity</h3>
+        <p className="text-gray-400">Choose an entity from the list to view its details</p>
+      </div>
     );
     
     return (
-      <Fade in={true} timeout={500}>
-        <Box>
-          <EntityItem entity={entity} person={false}/>
-        </Box>
-      </Fade>
+      <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+        <EntityItem entity={entity} person={false}/>
+      </div>
     );
   };
 
@@ -369,199 +365,177 @@ export default function Entities() {
     return <NotLoggedIn />;
   }
 
-  // Mobile view with drawer
-  if (isMobile) {
-    return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-        {/* Mobile App Bar */}
-        <AppBar position="sticky" elevation={2}>
-          <Toolbar>
-            {showDetails ? (
-              <>
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  onClick={handleBackToList}
-                  sx={{ mr: 2 }}
-                >
-                  <ArrowBack />
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  {currEntity}
-                </Typography>
-              </>
-            ) : (
-              <>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                  Entities ({filteredEntities.length})
-                </Typography>
-                <IconButton
-                  color="inherit"
-                  onClick={() => setFiltersOpen(!filtersOpen)}
-                >
-                  <Badge badgeContent={getActiveFilterCount()} color="error">
-                    <Tune />
-                  </Badge>
-                </IconButton>
-                {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-                  <IconButton color="inherit" onClick={addData}>
-                    <Add />
-                  </IconButton>
-                )}
-              </>
-            )}
-          </Toolbar>
-        </AppBar>
-
-        {/* Mobile Content */}
-        {showDetails ? (
-          <Box sx={{ p: 2 }}>
-            <DisplayEntity />
-          </Box>
-        ) : (
-          <Box>
-            {/* Collapsible Filters */}
-            <Collapse in={filtersOpen}>
-              <Paper elevation={1} sx={{ borderRadius: 0 }}>
-                <FilterSection />
-              </Paper>
-            </Collapse>
-
-            {/* Entity List */}
-            <Box sx={{ pb: 8 }}>
-              <EntityList />
-            </Box>
-          </Box>
-        )}
-
-        {/* Mobile FAB for filters when not expanded */}
-        {!filtersOpen && !showDetails && (
-          <Fab
-            color="primary"
-            sx={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
-            }}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <Badge badgeContent={getActiveFilterCount()} color="error">
-              <FilterList />
-            </Badge>
-          </Fab>
-        )}
-      </Box>
-    );
-  }
-
-  // Desktop view (similar to original but refined)
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={3} sx={{ borderRadius: 3, mb: 3, overflow: 'hidden' }}>
-        <Box sx={{ 
-          background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-          color: 'white',
-          p: 3
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Entity Database
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                Browse and explore game entities
-              </Typography>
-            </Box>
-            {localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-              <Button 
-                onClick={addData}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)'
-                  }
-                }}
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
+      <div className="max-w-full mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Entity Database</h1>
+                <p className="text-purple-300">Browse and explore game entities</p>
+              </div>
+            </div>
+            
+            {showDetails && (
+              <button
+                onClick={handleBackToList}
+                className="xl:hidden bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center space-x-2"
               >
-                Add Data
-              </Button>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"></path>
+                </svg>
+                <span>Back to List</span>
+              </button>
             )}
-          </Box>
-        </Box>
-      </Paper>
+          </div>
+        </div>
 
-      {entities.length > 0 ? (
-        <Grid container spacing={3}>
-          {/* Left Panel - Filters and List */}
-          <Grid item xs={12} md={4}>
-            <Stack spacing={2}>
-              {/* Filters */}
-              <Paper elevation={2} sx={{ borderRadius: 3 }}>
-                <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-                  <Typography variant="h6" fontWeight="bold" color="primary.main">
-                    Search & Filter
-                  </Typography>
-                </Box>
-                <FilterSection />
-              </Paper>
-
-              {/* Entity List */}
-              <Paper elevation={2} sx={{ borderRadius: 3, maxHeight: '60vh', overflow: 'hidden' }}>
-                <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-                  <Typography variant="h6" fontWeight="bold" color="primary.main">
-                    Entity Collection
-                  </Typography>
-                </Box>
-                <Box sx={{ maxHeight: 'calc(60vh - 60px)', overflow: 'auto' }}>
-                  <EntityList />
-                </Box>
-              </Paper>
-            </Stack>
-          </Grid>
-
-          {/* Right Panel - Entity Details */}
-          <Grid item xs={12} md={8}>
-            <Paper elevation={2} sx={{ borderRadius: 3, minHeight: '70vh' }}>
-              <Box sx={{ p: 3, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-                <Typography variant="h5" fontWeight="bold" color="primary.main">
-                  Entity Details
-                </Typography>
-              </Box>
-              <Box sx={{ p: 3 }}>
+        {loading ? (
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mb-4"></div>
+              <h3 className="text-xl font-semibold text-white mb-2">Loading entity database...</h3>
+              <p className="text-gray-400">Please wait while we fetch the data</p>
+            </div>
+          </div>
+        ) : entities.length > 0 ? (
+          <>
+            {/* Mobile Detail View */}
+            {showDetails && (
+              <div className="xl:hidden">
                 <DisplayEntity />
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      ) : (
-        <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
-            No entities found
-          </Typography>
-          {!loading && localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN' && (
-            <Button variant="contained" onClick={addData} size="large" startIcon={<Add />}>
-              Add Entities Now
-            </Button>
-          )}
-        </Paper>
-      )}
-    </Box>
+              </div>
+            )}
+
+            {/* Search and Filter Section */}
+            <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 7v10a2 2 0 002 2h14l-2-2H5V7h14V5a2 2 0 00-2-2H5a2 2 0 00-2 2v2z"></path>
+                      <path d="M21 7H3v2h18V7z"></path>
+                    </svg>
+                    <h2 className="text-xl font-bold text-white">Search & Filter</h2>
+                    {getActiveFilterCount() > 0 && (
+                      <span className="bg-purple-500/30 text-purple-300 px-2 py-1 rounded-full text-xs font-bold">
+                        {getActiveFilterCount()} active
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-bold">
+                      {filteredEntities.length} shown
+                    </span>
+                    <button 
+                      onClick={() => setFiltersOpen(!filtersOpen)}
+                      className="md:hidden bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 p-2 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Search Bar - Always Visible */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name, description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Advanced Filters - Collapsible on Mobile */}
+                <div className="hidden md:block">
+                  <FilterSection />
+                </div>
+                
+                {filtersOpen && (
+                  <div className="md:hidden">
+                    <FilterSection />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Entity Grid/List Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+              {/* Entity List/Grid */}
+              <div className="xl:col-span-3">
+                <EntityList />
+              </div>
+
+              {/* Entity Details Panel (Desktop) */}
+              <div className="hidden xl:block xl:col-span-1">
+                <DisplayEntity />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <svg className="w-16 h-16 text-gray-500 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h3 className="text-xl font-semibold text-white mb-2">No entity data available</h3>
+              <p className="text-gray-400">There are currently no entities in the database</p>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Filter Fab */}
+        <button
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          className="md:hidden fixed bottom-6 right-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110"
+        >
+          <div className="relative">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+            </svg>
+            {getActiveFilterCount() > 0 && (
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {getActiveFilterCount()}
+              </div>
+            )}
+          </div>
+        </button>
+      </div>
+
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message}
+        severity={toast.severity} 
+        isOpen={toast.open} 
+        onClose={hideToast} 
+      />
+    </div>
   );
 }
-
-/*
-  Moley's Comedy Club and Bar (Entity 65) has the Wormhole Object (Custom Object).
-  Sightless Seer (Enitity 365) drops a blue luminescent slab of skin use in making the Object Seer Tea (Object 365).
-  Jerry (Entity 7) may appear randomly and give the Object Jerry's Feather (Custom Object).
-  Create The Old Fear. A god.
-  Blanche (Entity 140) appears in the dreams of the people who play GAM from the Object BackROM (Object 47).
-  The King (Entity 33) gives out the Object The King's Courage (Custom Object) whenever it wants to AND upon The King's death.
-  The Musician (Entity 137) gives the Object Cassette Recorder (Object 34) to people.
-  The Keymaster (Entity 0) gives out a single Level Key to each person. Once ever.
-  Scream Eaters (Entity 97) drops Liquid Silence.
-  The Neighborhood Watch (Entity 96) is exclusive to Level 9 and will hunt down any wanderer with the Object Pocket (Object 51) in thier possession.
-*/

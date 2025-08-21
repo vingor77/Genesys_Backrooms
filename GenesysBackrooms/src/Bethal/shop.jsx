@@ -1,43 +1,403 @@
-import { Box, Button, Dialog, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { useState } from "react";
+export const weapons = [
+  {
+    "name": "Shovel",
+    "skill": "Melee",
+    "damage": "+2",
+    "critical": 4,
+    "range": "Engaged",
+    "encumbrance": 3,
+    "weight": 14,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 30,
+    "rarity": 1,
+    "special": "Disorient 2 when used as improvised weapon"
+  },
+  {
+    "name": "Stop Sign",
+    "skill": "Melee",
+    "damage": "+3",
+    "critical": 3,
+    "range": "Engaged",
+    "encumbrance": 4,
+    "weight": 21,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 0,
+    "rarity": 2,
+    "special": "Defensive 1, Cumbersome 2"
+  },
+  {
+    "name": "Yield Sign",
+    "skill": "Melee",
+    "damage": "+4",
+    "critical": 3,
+    "range": "Engaged",
+    "encumbrance": 5,
+    "weight": 42,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 0,
+    "rarity": 2,
+    "special": "Defensive 2, Cumbersome 3, Unwieldy 2"
+  },
+  {
+    "name": "Double-Barrel Shotgun",
+    "skill": "Ranged (Heavy)",
+    "damage": "9",
+    "critical": 3,
+    "range": "Medium",
+    "encumbrance": 4,
+    "weight": 16,
+    "conductive": true,
+    "two_handed": true,
+    "uses_ammo": true,
+    "ammo_type": "shotgun_shells",
+    "category": "ranged",
+    "price": 0,
+    "rarity": 6,
+    "special": "Blast 3, Knockdown, Limited Ammo 2"
+  },
+  {
+    "name": "Kitchen Knife",
+    "skill": "Melee",
+    "damage": "+5",
+    "critical": 3,
+    "range": "Engaged",
+    "encumbrance": 1,
+    "weight": 1,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 0,
+    "rarity": 1,
+    "special": "Pierce 1"
+  },
+  {
+    "name": "Crowbar",
+    "skill": "Melee",
+    "damage": "+2",
+    "critical": 4,
+    "range": "Engaged",
+    "encumbrance": 2,
+    "weight": 8,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 20,
+    "rarity": 1,
+    "special": "Pierce 1, Defensive 1"
+  },
+  {
+    "name": "Baseball Bat",
+    "skill": "Melee",
+    "damage": "+2",
+    "critical": 5,
+    "range": "Engaged",
+    "encumbrance": 2,
+    "weight": 3,
+    "conductive": false,
+    "two_handed": true,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 30,
+    "rarity": 1,
+    "special": "Knockdown"
+  },
+  {
+    "name": "Fire Axe",
+    "skill": "Melee",
+    "damage": "+3",
+    "critical": 2,
+    "range": "Engaged",
+    "encumbrance": 4,
+    "weight": 12,
+    "conductive": false,
+    "two_handed": true,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 75,
+    "rarity": 2,
+    "special": "Pierce 2, Vicious 1, Cumbersome 2"
+  },
+  {
+    "name": "Chain",
+    "skill": "Melee",
+    "damage": "+1",
+    "critical": 4,
+    "range": "Short",
+    "encumbrance": 3,
+    "weight": 15,
+    "conductive": true,
+    "two_handed": true,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 25,
+    "rarity": 2,
+    "special": "Ensnare 1, Flexible"
+  },
+  {
+    "name": "Machete",
+    "skill": "Melee",
+    "damage": "+2",
+    "critical": 3,
+    "range": "Engaged",
+    "encumbrance": 2,
+    "weight": 2,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "melee",
+    "price": 45,
+    "rarity": 3,
+    "special": "Pierce 1, Vicious 1"
+  },
+  {
+    "name": "Brass Knuckles",
+    "skill": "Brawl",
+    "damage": "+1",
+    "critical": 4,
+    "range": "Engaged",
+    "encumbrance": 1,
+    "weight": 1,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "hand_to_hand",
+    "price": 25,
+    "rarity": 4,
+    "special": "Disorient 1"
+  },
+  {
+    "name": "Spiked Gloves",
+    "skill": "Brawl",
+    "damage": "+1",
+    "critical": 3,
+    "range": "Engaged",
+    "encumbrance": 1,
+    "weight": 2,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "hand_to_hand",
+    "price": 40,
+    "rarity": 5,
+    "special": "Pierce 1, Vicious 1"
+  },
+  {
+    "name": "Shock Gloves",
+    "skill": "Brawl",
+    "damage": "+0",
+    "critical": 5,
+    "range": "Engaged",
+    "encumbrance": 1,
+    "weight": 3,
+    "conductive": true,
+    "two_handed": false,
+    "uses_ammo": false,
+    "category": "hand_to_hand",
+    "price": 150,
+    "rarity": 6,
+    "special": "Stun 3, Disorient 2"
+  },
+  {
+    "name": "Hunting Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": "10",
+    "critical": 3,
+    "range": "Extreme",
+    "encumbrance": 5,
+    "weight": 18,
+    "conductive": false,
+    "two_handed": true,
+    "uses_ammo": true,
+    "ammo_type": "rifle_rounds",
+    "category": "ranged",
+    "price": 1200,
+    "rarity": 4,
+    "special": "Pierce 2, Accurate 1, Cumbersome 2"
+  },
+  {
+    "name": "Crossbow",
+    "skill": "Ranged (Heavy)",
+    "damage": "8",
+    "critical": 3,
+    "range": "Long",
+    "encumbrance": 4,
+    "weight": 12,
+    "conductive": false,
+    "two_handed": true,
+    "uses_ammo": true,
+    "ammo_type": "crossbow_bolts",
+    "category": "ranged",
+    "price": 300,
+    "rarity": 3,
+    "special": "Pierce 1, Slow-Firing 1, Prepare 1"
+  },
+  {
+    "name": "Flare Gun",
+    "skill": "Ranged (Light)",
+    "damage": "5",
+    "critical": 4,
+    "range": "Medium",
+    "encumbrance": 2,
+    "weight": 4,
+    "conductive": false,
+    "two_handed": false,
+    "uses_ammo": true,
+    "ammo_type": "flares",
+    "category": "ranged",
+    "price": 100,
+    "rarity": 2,
+    "special": "Burn 2, Disorient 3, Limited Ammo 1"
+  }
+];
 
-export default function Shop(props) {
-  const [open, setOpen] = useState(false);
+export const suits = [
+  {
+    "name": "Decoy Suit",
+    "defense_melee": 0,
+    "defense_ranged": 0,
+    "soak": 0,
+    "encumbrance": 20,
+    "weight": 5,
+    "conductive": false,
+    "price": 0,
+    "rarity": 2,
+    "special": "Inferior - Automatically generates 1 threat on all checks while worn",
+    "description": "A flimsy, poorly made suit that offers no protection and actually hinders the wearer."
+  },
+  {
+    "name": "Brown Suit",
+    "defense_melee": 0,
+    "defense_ranged": 0,
+    "soak": 1,
+    "encumbrance": 40,
+    "weight": 8,
+    "conductive": false,
+    "price": 10,
+    "rarity": 2,
+    "special": "Basic protection",
+    "description": "A simple, durable work suit offering minimal protection from hazards."
+  },
+  {
+    "name": "Green Suit",
+    "defense_melee": 0,
+    "defense_ranged": 1,
+    "soak": 1,
+    "encumbrance": 40,
+    "weight": 9,
+    "conductive": false,
+    "price": 60,
+    "rarity": 3,
+    "special": "Camouflaged - Add boost die to Stealth checks in natural environments",
+    "description": "Military-style suit with camouflage patterns and basic ballistic protection."
+  },
+  {
+    "name": "Purple Suit",
+    "defense_melee": 1,
+    "defense_ranged": 0,
+    "soak": 1,
+    "encumbrance": 60,
+    "weight": 12,
+    "conductive": false,
+    "price": 70,
+    "rarity": 4,
+    "special": "Reinforced joints provide extra melee defense",
+    "description": "A reinforced suit with padded armor designed for close-quarters protection."
+  },
+  {
+    "name": "Hazard Suit",
+    "defense_melee": 0,
+    "defense_ranged": 0,
+    "soak": 2,
+    "encumbrance": 80,
+    "weight": 18,
+    "conductive": false,
+    "price": 90,
+    "rarity": 5,
+    "special": "Environmental Protection - Immune to most environmental hazards, toxins, and radiation",
+    "description": "Heavy-duty environmental protection suit designed for dangerous conditions."
+  },
+  {
+    "name": "Bee Suit",
+    "defense_melee": 1,
+    "defense_ranged": 1,
+    "soak": 1,
+    "encumbrance": 60,
+    "weight": 14,
+    "conductive": false,
+    "price": 110,
+    "rarity": 6,
+    "special": "Insulated - Immune to stun damage from electrical sources, Add boost die to Athletics checks",
+    "description": "Lightweight protective suit with excellent mobility and all-around defense."
+  },
+  {
+    "name": "Bunny Suit",
+    "defense_melee": 1,
+    "defense_ranged": 1,
+    "soak": 2,
+    "encumbrance": 60,
+    "weight": 11,
+    "conductive": false,
+    "price": 200,
+    "rarity": 7,
+    "special": "Agile - Reduce encumbrance by 1, Add boost die to Coordination checks",
+    "description": "Advanced lightweight suit combining excellent protection with enhanced mobility."
+  },
+  {
+    "name": "Pajama Suit",
+    "defense_melee": 2,
+    "defense_ranged": 2,
+    "soak": 2,
+    "encumbrance": 40,
+    "weight": 6,
+    "conductive": false,
+    "price": 900,
+    "rarity": 8,
+    "special": "Superior - Automatically generates 1 advantage on all checks, Comfortable - Recover 1 additional strain during rest",
+    "description": "The ultimate protective suit that somehow manages to be as comfortable as sleepwear while offering superior defense."
+  }
+];
 
-  return (
-    <Box>
-      <Button variant="outlined" onClick={() => setOpen(true)}>Display shop</Button>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{fontWeight: 'bold'}}>Name</TableCell>
-              <TableCell sx={{fontWeight: 'bold'}}>Price</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {props.static.map((item) => {
-              return (
-                <TableRow>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.price}</TableCell>
-                </TableRow>
-              )
-            })}
-            {props.variable.map((item) => {
-              return (
-                item.shown ?
-                  <TableRow>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.price}</TableCell>
-                  </TableRow>
-                :
-                  ""
-              )
-            })}
-          </TableBody>
-        </Table>
-      </Dialog>
-    </Box>
-  )
-}
+export const baseStore = [
+  {"name":"Boombox","price":60,"weight":16,"batteryCharge":25,"use":"Play music","useCount":999,"conductive":"No"},
+  {"name":"Extension Ladder","price":60,"weight":0,"batteryCharge":0,"use":"As a maneuver, extend a ladder to allow traversal up 3 height levels.","useCount":999,"conductive":"Yes"},
+  {"name":"Flashlight","price":15,"weight":0,"batteryCharge":30,"use":"As a maneuver, create a light that adds 2 light levels to a room, to a maximum of 7.","useCount":999,"conductive":"No"},
+  {"name":"Jetpack","price":900,"weight":52,"batteryCharge":50,"use":"As a maneuver, fly into the air and ignore any outdoor tile effects","useCount":999,"conductive":"Yes"},
+  {"name":"Lockpicker","price":20,"weight":16,"batteryCharge":0,"use":"As a maneuver, lock or unlock a door.","useCount":3,"conductive":"No"},
+  {"name":"Pro-Flashlight","price":25,"weight":5,"batteryCharge":60,"use":"As a maneuver, create a light that adds 4 light levels to a room, to a maximum of 7.","useCount":999,"conductive":"No"},
+  {"name":"Spray Paint","price":50,"weight":0,"batteryCharge":0,"use":"As a maneuver, put paint on some surface.","useCount":25,"conductive":"No"},
+  {"name":"Stun Grenade","price":30,"weight":5,"batteryCharge":0,"use":"As an action, stun all entities and players within a tile for 2 rounds.","useCount":1,"conductive":"No"},
+  {"name":"Walkie-Talkie","price":12,"weight":0,"batteryCharge":80,"use":"As a free action, speak into the walkie-talkie to other walkie-talkies","useCount":999,"conductive":"No"},
+  {"name":"Zap Gun","price":400,"weight":11,"batteryCharge":10,"use":"As an action, stun a target for as long as the beam is held","useCount":999,"conductive":"Yes"},
+  {"name":"Cruiser","price":370,"weight":0,"batteryCharge":0,"use":"While using, move two tiles per maneuver. May hold players and scrap","useCount":999,"conductive":"No"},
+  {"name":"Teleporter","price":375,"weight":0,"batteryCharge":0,"use":"As an action, teleport a player from anywhere to the ship. Can be used once per round. All items are dropped upon use.","useCount":999,"conductive":"No"},
+  {"name":"Inverse Teleporter","price":425,"weight":0,"batteryCharge":0,"use":"As ab action, teleport a player from inside the ship to a random location within the facility. Can be used once per round. All items are dropped when used.","useCount":999,"conductive":"No"},
+  {"name":"Loud Horn","price":100,"weight":0,"batteryCharge":0,"use":"As an action, sound a horn out 10 tiles. Gives 2 Boost dice to the next 3 navigation checks","useCount":999,"conductive":"No"},
+  {"name":"Signal Translator","price":255,"weight":0,"batteryCharge":0,"use":"Unlocks a maneuver to send a 10-character message to all players.","useCount":999,"conductive":"No"},
+  {"name":"Cozy Lights","price":140,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Goldfish","price":50,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Jack O' Lantern","price":50,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Television","price":130,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Record Player","price":120,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Romantic Table","price":120,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Shower","price":180,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Table","price":70,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Toilet","price":150,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Welcome Mat","price":40,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Plushie Pajama Man","price":100,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name":"Disco Ball","price":150,"weight":0,"batteryCharge":0,"use":"Gives a 10% bonus to the overtime bonus. Maximum 100%","useCount":999,"conductive":"No"},
+  {"name": "Shotgun Shell", "price" : 20, "weight": 0, "batteryCharge": 0, "use": "Loads the Double Barrel Shotgun", "useCount": 1, "conductive": "No"},
+  {"name": "Rifle Rounds", "price" : 300, "weight": 5, "batteryCharge": 0, "use": "Loads the Hunting Rifle", "useCount": 10, "conductive": "No"},
+  {"name": "Crossbow Bolts", "price" : 100, "weight": 8, "batteryCharge": 0, "use": "Loads the Crossbow", "useCount": 30, "conductive": "No"},
+  {"name": "Flare", "price" : 120, "weight": 0, "batteryCharge": 0, "use": "Loads the Flare Gun", "useCount": 3, "conductive": "No"}
+];

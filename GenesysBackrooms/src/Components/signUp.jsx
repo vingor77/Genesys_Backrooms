@@ -1,9 +1,49 @@
-import React, { useState } from 'react';
-import { Box,Button,Container,FormControl,IconButton,InputAdornment,InputLabel,OutlinedInput,Paper,Stack,TextField,Typography,Link,Avatar,Snackbar,Alert,CircularProgress,alpha,useTheme } from '@mui/material';
-import { Visibility,VisibilityOff,PersonAdd as PersonAddIcon,Person as PersonIcon,Email as EmailIcon,Lock as LockIcon } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
 import { collection, doc, getDocs, query, setDoc } from "firebase/firestore";
 import db, { auth } from '../Components/firebase';
 import { createUserWithEmailAndPassword } from "firebase/auth";
+
+// Toast notification component
+const Toast = ({ message, severity, isOpen, onClose }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const severityClasses = {
+    success: 'bg-emerald-500 border-emerald-400',
+    error: 'bg-red-500 border-red-400',
+    warning: 'bg-amber-500 border-amber-400',
+    info: 'bg-blue-500 border-blue-400'
+  };
+
+  const icons = {
+    success: '🎉',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-down">
+      <div className={`${severityClasses[severity]} text-white px-6 py-4 rounded-lg border shadow-xl flex items-center space-x-3 min-w-80`}>
+        <div className="text-xl">{icons[severity]}</div>
+        <span className="flex-1">{message}</span>
+        <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -12,7 +52,6 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'error' });
-  const theme = useTheme();
 
   const getErrorMessage = (errorCode) => {
     switch (errorCode) {
@@ -41,10 +80,7 @@ export default function SignUp() {
     setToast({ open: true, message, severity });
   };
 
-  const hideToast = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+  const hideToast = () => {
     setToast({ ...toast, open: false });
   };
 
@@ -96,334 +132,173 @@ export default function SignUp() {
   };
 
   return (
-    <Container 
-      component="main" 
-      maxWidth="sm"
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        py: { xs: 2, sm: 4 }
-      }}
-    >
-      <Paper
-        elevation={12}
-        sx={{
-          borderRadius: 4,
-          overflow: 'hidden',
-          background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
-          border: `1px solid ${alpha(theme.palette.success.main, 0.08)}`
-        }}
-      >
-        {/* Header */}
-        <Box
-          sx={{
-            background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-            color: 'white',
-            py: 6,
-            px: 4,
-            textAlign: 'center',
-            position: 'relative',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="7" cy="7" r="7"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-              opacity: 0.6
-            }
-          }}
-        >
-          <Avatar
-            sx={{
-              width: 80,
-              height: 80,
-              mx: 'auto',
-              mb: 3,
-              bgcolor: alpha('#ffffff', 0.15),
-              backdropFilter: 'blur(10px)',
-              border: `2px solid ${alpha('#ffffff', 0.2)}`
-            }}
-          >
-            <PersonAddIcon sx={{ fontSize: 40 }} />
-          </Avatar>
-          <Typography 
-            variant="h3" 
-            component="h1" 
-            fontWeight="bold" 
-            gutterBottom
-            sx={{ 
-              position: 'relative',
-              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            Join Us Today
-          </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              opacity: 0.9,
-              position: 'relative'
-            }}
-          >
-            Create your account to get started
-          </Typography>
-        </Box>
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Main SignUp Card */}
+        <div className="bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+          
+          {/* Header */}
+          <div className="relative p-8 bg-gradient-to-br from-green-600/30 to-emerald-600/30 text-center">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}></div>
+            </div>
+            
+            <div className="relative z-10">
+              {/* Logo/Avatar */}
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl border-2 border-white/20">
+                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path>
+                </svg>
+              </div>
+              
+              <h1 className="text-3xl font-bold text-white mb-2">Join Us Today</h1>
+              <p className="text-green-200">Create your account to get started</p>
+            </div>
+          </div>
 
-        {/* Form */}
-        <Box sx={{ p: 5 }}>
-          <Box 
-            component="form" 
-            onSubmit={handleSignUp}
-            sx={{ mt: 1 }}
-          >
-            <Stack spacing={4}>
-              <TextField
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                name="username"
-                autoComplete="username"
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.success.main,
-                        borderWidth: 2,
-                      }
-                    },
-                    '&.Mui-focused': {
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.12)}`,
-                    }
-                  }
-                }}
-              />
+          {/* Form */}
+          <div className="p-8">
+            <form onSubmit={handleSignUp} className="space-y-6">
+              
+              {/* Username Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Username</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-10 pr-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Enter your username"
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.success.main,
-                        borderWidth: 2,
-                      }
-                    },
-                    '&.Mui-focused': {
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.12)}`,
-                    }
-                  }
-                }}
-              />
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Email Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-10 pr-4 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
 
-              <FormControl 
-                fullWidth 
-                variant="outlined"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.3s ease-in-out',
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.success.main,
-                        borderWidth: 2,
-                      }
-                    },
-                    '&.Mui-focused': {
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.success.main, 0.12)}`,
-                    }
-                  }
-                }}
-              >
-                <InputLabel htmlFor="password">Password</InputLabel>
-                <OutlinedInput
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <LockIcon color="action" />
-                    </InputAdornment>
-                  }
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        sx={{
-                          transition: 'transform 0.2s ease-in-out',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                            bgcolor: alpha(theme.palette.success.main, 0.04)
-                          }
-                        }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  label="Password"
-                />
-              </FormControl>
+              {/* Password Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Password</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl pl-10 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Enter your password"
+                    minLength="6"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"></path>
+                        <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"></path>
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Password must be at least 6 characters long</p>
+              </div>
 
-              <Button
+              {/* Submit Button */}
+              <button
                 type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
                 disabled={loading}
-                sx={{
-                  py: 2,
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-                  boxShadow: '0 8px 32px rgba(76, 175, 80, 0.3)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #43a047 0%, #5cb860 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(76, 175, 80, 0.4)',
-                  },
-                  '&:active': {
-                    transform: 'translateY(0px)',
-                  },
-                  '&:disabled': {
-                    background: theme.palette.grey[300],
-                    boxShadow: 'none',
-                    transform: 'none'
-                  }
-                }}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:cursor-not-allowed flex items-center justify-center space-x-3"
               >
                 {loading ? (
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <CircularProgress size={20} color="inherit" />
-                    Creating Account...
-                  </Box>
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Creating Account...</span>
+                  </>
                 ) : (
-                  'Create Account'
+                  <>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path>
+                    </svg>
+                    <span>Create Account</span>
+                  </>
                 )}
-              </Button>
-            </Stack>
-          </Box>
+              </button>
+            </form>
 
-          {/* Footer */}
-          <Box 
-            sx={{ 
-              mt: 4, 
-              pt: 3,
-              borderTop: `1px solid ${alpha(theme.palette.grey[300], 0.5)}`,
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Already have an account?{' '}
-              <Link 
-                href="/login" 
-                sx={{ 
-                  fontWeight: 'bold',
-                  textDecoration: 'none',
-                  color: theme.palette.success.main,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    textDecoration: 'underline',
-                    color: theme.palette.success.dark
-                  }
-                }}
-              >
-                Sign in here
-              </Link>
-            </Typography>
-          </Box>
-        </Box>
+            {/* Footer Links */}
+            <div className="mt-8 pt-6 border-t border-white/10 text-center">
+              <p className="text-gray-400 text-sm">
+                Already have an account?{' '}
+                <a 
+                  href="/login" 
+                  className="text-green-400 hover:text-green-300 font-semibold transition-colors hover:underline"
+                >
+                  Sign in here
+                </a>
+              </p>
+            </div>
+          </div>
 
-        {/* Security Note */}
-        <Box 
-          sx={{ 
-            px: 4, 
-            py: 3, 
-            bgcolor: alpha(theme.palette.success.main, 0.04),
-            borderTop: `1px solid ${alpha(theme.palette.success.main, 0.08)}`
-          }}
-        >
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ 
-              fontSize: '0.75rem',
-              display: 'block',
-              textAlign: 'center'
-            }}
-          >
-            🔒 Your data is protected with Firebase security
-          </Typography>
-        </Box>
-      </Paper>
+          {/* Security Footer */}
+          <div className="px-8 py-4 bg-gradient-to-r from-white/5 to-white/5 border-t border-white/10">
+            <p className="text-xs text-center text-gray-400 flex items-center justify-center space-x-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+              </svg>
+              <span>Your data is protected with Firebase security</span>
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Toast Notifications */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={6000}
-        onClose={hideToast}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{
-          '& .MuiSnackbarContent-root': {
-            borderRadius: 2
-          }
-        }}
-      >
-        <Alert
-          onClose={hideToast}
-          severity={toast.severity}
-          variant="filled"
-          sx={{
-            width: '100%',
-            borderRadius: 2,
-            boxShadow: 3,
-            '& .MuiAlert-icon': {
-              fontSize: '1.2rem'
-            }
-          }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message}
+        severity={toast.severity} 
+        isOpen={toast.open} 
+        onClose={hideToast} 
+      />
+    </div>
   );
 }

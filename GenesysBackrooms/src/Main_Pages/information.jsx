@@ -1,6376 +1,4105 @@
 import React, { useState } from 'react';
-import { Accordion,AccordionDetails,AccordionSummary,Box,Card,CardContent,Chip,Container,Divider,Grid,Paper,Stack,Tab,Tabs,Typography,useTheme,alpha } from '@mui/material';
-import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
-const NotLoggedIn = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-    <Typography variant="h5" color="text.secondary">Please log in to access game information</Typography>
-  </Box>
-);
+const RulesPage = () => {
+  // State for managing which sections are expanded
+  const [expandedSections, setExpandedSections] = useState({
+    general: true,
+    spending: false,
+    status: false,
+    lighting: false,
+    exhaustion: false,
+    temperature: false,
+    resting: false,
+    fear: false,
+    fall: false,
+    atmospheric: false,
+    hacking: false,
+    diseases: false,
+    character: false,
+    custom: false,
+    equipment: false,
+    lethal: false
+  });
 
-export default function Information() {
-  const theme = useTheme();
-  const [generalValue, setGeneralValue] = useState(0);
-  const [effectValue, setEffectValue] = useState(0);
-  const [lethalValue, setLethalValue] = useState(0);
-  const [isLoggedIn] = useState(true);
-
-  const DisplayGeneralTab = () => {
-    const content = [
-      // Actions per turn
-    <Box key="actions" maxHeight="750px" overflow="auto" sx={{ p: 2 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          mb: 3,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: 3,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Turn Structure
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          What you can do each turn in combat and encounters
-        </Typography>
-      </Paper>
-      
-      {/* Action Categories */}
-      <Stack spacing={3}>
-        {/* Actions Section */}
-        <Paper elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <Box sx={{ 
-            background: 'linear-gradient(90deg, #4CAF50 0%, #45a049 100%)',
-            p: 2,
-            color: 'white'
-          }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Typography variant="h5" fontWeight="bold">1</Typography>
-              </Box>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  One Action Per Turn
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Choose one primary action
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-          <Box sx={{ p: 3, bgcolor: alpha('#4CAF50', 0.05) }}>
-            <Grid container spacing={2}>
-              {[
-                { icon: '⚔️', title: 'Use a maneuver', desc: 'Perform tactical movement' },
-                { icon: '⚡', title: 'Activate an ability', desc: 'Use special powers or talents' },
-                { icon: '🎯', title: 'Perform a skill check', desc: 'Use your expertise' },
-                { icon: '🗡️', title: 'Perform a combat check', desc: 'Attack or defend' }
-              ].map((action, index) => (
-                <Grid item xs={12} sm={6} key={index}>
-                  <Paper elevation={1} sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    border: '2px solid transparent',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      border: '2px solid #4CAF50',
-                      transform: 'translateY(-2px)',
-                      boxShadow: 3
-                    }
-                  }}>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography variant="h4">{action.icon}</Typography>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {action.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {action.desc}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Paper>
-            
-        {/* Maneuvers Section */}
-        <Paper elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <Box sx={{ 
-            background: 'linear-gradient(90deg, #2196F3 0%, #1976D2 100%)',
-            p: 2,
-            color: 'white'
-          }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Typography variant="h5" fontWeight="bold">2</Typography>
-              </Box>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  Two Maneuvers Per Turn
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Tactical options and positioning (Page 98-100)
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-          <Box sx={{ p: 3, bgcolor: alpha('#2196F3', 0.05) }}>
-            <Grid container spacing={1.5}>
-              {[
-                { icon: '🎯', name: 'Aim' },
-                { icon: '🤝', name: 'Assist' },
-                { icon: '🛡️', name: 'Guarded Stance' },
-                { icon: '🔧', name: 'Interact with Environment' },
-                { icon: '🎒', name: 'Manage Gear' },
-                { icon: '🐎', name: 'Mount or Dismount' },
-                { icon: '🏃', name: 'Move' },
-                { icon: '🤲', name: 'Drop prone or Stand from prone' },
-                { icon: '⏳', name: 'Preparation' },
-                { icon: '✨', name: 'Other non-check actions' }
-              ].map((maneuver, index) => (
-                <Grid item xs={6} sm={4} md={3} key={index}>
-                  <Chip
-                    icon={<Typography>{maneuver.icon}</Typography>}
-                    label={maneuver.name}
-                    variant="outlined"
-                    sx={{
-                      width: '100%',
-                      height: 'auto',
-                      py: 1,
-                      px: 1,
-                      '& .MuiChip-label': {
-                        fontSize: '0.8rem',
-                        textAlign: 'center',
-                        whiteSpace: 'normal',
-                        lineHeight: 1.2
-                      },
-                      borderColor: '#2196F3',
-                      color: '#2196F3',
-                      '&:hover': {
-                        bgcolor: alpha('#2196F3', 0.1),
-                        borderColor: '#1976D2'
-                      }
-                    }}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Paper>
-            
-        {/* Incidentals Section */}
-        <Paper elevation={4} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <Box sx={{ 
-            background: 'linear-gradient(90deg, #FF9800 0%, #F57C00 100%)',
-            p: 2,
-            color: 'white'
-          }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Typography variant="h5" fontWeight="bold">3</Typography>
-              </Box>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  Three Incidentals Per Turn
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Quick, minor actions that don't require much effort
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-          <Box sx={{ p: 3, bgcolor: alpha('#FF9800', 0.05) }}>
-            <Stack spacing={2}>
-              {[
-                { icon: '💬', text: 'Speak to another character', type: 'Communication' },
-                { icon: '📦', text: 'Drop a held item or object', type: 'Item Management' },
-                { icon: '👀', text: 'Minor movements like looking behind you or peeking around a corner', type: 'Awareness' },
-                { icon: '⚡', text: 'Another action that takes very little time or has no measurable impact', type: 'Miscellaneous' }
-              ].map((incidental, index) => (
-                <Paper key={index} elevation={1} sx={{ 
-                  p: 2, 
-                  borderLeft: '4px solid #FF9800',
-                  bgcolor: 'white',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    bgcolor: alpha('#FF9800', 0.02),
-                    transform: 'translateX(4px)'
-                  }
-                }}>
-                  <Box display="flex" alignItems="flex-start" gap={2}>
-                    <Typography variant="h5" sx={{ mt: 0.5 }}>{incidental.icon}</Typography>
-                    <Box>
-                      <Chip 
-                        label={incidental.type} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: alpha('#FF9800', 0.1), 
-                          color: '#F57C00',
-                          mb: 0.5,
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                      <Typography variant="body2">{incidental.text}</Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-            
-            {/* Special Rule */}
-            <Paper elevation={2} sx={{ 
-              mt: 3, 
-              p: 2, 
-              bgcolor: alpha('#FF5722', 0.1),
-              border: '2px dashed #FF5722',
-              borderRadius: 2
-            }}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Typography variant="h5">⚠️</Typography>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold" color="#FF5722">
-                    Outside Your Turn
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    You may perform <strong>1 incidental</strong> from the above list during other players' turns
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    <Box key="stats" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          Character Maximums
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Ultimate limits for your character
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Combat Stats - Simple List Format */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              🛡️ Combat & Survival Stats
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                { icon: '🛡️', label: 'Defense', value: '4', desc: 'Maximum defensive rating' },
-                { icon: '💪', label: 'Soak', value: '10', desc: 'Damage reduction capacity' },
-                { icon: '❤️', label: 'Wounds', value: '150', desc: 'Physical health threshold' },
-                { icon: '🧠', label: 'Strain', value: '150', desc: 'Mental fatigue threshold' }
-              ].map((stat, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#f44336', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#f44336', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography variant="h5">{stat.icon}</Typography>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }}>
-                          {stat.label}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                          {stat.desc}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box 
-                      sx={{ 
-                        minWidth: 48, 
-                        height: 48, 
-                        borderRadius: '50%', 
-                        bgcolor: '#f44336',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Typography variant="h6" fontWeight="bold" color="white">
-                        {stat.value}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Character Progression - Simple Cards */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#2196F3', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #2196F3'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-              📈 Character Development Limits
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Characteristics */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#2196F3', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#2196F3', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Typography variant="h5">📊</Typography>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                        Characteristics
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                        Core attributes (Brawn, Agility, etc.)
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box 
-                    sx={{ 
-                      minWidth: 48, 
-                      height: 48, 
-                      borderRadius: '50%', 
-                      bgcolor: '#2196F3',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight="bold" color="white">
-                      6
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ mt: 1, pl: 5 }}>
-                  <Chip 
-                    label="Max 5 during character creation" 
-                    size="small" 
-                    sx={{
-                      bgcolor: alpha('#2196F3', 0.1),
-                      color: '#2196F3',
-                      fontSize: '0.75rem'
-                    }}
-                  />
-                </Box>
-              </Paper>
-                  
-              {/* Skills */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#2196F3', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#2196F3', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Typography variant="h5">🎯</Typography>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                        Skills
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                        Individual skill rank maximum
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box 
-                    sx={{ 
-                      minWidth: 48, 
-                      height: 48, 
-                      borderRadius: '50%', 
-                      bgcolor: '#2196F3',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight="bold" color="white">
-                      6
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ mt: 1, pl: 5 }}>
-                  <Chip 
-                    label="Max 2 during character creation" 
-                    size="small" 
-                    sx={{
-                      bgcolor: alpha('#2196F3', 0.1),
-                      color: '#2196F3',
-                      fontSize: '0.75rem'
-                    }}
-                  />
-                </Box>
-              </Paper>
-                  
-              {/* Quick Reference */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#4CAF50', 0.05),
-                  border: '1px dashed #4CAF50',
-                  borderRadius: 2
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="h5">💡</Typography>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                      Quick Reference
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                      These are the absolute maximum values your character can achieve
-                    </Typography>
-                  </Box>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    <Box key="rolls" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-          borderRadius: 2,
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" color="text.primary" gutterBottom>
-          🎲 Dice System & Spending Results
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Maximum dice limits and how to spend your roll results
-        </Typography>
-
-        {/* Dice Limits */}
-        <Stack spacing={1}>
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#4CAF50' }} />
-            <Typography variant="body2" fontWeight="medium">5 boost dice</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#f44336' }} />
-            <Typography variant="body2" fontWeight="medium">5 setback dice</Typography>
-          </Box>
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#9c27b0' }} />
-            <Typography variant="body2" fontWeight="medium">2 difficulty dice</Typography>
-          </Box>
-        </Stack>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Advantages in Combat */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#4CAF50', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #4CAF50'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-              ✅ Spending Advantages in Combat
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                {
-                  cost: '1',
-                  options: [
-                    'Recover strain',
-                    'Add a boost dice to the next ally\'s check',
-                    'Notice an important detail'
-                  ]
-                },
-                {
-                  cost: '2',
-                  options: [
-                    'Perform a free maneuver',
-                    'Add a setback dice to a target\'s next check'
-                  ]
-                },
-                {
-                  cost: '3',
-                  options: [
-                    'Remove 1 melee or ranged defense from target until end of turn',
-                    'Ignore environmental penalties',
-                    'Forgo damage to force the target to skip their next turn',
-                    'Gain 1 melee or ranged defense until the start of your next turn',
-                    'Disarm the target'
-                  ]
-                }
-              ].map((advantage, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#4CAF50', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#4CAF50', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Chip 
-                      label={advantage.cost} 
-                      sx={{ 
-                        bgcolor: '#4CAF50', 
-                        color: 'white', 
-                        fontWeight: 'bold',
-                        minWidth: 32,
-                        height: 32
-                      }} 
-                    />
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                      Advantage{advantage.cost !== '1' ? 's' : ''} Required
-                    </Typography>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 2 }}>
-                    {advantage.options.map((option, optIndex) => (
-                      <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                        • {option}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Advantages in Social Conflict */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#2196F3', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #2196F3'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-              💬 Spending Advantages in Social Conflict
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                {
-                  cost: '1',
-                  options: [
-                    'Recover strain',
-                    'Add a boost dice to the next ally\'s check',
-                    'Notice an important detail'
-                  ]
-                },
-                {
-                  cost: '2',
-                  options: [
-                    'Perform a free maneuver',
-                    'Add a setback dice to a target\'s next check',
-                    'Learn the strength or flaw of the target'
-                  ]
-                },
-                {
-                  cost: '3',
-                  options: [
-                    'Learn the desire or fear of the target',
-                    'Conceal your true goal',
-                    'Learn the target\'s true goal'
-                  ]
-                },
-                {
-                  cost: '4',
-                  options: [
-                    'Inflict a critical remark'
-                  ]
-                }
-              ].map((advantage, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#2196F3', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#2196F3', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Chip 
-                      label={advantage.cost} 
-                      sx={{ 
-                        bgcolor: '#2196F3', 
-                        color: 'white', 
-                        fontWeight: 'bold',
-                        minWidth: 32,
-                        height: 32
-                      }} 
-                    />
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                      Advantage{advantage.cost !== '1' ? 's' : ''} Required
-                    </Typography>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 2 }}>
-                    {advantage.options.map((option, optIndex) => (
-                      <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                        • {option}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Triumphs in Combat */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#FF9800', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #FF9800'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF9800' }}>
-              ⚡ Spending Triumphs in Combat
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                {
-                  cost: '1',
-                  options: [
-                    'Anything requiring advantages',
-                    'Add 1 difficulty to target\'s next check',
-                    'Upgrade an ally\'s next check',
-                    'Do something vital',
-                    'On initiative, perform a free maneuver',
-                    'Inflict a critical injury',
-                    'Damage the target\'s armor or weapon'
-                  ]
-                },
-                {
-                  cost: '2',
-                  options: [
-                    'Destroy the target\'s weapon (if possible)'
-                  ]
-                }
-              ].map((triumph, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#FF9800', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#FF9800', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Chip 
-                      label={triumph.cost} 
-                      sx={{ 
-                        bgcolor: '#FF9800', 
-                        color: 'white', 
-                        fontWeight: 'bold',
-                        minWidth: 32,
-                        height: 32
-                      }} 
-                    />
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800' }}>
-                      Triumph{triumph.cost !== '1' ? 's' : ''} Required
-                    </Typography>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 2 }}>
-                    {triumph.options.map((option, optIndex) => (
-                      <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                        • {option}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Triumphs in Social Conflict */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#9C27B0', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #9C27B0'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-              💫 Spending Triumphs in Social Conflict
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Paper 
-              elevation={1} 
-              sx={{ 
-                p: 2, 
-                borderRadius: 2,
-                bgcolor: alpha('#9C27B0', 0.03),
-                border: '1px solid',
-                borderColor: alpha('#9C27B0', 0.2)
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={2} mb={1}>
-                <Chip 
-                  label="1" 
-                  sx={{ 
-                    bgcolor: '#9C27B0', 
-                    color: 'white', 
-                    fontWeight: 'bold',
-                    minWidth: 32,
-                    height: 32
-                  }} 
-                />
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-                  Triumph Required
-                </Typography>
-              </Box>
-              <Stack spacing={0.5} sx={{ pl: 2 }}>
-                {[
-                  'Anything requiring advantages',
-                  'Add 1 difficulty to target\'s next check',
-                  'Upgrade an ally\'s next check',
-                  'Do something vital',
-                  'On initiative, perform a free maneuver',
-                  'Inflict a critical remark'
-                ].map((option, index) => (
-                  <Typography key={index} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • {option}
-                  </Typography>
-                ))}
-              </Stack>
-            </Paper>
-          </Box>
-        </Paper>
-              
-        {/* Threat in Combat */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              ❌ Spending Threat in Combat
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                {
-                  cost: '1',
-                  options: [
-                    'Suffer 1 strain',
-                    'Lose the benefits of a previous maneuver'
-                  ]
-                },
-                {
-                  cost: '2',
-                  options: [
-                    'Target may perform a maneuver free',
-                    'Add a boost dice to the target\'s next check',
-                    'The active player adds a setback dice to the next check made'
-                  ]
-                },
-                {
-                  cost: '3',
-                  options: [
-                    'Fall prone'
-                  ]
-                }
-              ].map((threat, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#f44336', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#f44336', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Chip 
-                      label={threat.cost} 
-                      sx={{ 
-                        bgcolor: '#f44336', 
-                        color: 'white', 
-                        fontWeight: 'bold',
-                        minWidth: 32,
-                        height: 32
-                      }} 
-                    />
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }}>
-                      Threat{threat.cost !== '1' ? 's' : ''} Required
-                    </Typography>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 2 }}>
-                    {threat.options.map((option, optIndex) => (
-                      <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                        • {option}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Threat in Social Conflict */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#e91e63', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #e91e63'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#e91e63' }}>
-              🗣️ Spending Threat in Social Conflict
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                {
-                  cost: '1',
-                  options: [
-                    'Suffer 1 strain'
-                  ]
-                },
-                {
-                  cost: '2',
-                  options: [
-                    'Add a boost dice to the target\'s next check',
-                    'The active player adds a setback dice to the next check made',
-                    'The active player reveals their own strength or flaw'
-                  ]
-                },
-                {
-                  cost: '3',
-                  options: [
-                    'The active player reveals their own desire or fear',
-                    'The active character reveals their own true goal'
-                  ]
-                }
-              ].map((threat, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    bgcolor: alpha('#e91e63', 0.03),
-                    border: '1px solid',
-                    borderColor: alpha('#e91e63', 0.2)
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Chip 
-                      label={threat.cost} 
-                      sx={{ 
-                        bgcolor: '#e91e63', 
-                        color: 'white', 
-                        fontWeight: 'bold',
-                        minWidth: 32,
-                        height: 32
-                      }} 
-                    />
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#e91e63' }}>
-                      Threat{threat.cost !== '1' ? 's' : ''} Required
-                    </Typography>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 2 }}>
-                    {threat.options.map((option, optIndex) => (
-                      <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                        • {option}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Despair in Combat & Social */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#9c27b0', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #9c27b0'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#9c27b0' }}>
-              💀 Spending Despair
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Combat Despair */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#9c27b0', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#9c27b0', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Chip 
-                    label="1" 
-                    sx={{ 
-                      bgcolor: '#9c27b0', 
-                      color: 'white', 
-                      fontWeight: 'bold',
-                      minWidth: 32,
-                      height: 32
-                    }} 
-                  />
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9c27b0' }}>
-                    Despair in Combat
-                  </Typography>
-                </Box>
-                <Stack spacing={0.5} sx={{ pl: 2 }}>
-                  {[
-                    'Anything requiring threats',
-                    'The active player\'s next check is 1 difficulty higher',
-                    'Damage the active player\'s weapon. If dual-wielding, damage the first weapon',
-                    'Damage the active player\'s armor'
-                  ].map((option, index) => (
-                    <Typography key={index} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                      • {option}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Social Despair */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#607d8b', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#607d8b', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Chip 
-                    label="1" 
-                    sx={{ 
-                      bgcolor: '#607d8b', 
-                      color: 'white', 
-                      fontWeight: 'bold',
-                      minWidth: 32,
-                      height: 32
-                    }} 
-                  />
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#607d8b' }}>
-                    Despair in Social Conflict
-                  </Typography>
-                </Box>
-                <Stack spacing={0.5} sx={{ pl: 2 }}>
-                  {[
-                    'Anything requiring threats',
-                    'The active player\'s next check is 1 difficulty higher',
-                    'The active player becomes distracted and loses their next turn',
-                    'Learn a false motivation facet of target'
-                  ].map((option, index) => (
-                    <Typography key={index} variant="body2" sx={{ fontSize: '0.85rem' }}>
-                      • {option}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    <Box key="keywords" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          🎭 Status Effects & Keywords
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Conditions that affect character actions and abilities
-        </Typography>
-      </Paper>
-      
-      {/* All Status Effects in One Section */}
-      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <Box sx={{ 
-          bgcolor: alpha('#ff6b6b', 0.1), 
-          p: 2, 
-          borderBottom: '3px solid #ff6b6b'
-        }}>
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#ff6b6b' }}>
-            📋 All Status Effects & Conditions
-          </Typography>
-        </Box>
-        <Box sx={{ p: 2 }}>
-          <Stack spacing={2}>
-            {[
-              // Debilitating Conditions
-              {
-                name: 'STAGGERED',
-                effect: 'You may not use your action while staggered, including downgrading to a maneuver.',
-                color: '#f44336',
-                severity: 'Severe'
-              },
-              {
-                name: 'IMMOBILIZED',
-                effect: 'You may not use any maneuvers, including any that may be part of an extra effect.',
-                color: '#f44336',
-                severity: 'Severe'
-              },
-              {
-                name: 'BLIND',
-                effect: 'You add 3 difficulty to Perception and Vigilance checks and 2 to all other checks.',
-                color: '#f44336',
-                severity: 'Severe'
-              },
-              {
-                name: 'DEAF',
-                effect: 'You add 3 difficulty to Perception checks based on sound.',
-                color: '#f44336',
-                severity: 'Severe'
-              },
-              // Moderate Conditions
-              {
-                name: 'DISORIENTED',
-                effect: 'You add one setback dice to all checks while Disoriented.',
-                color: '#FF9800',
-                severity: 'Moderate'
-              },
-              {
-                name: 'ENCUMBERED',
-                effect: 'For each point over the encumbrance threshold, that player receives a setback dice. While encumbered at or above brawn, the player\'s free maneuver is lost.',
-                color: '#FF9800',
-                severity: 'Moderate'
-              },
-              {
-                name: 'GRAPPLE',
-                effect: 'The target must succeed on a contested Brawl check to resist being grabbed. While grappled, you are immobilized. At the end of each of your turns, you may perform another contested Brawl check to escape.',
-                color: '#FF9800',
-                severity: 'Moderate'
-              },
-              {
-                name: 'PRONE',
-                effect: 'Melee attacks add a boost dice and ranged attacks add a setback dice when targeting a prone target.',
-                color: '#FF9800',
-                severity: 'Moderate'
-              },
-              // Environmental Effects
-              {
-                name: 'COVER',
-                effect: 'While in cover, you receive 1 ranged defense and any attempting perception against you adds 1 setback dice.',
-                color: '#2196F3',
-                severity: 'Beneficial'
-              },
-              {
-                name: 'DIFFICULT TERRAIN',
-                effect: 'While traversing difficult terrain, it requires double the maneuvers to move.',
-                color: '#2196F3',
-                severity: 'Environmental'
-              },
-              {
-                name: 'GRAVITY',
-                effect: 'Stronger gravity adds 1-3 setback dice to all brawn and coordination checks, excluding resilience. Weaker gravity adds boost dice instead.',
-                color: '#2196F3',
-                severity: 'Environmental'
-              },
-              {
-                name: 'HOLDING BREATH',
-                effect: 'You can hold your breath for brawn rounds.',
-                color: '#2196F3',
-                severity: 'Environmental'
-              },
-              // Dangerous Conditions
-              {
-                name: 'SUFFOCATING',
-                effect: 'You receive 3 strain damage each round. If you exceed your strain threshold, you receive a critical injury every round until you either stop suffocating or die.',
-                color: '#d32f2f',
-                severity: 'Dangerous'
-              },
-              {
-                name: 'CRITICAL REMARK',
-                effect: 'Inflict 5 strain to the target. This can be done in social conflict only.',
-                color: '#d32f2f',
-                severity: 'Dangerous'
-              }
-            ].map((condition, index) => (
-              <Paper 
-                key={index}
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha(condition.color, 0.03),
-                  border: '1px solid',
-                  borderColor: alpha(condition.color, 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={2}>
-                  <Box sx={{ flex: 1 }}>
-                    <Box display="flex" alignItems="center" gap={2} mb={1}>
-                      <Chip 
-                        label={condition.name} 
-                        sx={{ 
-                          bgcolor: condition.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.75rem'
-                        }} 
-                      />
-                      <Chip 
-                        label={condition.severity} 
-                        size="small"
-                        variant="outlined"
-                        sx={{ 
-                          color: condition.color,
-                          borderColor: condition.color,
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.primary" sx={{ fontSize: '0.85rem' }}>
-                      {condition.effect}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Paper>
-            ))}
-          </Stack>
-          
-          {/* Quick Reference Guide */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              mt: 3, 
-              p: 2, 
-              bgcolor: alpha('#4CAF50', 0.05),
-              border: '1px dashed #4CAF50',
-              borderRadius: 2
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Typography variant="h5">💡</Typography>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                Quick Reference Guide
-              </Typography>
-            </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#f44336', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" fontWeight="bold" sx={{ color: '#f44336' }}>
-                    SEVERE
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    Major penalties or action restrictions
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#FF9800', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" fontWeight="bold" sx={{ color: '#FF9800' }}>
-                    MODERATE
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    Minor penalties or limitations
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                    ENVIRONMENTAL
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    Situational effects from surroundings
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#d32f2f', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" fontWeight="bold" sx={{ color: '#d32f2f' }}>
-                    DANGEROUS
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    Life-threatening conditions
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Box>
-      </Paper>
-    </Box>,
-
-    <Box key="combat" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #ff4757 0%, #ff3742 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          ⚔️ Combat System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Movement, attack difficulties, and special combat rules
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Movement & Range */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#2196F3', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #2196F3'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-              🏃 Movement & Range System
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Movement Requirements */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#4CAF50', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#4CAF50', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Chip 
-                    label="1 MANEUVER" 
-                    sx={{ 
-                      bgcolor: '#4CAF50', 
-                      color: 'white', 
-                      fontWeight: 'bold',
-                      fontSize: '0.75rem'
-                    }} 
-                  />
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                    Movement Requirements
-                  </Typography>
-                </Box>
-                <Stack spacing={0.5} sx={{ pl: 2 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Engaged ↔ Short range
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Short ↔ Medium range
-                  </Typography>
-                </Stack>
-              </Paper>
-                  
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#FF9800', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#FF9800', 0.2)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Chip 
-                    label="2 MANEUVERS" 
-                    sx={{ 
-                      bgcolor: '#FF9800', 
-                      color: 'white', 
-                      fontWeight: 'bold',
-                      fontSize: '0.75rem'
-                    }} 
-                  />
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800' }}>
-                    Movement Requirements
-                  </Typography>
-                </Box>
-                <Stack spacing={0.5} sx={{ pl: 2 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Medium ↔ Long range
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Long ↔ Extreme range
-                  </Typography>
-                </Stack>
-              </Paper>
-                  
-              {/* Range Distances */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#2196F3', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#2196F3', 0.2)
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }} gutterBottom>
-                  📏 Range Distances
-                </Typography>
-                <Grid container spacing={1}>
-                  {[
-                    { name: 'Engaged', distance: '0-3 feet' },
-                    { name: 'Short', distance: '4-33 feet' },
-                    { name: 'Medium', distance: '34-144 feet' },
-                    { name: 'Long', distance: '145-500 feet' },
-                    { name: 'Extreme', distance: '501+ feet' }
-                  ].map((range, index) => (
-                    <Grid item xs={6} sm={4} md={2.4} key={index}>
-                      <Box 
-                        textAlign="center" 
-                        p={1} 
-                        sx={{ 
-                          bgcolor: alpha('#2196F3', 0.1), 
-                          borderRadius: 1,
-                          minHeight: '60px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.8rem' }}>
-                          {range.name}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                          {range.distance}
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                
-        {/* Attack Difficulties */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              🎯 Attack Difficulties by Range
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Melee Attacks */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#f44336', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#f44336', 0.2)
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  🗡️ Melee Attack Difficulty
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { range: 'Engaged', difficulty: '2', color: '#f44336' },
-                    { range: 'Short (with reach)', difficulty: '3', color: '#f44336' },
-                    { range: 'Medium+', difficulty: 'N/A', color: '#9e9e9e', disabled: true }
-                  ].map((attack, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1} 
-                      sx={{ 
-                        bgcolor: alpha(attack.color, attack.disabled ? 0.05 : 0.1), 
-                        borderRadius: 1,
-                        minHeight: '40px'
-                      }}
-                    >
-                      <Typography 
-                        variant="body2" 
-                        fontWeight="medium" 
-                        sx={{ 
-                          fontSize: '0.85rem',
-                          color: attack.disabled ? 'text.secondary' : 'text.primary'
-                        }}
-                      >
-                        {attack.range}
-                      </Typography>
-                      <Chip 
-                        label={attack.difficulty} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: attack.disabled ? 'transparent' : attack.color, 
-                          color: attack.disabled ? attack.color : 'white', 
-                          fontWeight: 'bold',
-                          ...(attack.disabled && { border: `1px solid ${attack.color}` })
-                        }} 
-                        variant={attack.disabled ? "outlined" : "filled"}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Ranged Attacks */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#f44336', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#f44336', 0.2)
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  🏹 Ranged Attack Difficulty
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { range: 'Engaged (1-handed)', difficulty: '2', color: '#f44336' },
-                    { range: 'Engaged (2-handed)', difficulty: '3', color: '#f44336' },
-                    { range: 'Short', difficulty: '1', color: '#4CAF50' },
-                    { range: 'Medium', difficulty: '2', color: '#f44336' },
-                    { range: 'Long', difficulty: '3', color: '#f44336' },
-                    { range: 'Extreme', difficulty: '4', color: '#d32f2f' }
-                  ].map((attack, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1} 
-                      sx={{ 
-                        bgcolor: alpha(attack.color, 0.1), 
-                        borderRadius: 1,
-                        minHeight: '40px'
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>
-                        {attack.range}
-                      </Typography>
-                      <Chip 
-                        label={attack.difficulty} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: attack.color, 
-                          color: 'white', 
-                          fontWeight: 'bold' 
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                
-        {/* Dual Wielding */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#9C27B0', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #9C27B0'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-              ⚔️ Dual Wielding Rules
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Paper 
-              elevation={1} 
-              sx={{ 
-                p: 2, 
-                borderRadius: 2,
-                bgcolor: alpha('#9C27B0', 0.03),
-                border: '1px solid',
-                borderColor: alpha('#9C27B0', 0.2)
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }} gutterBottom>
-                📋 Step-by-Step Process
-              </Typography>
-              <Stack spacing={1}>
-                {[
-                  "Determine which weapon will attack first",
-                  "Consider both weapons' skills",
-                  "Take the lowest skill",
-                  "Consider both weapons' Characteristics", 
-                  "Take the lowest Characteristic",
-                  "Consider both weapons' attack difficulty",
-                  "Take the higher difficulty and add 1",
-                  "Attack",
-                  "Spend two advantages to deal the other weapon's damage (optional)"
-                ].map((step, index) => (
-                  <Box 
-                    key={index}
-                    display="flex" 
-                    alignItems="center" 
-                    gap={2} 
-                    p={1} 
-                    sx={{ 
-                      bgcolor: alpha('#9C27B0', 0.05), 
-                      borderRadius: 1,
-                      minHeight: '40px'
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 24, 
-                        height: 24, 
-                        borderRadius: '50%', 
-                        bgcolor: '#9C27B0',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        flexShrink: 0
-                      }}
-                    >
-                      {index + 1}
-                    </Box>
-                    <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                      {step}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </Paper>
-          </Box>
-        </Paper>
-              
-        {/* Critical Injuries */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#d32f2f', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #d32f2f'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#d32f2f' }}>
-              💥 Critical Injury Rules
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#d32f2f', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#d32f2f', 0.2)
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#d32f2f' }} gutterBottom>
-                  ⚡ Application Requirements
-                </Typography>
-                <Stack spacing={0.5} sx={{ pl: 1 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Attack must deal more damage than target's soak
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Triumphs can apply critical injuries on any successful hit
-                  </Typography>
-                </Stack>
-              </Paper>
-              
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2,
-                  bgcolor: alpha('#d32f2f', 0.03),
-                  border: '1px solid',
-                  borderColor: alpha('#d32f2f', 0.2)
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#d32f2f' }} gutterBottom>
-                  📊 Multiple Injuries & Thresholds
-                </Typography>
-                <Stack spacing={0.5} sx={{ pl: 1 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Each additional critical injury in one attack: +10 to roll
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                    • Exceeding wound threshold: automatic critical injury (once per combat)
-                  </Typography>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#4CAF50', 0.05),
-            border: '1px dashed #4CAF50',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                Combat Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Short range is optimal for most ranged weapons (Difficulty 1)
-                • Engaged range penalizes ranged attacks but favors melee
-                • Dual wielding uses lowest stats but higher difficulty
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    <Box key="hacking" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg,rgb(0, 124, 66) 0%,rgb(3, 136, 69) 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          💻 Hacking System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Digital infiltration • Terminal access required • Shares combat initiative
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Hacking Process */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#00ff88', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid rgb(0, 124, 66)'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#00cc66' }}>
-              🔓 Hacking Process
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Step 1: Access System */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#00ff88', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#00ff88', 0.3)}`
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 2, 
-                      bgcolor: '#00ff88',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1rem',
-                      flexShrink: 0
-                    }}
-                  >
-                    1
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" color="#00cc66">
-                      Access System
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                      Computers skill check based on system security level
-                    </Typography>
-                  </Box>
-                </Box>
-                  
-                <Typography variant="body2" fontWeight="bold" sx={{ color: '#00cc66', mb: 1 }}>
-                  Security Levels:
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { name: 'Unsecured/Password Known', diff: 0, color: '#4CAF50' },
-                    { name: 'Public Terminal, PAD, Personal Computer', diff: 1, color: '#8BC34A' },
-                    { name: 'Small Business Server', diff: 2, color: '#FFC107' },
-                    { name: 'Government Network/Corporate Server', diff: 3, color: '#FF9800' },
-                    { name: 'Hacker Darknet or Military Server', diff: 4, color: '#FF5722' },
-                    { name: 'Megacorp Core System, Intelligence Agency', diff: 5, color: '#D32F2F' }
-                  ].map((system, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1} 
-                      sx={{ 
-                        bgcolor: alpha(system.color, 0.1), 
-                        borderRadius: 1,
-                        border: `1px solid ${alpha(system.color, 0.3)}`
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        {system.name}
-                      </Typography>
-                      <Chip 
-                        label={`Diff ${system.diff}`} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: system.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Step 2: Override Security */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#00ff88', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#00ff88', 0.3)}`
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 2, 
-                      bgcolor: '#00ff88',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1rem',
-                      flexShrink: 0
-                    }}
-                  >
-                    2
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" color="#00cc66">
-                      Override Security Programs
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                      Difficulty 2 Computers check
-                    </Typography>
-                  </Box>
-                </Box>
-              </Paper>
-                  
-              {/* Step 3: System Control */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#00ff88', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#00ff88', 0.3)}`
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 2, 
-                      bgcolor: '#00ff88',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1rem',
-                      flexShrink: 0
-                    }}
-                  >
-                    3
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" fontWeight="bold" color="#00cc66">
-                      System Control
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                      Unlocks new maneuvers
-                    </Typography>
-                  </Box>
-                </Box>
-                <Stack spacing={0.5} sx={{ pl: 2, mt: 1 }}>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    • Enact Command
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    • Activate Programs
-                  </Typography>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                  
-        {/* Defending Against Hacks */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              🛡️ Defending Against Hacks
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Trace User */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.2)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  🔍 Step 1: Trace User
-                </Typography>
-                <Typography variant="body2" sx={{ fontSize: '0.85rem', mb: 1 }}>
-                  Contested Computers check to locate the hacker
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { success: '1st', info: 'Hacker\'s level known, Lockout -1 difficulty' },
-                    { success: '2nd', info: 'Group associations known, Lockout -1 difficulty' },
-                    { success: '3rd', info: 'Exact location known, Lockout -1 difficulty' },
-                    { success: '4th', info: 'Access point identified, Lockout -1 difficulty' },
-                    { success: '5th+', info: 'Personal data revealed (name, age, etc.)' }
-                  ].map((trace, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      alignItems="flex-start" 
-                      gap={1}
-                      sx={{ 
-                        p: 1, 
-                        bgcolor: alpha('#f44336', 0.05),
-                        borderRadius: 1
-                      }}
-                    >
-                      <Chip 
-                        label={trace.success} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: '#f44336', 
-                          color: 'white',
-                          minWidth: 40,
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        {trace.info}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Lockout */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.2)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  🚫 Step 2: Lockout
-                </Typography>
-                <Typography variant="body2" sx={{ fontSize: '0.85rem', mb: 1 }}>
-                  Remove hacker from system
-                </Typography>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#f44336', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    On Success:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    • Hacker loses system access<br />
-                    • Re-entry difficulty +2 (if allowed)
-                  </Typography>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Security Programs */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#FF9800', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #FF9800'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF9800' }}>
-              🔒 Security Programs
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {[
-                { 
-                  name: 'Firewall', 
-                  strength: 3, 
-                  failure: 'None',
-                  icon: '🛡️',
-                  color: '#2196F3'
-                },
-                { 
-                  name: 'Sentry', 
-                  strength: 2, 
-                  failure: 'Sysops notified, automatic Trace success',
-                  icon: '👁️',
-                  color: '#FF9800'
-                },
-                { 
-                  name: 'Gate', 
-                  strength: 2, 
-                  failure: 'Lose system access',
-                  icon: '🚪',
-                  color: '#f44336'
-                },
-                { 
-                  name: 'Gate (Pop-up)', 
-                  strength: 1, 
-                  failure: '2 strain damage + existential crisis',
-                  icon: '📧',
-                  color: '#9C27B0'
-                }
-              ].map((program, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha(program.color, 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(program.color, 0.2)}`
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Typography variant="h5">{program.icon}</Typography>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: program.color }}>
-                        {program.name}
-                      </Typography>
-                      <Chip 
-                        label={`Strength ${program.strength}`} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: program.color, 
-                          color: 'white',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                    <strong>Failure:</strong> {program.failure}
-                  </Typography>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Spending Results */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#4CAF50', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #4CAF50'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-              🎲 Spending Roll Results
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Advantages */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#4CAF50', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#4CAF50', 0.2)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }} gutterBottom>
-                  ✅ Advantages
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    {
-                      cost: 1,
-                      options: [
-                        'Add boost dice to next Computers check',
-                        'Delay security program reactivation (Hacker)'
-                      ]
-                    },
-                    {
-                      cost: 2,
-                      options: [
-                        'Extra Enact Command as incidental',
-                        'Add setback to next Trace (Hacker)',
-                        'Modify program: +1 setback to Override (Defender)'
-                      ]
-                    },
-                    {
-                      cost: 3,
-                      options: [
-                        'Inflict 3 strain damage',
-                        'Create backdoor access (Hacker)',
-                        'Auto-succeed on Trace (Defender)'
-                      ]
-                    }
-                  ].map((advantage, index) => (
-                    <Box 
-                      key={index}
-                      sx={{ 
-                        p: 1.5, 
-                        bgcolor: alpha('#4CAF50', 0.05),
-                        borderRadius: 1,
-                        border: `1px solid ${alpha('#4CAF50', 0.2)}`
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                        <Chip 
-                          label={advantage.cost} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: '#4CAF50', 
-                            color: 'white',
-                            fontWeight: 'bold',
-                            minWidth: 24,
-                            height: 24
-                          }} 
-                        />
-                        <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
-                          Advantage{advantage.cost > 1 ? 's' : ''}
-                        </Typography>
-                      </Box>
-                      <Stack spacing={0.5} sx={{ pl: 2 }}>
-                        {advantage.options.map((option, optIndex) => (
-                          <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.8rem' }}>
-                            • {option}
-                          </Typography>
-                        ))}
-                      </Stack>
-                    </Box>
-                  ))}
-
-                  {/* Triumph */}
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      bgcolor: alpha('#FF9800', 0.05),
-                      borderRadius: 1,
-                      border: `1px solid ${alpha('#FF9800', 0.2)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                      <Chip 
-                        label="⚡" 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: '#FF9800', 
-                          color: 'white',
-                          fontWeight: 'bold',
-                          minWidth: 24,
-                          height: 24
-                        }} 
-                      />
-                      <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
-                        Triumph
-                      </Typography>
-                    </Box>
-                    <Stack spacing={0.5} sx={{ pl: 2 }}>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Permanently disable program (Hacker)</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Cancel successful Trace (Hacker)</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Add strength 3 backup firewall (Defender)</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Remove backdoor access (Defender)</Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Paper>
-                      
-              {/* Threats */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.2)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  ❌ Threats
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    {
-                      cost: 1,
-                      options: [
-                        'Setback to next Computers check',
-                        'Two setbacks to non-Computers checks'
-                      ]
-                    },
-                    {
-                      cost: 2,
-                      options: [
-                        'Only action OR maneuver next turn (Hacker)',
-                        'Double Trace success next time (Defender)',
-                        'Reduce system strength to min 1 (Defender)'
-                      ]
-                    },
-                    {
-                      cost: 3,
-                      options: [
-                        'All users aware of hack (Hacker)',
-                        'Accidental backdoor created (Defender)'
-                      ]
-                    }
-                  ].map((threat, index) => (
-                    <Box 
-                      key={index}
-                      sx={{ 
-                        p: 1.5, 
-                        bgcolor: alpha('#f44336', 0.05),
-                        borderRadius: 1,
-                        border: `1px solid ${alpha('#f44336', 0.2)}`
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                        <Chip 
-                          label={threat.cost} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: '#f44336', 
-                            color: 'white',
-                            fontWeight: 'bold',
-                            minWidth: 24,
-                            height: 24
-                          }} 
-                        />
-                        <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
-                          Threat{threat.cost > 1 ? 's' : ''}
-                        </Typography>
-                      </Box>
-                      <Stack spacing={0.5} sx={{ pl: 2 }}>
-                        {threat.options.map((option, optIndex) => (
-                          <Typography key={optIndex} variant="body2" sx={{ fontSize: '0.8rem' }}>
-                            • {option}
-                          </Typography>
-                        ))}
-                      </Stack>
-                    </Box>
-                  ))}
-
-                  {/* Despair */}
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      bgcolor: alpha('#9c27b0', 0.05),
-                      borderRadius: 1,
-                      border: `1px solid ${alpha('#9c27b0', 0.2)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                      <Chip 
-                        label="💀" 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: '#9c27b0', 
-                          color: 'white',
-                          fontWeight: 'bold',
-                          minWidth: 24,
-                          height: 24
-                        }} 
-                      />
-                      <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
-                        Despair
-                      </Typography>
-                    </Box>
-                    <Stack spacing={0.5} sx={{ pl: 2 }}>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Allow auto-success on Trace (Hacker)</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Wrong target traced (Defender)</Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                      
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#2196F3', 0.05),
-            border: '1px dashed #2196F3',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                Hacking Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Higher security systems require more difficult Computers checks
-                • Successful traces make lockout easier for defenders
-                • Triumphs can permanently disable security programs
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    // Healing
-    <Box key="healing" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          🏥 Healing & Recovery System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Medicine checks, automatic healing, and recovery mechanics
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Medicine Check Applications */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#4CAF50', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #4CAF50'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-              💉 Medicine Check Applications
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Daily Medicine Check */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#4CAF50', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#4CAF50', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }} gutterBottom>
-                  📅 Daily Medicine Check
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem', mb: 1 }}>
-                  One attempt per day • Resets at dawn
-                </Typography>
-                
-                <Stack spacing={1}>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#4CAF50', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      🩹 Healing Wounds & Strain
-                    </Typography>
-                    <Stack spacing={0.5}>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Each Success = 1 wound healed</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Each Advantage = 1 strain healed</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Triumph = +3 wounds or strain</Typography>
-                    </Stack>
-                  </Box>
-                  
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#FF9800', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      ⚠️ Critical Injuries
-                    </Typography>
-                    <Stack spacing={0.5}>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Success = Injury removed</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Failure = No effect</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#FF9800', fontWeight: 'medium' }}>
-                        Failed attempts cannot be retried for 1 week
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Paper>
-              
-              {/* Revitalization Check */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#2196F3', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#2196F3', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }} gutterBottom>
-                  ⚡ Revitalization (Separate Check)
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem', mb: 1 }}>
-                  Remove exhaustion • Does not use daily medicine check
-                </Typography>
-                
-                <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Daily Exhaustion Removal
-                  </Typography>
-                  <Stack spacing={0.5}>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Difficulty = Exhaustion level being removed</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• One level per day maximum</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Success removes the targeted level</Typography>
-                  </Stack>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Medicine Check Difficulties */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#FF9800', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #FF9800'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF9800' }}>
-              🎯 Medicine Check Difficulties
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Base Difficulties */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#FF9800', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#FF9800', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800' }} gutterBottom>
-                  📊 Base Difficulties by Condition
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { condition: 'At half or lower wounds', difficulty: 1, color: '#4CAF50' },
-                    { condition: 'At more than half wounds', difficulty: 2, color: '#FF9800' },
-                    { condition: 'Over wound threshold', difficulty: 3, color: '#f44336' },
-                    { condition: 'Critical injury', difficulty: 'Variable', color: '#2196F3', note: 'Based on injury severity' }
-                  ].map((item, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1.5} 
-                      sx={{ 
-                        bgcolor: alpha(item.color, 0.1), 
-                        borderRadius: 1,
-                        border: `1px solid ${alpha(item.color, 0.3)}`
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>
-                          {item.condition}
-                        </Typography>
-                        {item.note && (
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                            {item.note}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Chip 
-                        label={`Diff ${item.difficulty}`} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: item.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Difficulty Modifiers */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  ⬆️ Difficulty Modifiers
-                </Typography>
-                <Stack spacing={1}>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#f44336', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>No Medical Tools</Typography>
-                    <Typography variant="body2" sx={{ color: '#f44336', fontSize: '0.8rem' }}>+1 Difficulty</Typography>
-                  </Box>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#f44336', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>Healing Yourself</Typography>
-                    <Typography variant="body2" sx={{ color: '#f44336', fontSize: '0.8rem' }}>+2 Difficulty</Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Automatic Healing Methods */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#2196F3', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #2196F3'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-              🔄 Automatic Healing Methods
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Post-Combat Recovery */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#2196F3', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#2196F3', 0.3)}`
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 2, 
-                      bgcolor: '#2196F3',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      flexShrink: 0
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight="bold">🛡️</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                      Post-Combat Strain Recovery
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                      After each combat encounter
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Difficulty 0 Cool or Discipline Check
-                  </Typography>
-                  <Stack spacing={0.5}>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Each Success = 1 strain recovered</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• No failure penalties</Typography>
-                  </Stack>
-                </Box>
-              </Paper>
-                  
-              {/* Painkillers */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#9C27B0', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#9C27B0', 0.3)}`
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 2, 
-                      bgcolor: '#9C27B0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      flexShrink: 0
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight="bold">💊</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-                      Painkiller Usage
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                      Diminishing returns system
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#9C27B0', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Healing Formula: 5 - (times used)
-                  </Typography>
-                  <Stack spacing={0.5}>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• 1st use: 4 healing</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• 2nd use: 3 healing</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• 5th+ use: 0 healing</Typography>
-                    <Typography variant="body2" sx={{ color: '#9C27B0', fontWeight: 'medium', fontSize: '0.8rem', mt: 0.5 }}>
-                      Resets after 24 hours from first use
-                    </Typography>
-                  </Stack>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                  
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#4CAF50', 0.05),
-            border: '1px dashed #4CAF50',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                Healing Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Daily medicine checks reset at dawn
-                • Critical injury failures have a 1-week cooldown
-                • Post-combat strain recovery is automatic and risk-free
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    // Time
-    <Box key="time" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          ⏰ Time & Sanity System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Room-based time tracking • Time dilation effects • Sanity degradation
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Time Passage Mechanics */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#673AB7', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #673AB7'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#673AB7' }}>
-              🚪 Time Passage Mechanics
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Base Room Times */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#673AB7', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#673AB7', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#673AB7' }} gutterBottom>
-                  🏠 Base Room Traversal Times
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { size: 'Small/Medium Room', time: '1 minute', color: '#4CAF50' },
-                    { size: 'Large Room', time: '2 minutes', color: '#FF9800' },
-                    { size: 'Combat Round', time: '1 minute', color: '#f44336', note: 'Regardless of room size' }
-                  ].map((room, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1.5} 
-                      sx={{ 
-                        bgcolor: alpha(room.color, 0.1), 
-                        borderRadius: 1,
-                        border: `1px solid ${alpha(room.color, 0.3)}`
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>
-                          {room.size}
-                        </Typography>
-                        {room.note && (
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                            {room.note}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Chip 
-                        label={room.time} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: room.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Time Modifiers */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#2196F3', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#2196F3', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }} gutterBottom>
-                  ⚙️ Time Modification Factors
-                </Typography>
-                <Stack spacing={1}>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Actions in Room
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>+1 minute per action performed</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                      Simultaneous actions by different players don't stack
-                    </Typography>
-                  </Box>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#FF9800', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Level Time Dilation
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>Multiplier varies by area/level</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                      Range: 0.5x (twice as slow) to 2x (twice as fast)
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Time Calculation Example */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#9C27B0', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #9C27B0'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-              🧮 Time Calculation Example
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Paper 
-              elevation={1} 
-              sx={{ 
-                p: 2, 
-                bgcolor: alpha('#9C27B0', 0.03),
-                borderRadius: 2,
-                border: `1px solid ${alpha('#9C27B0', 0.3)}`
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }} gutterBottom>
-                📋 Step-by-Step Calculation
-              </Typography>
-              <Stack spacing={1}>
-                {[
-                  { step: '1', desc: 'Small room base time', value: '1 minute' },
-                  { step: '2', desc: 'Examine object action', value: '+1 minute' },
-                  { step: '3', desc: 'Search room action', value: '+1 minute' },
-                  { step: '4', desc: 'Subtotal before dilation', value: '3 minutes' },
-                  { step: '5', desc: 'Apply 1.5x time dilation', value: '×1.5 = 4.5 minutes' },
-                  { step: '6', desc: 'Round normally', value: '5 minutes total' }
-                ].map((calc, index) => (
-                  <Box 
-                    key={index}
-                    display="flex" 
-                    alignItems="center" 
-                    gap={2} 
-                    p={1.5} 
-                    sx={{ 
-                      bgcolor: alpha('#9C27B0', 0.05), 
-                      borderRadius: 1,
-                      border: `1px solid ${alpha('#9C27B0', 0.2)}`
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 24, 
-                        height: 24, 
-                        borderRadius: '50%', 
-                        bgcolor: '#9C27B0',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        flexShrink: 0
-                      }}
-                    >
-                      {calc.step}
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>{calc.desc}</Typography>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: '#9C27B0', fontSize: '0.8rem' }}>
-                        {calc.value}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            </Paper>
-          </Box>
-        </Paper>
-              
-        {/* Sanity Check System */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              🧠 Time-Based Sanity Degradation
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Sanity Check Requirements */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  ⚠️ Sanity Check Trigger
-                </Typography>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#f44336', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Required on levels with Survival Difficulty ≥ 1
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    Must check periodically based on danger level
-                  </Typography>
-                </Box>
-              </Paper>
-              
-              {/* Sanity Check Intervals */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#f44336', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#f44336', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#f44336' }} gutterBottom>
-                  ⏱️ Check Intervals by Survival Difficulty
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { level: 1, time: '4 hours', color: '#4CAF50' },
-                    { level: 2, time: '2 hours', color: '#8BC34A' },
-                    { level: 3, time: '1 hour', color: '#FFC107' },
-                    { level: 4, time: '30 minutes', color: '#FF9800' },
-                    { level: 5, time: '15 minutes', color: '#f44336' }
-                  ].map((difficulty, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1.5} 
-                      sx={{ 
-                        bgcolor: alpha(difficulty.color, 0.1), 
-                        borderRadius: 1,
-                        border: `1px solid ${alpha(difficulty.color, 0.3)}`
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>
-                        Survival Difficulty {difficulty.level}
-                      </Typography>
-                      <Chip 
-                        label={difficulty.time} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: difficulty.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-                
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#673AB7', 0.05),
-            border: '1px dashed #673AB7',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#673AB7' }}>
-                Time Tracking Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Base room time + actions + time dilation = total time
-                • Higher survival difficulty = more frequent sanity checks
-                • Combat rounds are always 1 minute regardless of room size
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    // Durability and Repairs
-    <Box key="durability" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          mb: 4, 
-          borderRadius: 3, 
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          🔧 Durability & Repair System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Equipment degradation effects • Repair mechanics • Cost calculations
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* Weapon Durability */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#f44336', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #f44336'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-              ⚔️ Weapon Durability Effects
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={1}>
-              {[
-                { 
-                  durability: 'Maximum', 
-                  effect: 'No effects', 
-                  color: '#4CAF50',
-                  severity: 'Perfect'
-                },
-                { 
-                  durability: 'Lost 1', 
-                  effect: 'Add 1 setback dice to all weapon checks', 
-                  color: '#8BC34A',
-                  severity: 'Minor Wear'
-                },
-                { 
-                  durability: 'Lost 2', 
-                  effect: 'Increase difficulty by 1 when using weapon', 
-                  color: '#FFC107',
-                  severity: 'Moderate'
-                },
-                { 
-                  durability: 'Lost 3', 
-                  effect: 'Upgrade 1 difficulty dice when using weapon', 
-                  color: '#FF9800',
-                  severity: 'Heavy'
-                },
-                { 
-                  durability: 'Lost 4', 
-                  effect: 'Weapon becomes unwieldy - treat skill as tier 0', 
-                  color: '#FF5722',
-                  severity: 'Critical'
-                },
-                { 
-                  durability: 'Lost 5', 
-                  effect: 'Weapon breaks - loses all effects and bonuses', 
-                  color: '#D32F2F',
-                  severity: 'Broken'
-                }
-              ].map((weapon, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha(weapon.color, 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(weapon.color, 0.3)}`
-                  }}
-                >
-                  <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-                    <Box sx={{ flex: 1 }}>
-                      <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: weapon.color }}>
-                          {weapon.durability}
-                        </Typography>
-                        <Chip 
-                          label={weapon.severity} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: weapon.color, 
-                            color: 'white',
-                            fontSize: '0.7rem'
-                          }} 
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.primary" sx={{ fontSize: '0.85rem' }}>
-                        {weapon.effect}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Armor Durability */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#2196F3', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #2196F3'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-              🛡️ Armor Durability Effects
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={1}>
-              {[
-                { 
-                  durability: 'Maximum', 
-                  effect: 'No effects', 
-                  color: '#4CAF50',
-                  severity: 'Perfect'
-                },
-                { 
-                  durability: 'Lost 1', 
-                  effect: 'Add 1 setback dice to all Brawn and Agility checks', 
-                  color: '#8BC34A',
-                  severity: 'Minor Wear'
-                },
-                { 
-                  durability: 'Lost 2', 
-                  effect: 'Lose 1 defense and 1 soak', 
-                  color: '#FFC107',
-                  severity: 'Moderate'
-                },
-                { 
-                  durability: 'Lost 3', 
-                  effect: 'Increase difficulty of all Brawn and Agility checks by 1', 
-                  color: '#FF9800',
-                  severity: 'Heavy'
-                },
-                { 
-                  durability: 'Lost 4', 
-                  effect: 'Upgrade 1 difficulty dice for all Brawn and Agility checks', 
-                  color: '#FF5722',
-                  severity: 'Critical'
-                },
-                { 
-                  durability: 'Lost 5', 
-                  effect: 'Armor breaks - loses all effects', 
-                  color: '#D32F2F',
-                  severity: 'Broken'
-                }
-              ].map((armor, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha(armor.color, 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(armor.color, 0.3)}`
-                  }}
-                >
-                  <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-                    <Box sx={{ flex: 1 }}>
-                      <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: armor.color }}>
-                          {armor.durability}
-                        </Typography>
-                        <Chip 
-                          label={armor.severity} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: armor.color, 
-                            color: 'white',
-                            fontSize: '0.7rem'
-                          }} 
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.primary" sx={{ fontSize: '0.85rem' }}>
-                        {armor.effect}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-          </Box>
-        </Paper>
-            
-        {/* Repair System */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#4CAF50', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #4CAF50'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-              🔨 Repair Mechanics
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Stack spacing={2}>
-              {/* Repair Process */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#4CAF50', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#4CAF50', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }} gutterBottom>
-                  🛠️ Repair Process
-                </Typography>
-              
-                <Stack spacing={1}>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#4CAF50', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Required Skills
-                    </Typography>
-                    <Stack spacing={0.5}>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Metalworking</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Leatherworking</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>• Crafting [General]</Typography>
-                    </Stack>
-                  </Box>
-
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Base Difficulty
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                      Difficulty = Durability Lost
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#FF9800', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Base Time Required
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                      1 hour per difficulty point
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-              
-              {/* Repair Modifiers */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#FF9800', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#FF9800', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800' }} gutterBottom>
-                  ⚠️ Repair Modifiers
-                </Typography>
-              
-                <Stack spacing={1}>
-                  {[
-                    { 
-                      condition: 'No Tools Available', 
-                      modifier: '+1 Difficulty', 
-                      color: '#f44336' 
-                    },
-                    { 
-                      condition: 'Rush Job (Half Time)', 
-                      modifier: '+1 Difficulty', 
-                      color: '#f44336' 
-                    }
-                  ].map((modifier, index) => (
-                    <Box 
-                      key={index}
-                      display="flex" 
-                      justifyContent="space-between" 
-                      alignItems="center" 
-                      p={1.5} 
-                      sx={{ 
-                        bgcolor: alpha(modifier.color, 0.1), 
-                        borderRadius: 1,
-                        border: `1px solid ${alpha(modifier.color, 0.3)}`
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.85rem' }}>
-                        {modifier.condition}
-                      </Typography>
-                      <Chip 
-                        label={modifier.modifier} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: modifier.color, 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }} 
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-                
-              {/* Cost Calculation */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#9C27B0', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#9C27B0', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }} gutterBottom>
-                  💰 Repair Cost Calculation
-                </Typography>
-              
-                <Stack spacing={1}>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#9C27B0', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Base Cost Formula
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                      20% × Original Value × Difficulty
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#4CAF50', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Cost Reduction
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                      -10% per Advantage rolled
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#2196F3', 0.1), borderRadius: 1, textAlign: 'center' }}>
-                    <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Final Step
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.8rem' }}>
-                      Round down final price
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                <Box sx={{ mt: 2, p: 1.5, bgcolor: alpha('#9C27B0', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Example Calculation:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    <strong>100 credit sword, 3 durability lost, 2 advantages:</strong><br />
-                    Base Cost: 20% × 100 × 3 = 60 credits<br />
-                    Reduction: 60 - (2 × 10%) = 60 - 12 = 48 credits<br />
-                    <strong>Final Cost: 48 credits</strong>
-                  </Typography>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#FF9800', 0.05),
-            border: '1px dashed #FF9800',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800' }}>
-                Durability Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Durability lost = repair difficulty
-                • No tools or rush jobs add +1 difficulty
-                • Cost = 20% × value × difficulty, reduced by advantages
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>,
-
-    // Diseases
-    <Box key="diseases" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-      {/* Header Section */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 2, 
-          mb: 2,
-          background: 'linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%)',
-          borderRadius: 2,
-          color: 'white',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          🦠 Disease System
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          Progressive ailments • Stage-based effects • Terminal conditions
-        </Typography>
-      </Paper>
-      
-      <Stack spacing={2}>
-        {/* The Wretched Cycle */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#D32F2F', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #D32F2F'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#D32F2F' }}>
-              🧟 The Wretched Cycle
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#D32F2F', opacity: 0.8, fontSize: '0.85rem' }}>
-              Potentially terminal • Humanity loss • Wretch transformation
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2" fontWeight="medium" sx={{ mb: 2, fontSize: '0.85rem' }}>
-              <strong>Transmission:</strong> Contact with Wretches • <strong>Effect:</strong> Progressive humanity loss and physical transformation
-            </Typography>
-
-            <Stack spacing={2}>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#D32F2F' }}>
-                Disease Progression
-              </Typography>
-
-              {[
-                {
-                  stage: 'Stage 1',
-                  title: 'Mental Corruption',
-                  effects: [
-                    'Develop poison ivy-like rash and itching',
-                    'Immediate Difficulty 4 Sanity check required',
-                    'Failure: Gain permanent sanity level until cleansed'
-                  ],
-                  color: '#FF9800',
-                  icon: '🧠',
-                  severity: 'Mild'
-                },
-                {
-                  stage: 'Stage 2', 
-                  title: 'Physical Degradation',
-                  effects: [
-                    'Lose ability to speak clearly',
-                    'Add 2 setback dice to all social checks',
-                    'Treat Brawn and Agility as 1 lower'
-                  ],
-                  color: '#FF5722',
-                  icon: '🗣️',
-                  severity: 'Moderate'
-                },
-                {
-                  stage: 'Stage 3',
-                  title: 'Terminal Decay',
-                  effects: [
-                    'Cannot speak, rest, eat, or drink independently',
-                    'Ooze corrosive brown sludge (5 damage to contact)',
-                    'Resilience check: Difficulty 1 + previous successes',
-                    'Check required immediately and every 24 hours',
-                    'Failure: Transform into Wretch'
-                  ],
-                  color: '#D32F2F',
-                  icon: '☠️',
-                  severity: 'Terminal'
-                }
-              ].map((stage, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha(stage.color, 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(stage.color, 0.3)}`
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Typography variant="h4">{stage.icon}</Typography>
-                    <Box sx={{ flex: 1 }}>
-                      <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: stage.color }}>
-                          {stage.stage}
-                        </Typography>
-                        <Chip 
-                          label={stage.severity} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: stage.color, 
-                            color: 'white',
-                            fontSize: '0.7rem'
-                          }} 
-                        />
-                      </Box>
-                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.9rem' }}>
-                        {stage.title}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 1 }}>
-                    {stage.effects.map((effect, effectIndex) => (
-                      <Typography key={effectIndex} variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        • {effect}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-
-              {/* Special Mechanics */}
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: alpha('#8E24AA', 0.03),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha('#8E24AA', 0.3)}`
-                }}
-              >
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#8E24AA' }} gutterBottom>
-                  ⚠️ Special Wretched Cycle Mechanics
-                </Typography>
-                <Box sx={{ p: 1.5, bgcolor: alpha('#8E24AA', 0.1), borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                    Stage 3 Overflow Rule:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    Receiving additional Wretched Cycle stages while at Stage 3 adds +1 difficulty 
-                    to the next transformation resistance check.
-                  </Typography>
-                </Box>
-              </Paper>
-            </Stack>
-          </Box>
-        </Paper>
-              
-        {/* The Disease */}
-        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-          <Box sx={{ 
-            bgcolor: alpha('#1976D2', 0.1), 
-            p: 2, 
-            borderBottom: '3px solid #1976D2'
-          }}>
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#1976D2' }}>
-              🩸 The Disease
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#1976D2', opacity: 0.8, fontSize: '0.85rem' }}>
-              Hardest to treat • Blood clotting • Necrosis and hemorrhaging
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2" fontWeight="medium" sx={{ mb: 2, fontSize: '0.85rem' }}>
-              <strong>Transmission:</strong> Contaminated air inhalation • Contact with contaminated blood
-            </Typography>
-
-            <Stack spacing={2}>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1976D2' }}>
-                Disease Progression
-              </Typography>
-
-              {[
-                {
-                  stage: 'Stage 1',
-                  title: 'Asymptomatic',
-                  effects: ['No visible symptoms', 'Disease present but dormant'],
-                  color: '#4CAF50',
-                  icon: '😐',
-                  severity: 'Hidden'
-                },
-                {
-                  stage: 'Stage 2',
-                  title: 'Blood Vessel Restriction',
-                  effects: [
-                    'One limb begins to slow down',
-                    'Blood clots restrict circulation',
-                    'Gain critical injury rating 96'
-                  ],
-                  color: '#FF9800',
-                  icon: '🦵',
-                  severity: 'Noticeable'
-                },
-                {
-                  stage: 'Stage 3',
-                  title: 'Severe Compromise',
-                  effects: [
-                    'Blood vessels severely compromised',
-                    'Begin bleeding from orifices',
-                    'Lose free maneuver per turn',
-                    'Action OR maneuver per turn only',
-                    'Gain 1 unsoakable wound per action taken'
-                  ],
-                  color: '#FF5722',
-                  icon: '🩸',
-                  severity: 'Severe'
-                },
-                {
-                  stage: 'Stage 4+',
-                  title: 'Limb Necrosis',
-                  effects: [
-                    'Body can no longer maintain circulation',
-                    'One limb becomes necrotic per stage',
-                    'Cannot use necrotic limbs',
-                    'Death if all 4 major limbs affected'
-                  ],
-                  color: '#D32F2F',
-                  icon: '🦴',
-                  severity: 'Terminal'
-                }
-              ].map((stage, index) => (
-                <Paper 
-                  key={index}
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha(stage.color, 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha(stage.color, 0.3)}`
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2} mb={1}>
-                    <Typography variant="h4">{stage.icon}</Typography>
-                    <Box sx={{ flex: 1 }}>
-                      <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: stage.color }}>
-                          {stage.stage}
-                        </Typography>
-                        <Chip 
-                          label={stage.severity} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: stage.color, 
-                            color: 'white',
-                            fontSize: '0.7rem'
-                          }} 
-                        />
-                      </Box>
-                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ fontSize: '0.9rem' }}>
-                        {stage.title}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack spacing={0.5} sx={{ pl: 1 }}>
-                    {stage.effects.map((effect, effectIndex) => (
-                      <Typography key={effectIndex} variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        • {effect}
-                      </Typography>
-                    ))}
-                  </Stack>
-                </Paper>
-              ))}
-
-              {/* Critical Information */}
-              <Stack spacing={1}>
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#FF5722', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#FF5722', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF5722' }} gutterBottom>
-                    🦴 Stage 4+ Progression
-                  </Typography>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#FF5722', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Limb Necrosis Order:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                      Each stage beyond 4 affects one additional major limb (arms and legs). 
-                      Patient dies if all 4 major limbs become necrotic and another stage is gained.
-                    </Typography>
-                  </Box>
-                </Paper>
-                
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#1976D2', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#1976D2', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1976D2' }} gutterBottom>
-                    💊 Treatment Difficulty
-                  </Typography>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#1976D2', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Hardest Disease to Treat:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                      The Disease is specifically noted as the most difficult disease to treat 
-                      within the Backrooms environment.
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Stack>
-            </Stack>
-          </Box>
-        </Paper>
-                
-        {/* Quick Reference */}
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
-            bgcolor: alpha('#8E24AA', 0.05),
-            border: '1px dashed #8E24AA',
-            borderRadius: 2
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="h5">💡</Typography>
-            <Box>
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#8E24AA' }}>
-                Disease Quick Tips
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                • Wretched Cycle: Contact transmission, progressive humanity loss
-                • The Disease: Airborne/blood transmission, hardest to treat
-                • Both diseases have terminal stages that can result in death
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Stack>
-    </Box>
-    ];
-
-    return content[generalValue] || content[0];
+  // Toggle section expansion
+  const toggleSection = (sectionKey) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
   };
 
-  const DisplayEffectTab = () => {
-    const effectContent = [
-      <Box key="lighting" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-        {/* Header Section */}
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 2, 
-            mb: 2,
-            background: 'linear-gradient(135deg, #FFC107 0%, #FF8F00 100%)',
-            borderRadius: 2,
-            color: 'white',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            💡 Lighting & Concealment
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Light levels • Visibility modifiers • Stealth mechanics
-          </Typography>
-        </Paper>
-        
-        <Stack spacing={2}>
-          {/* Light Level System */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#FFC107', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #FFC107'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF8F00' }}>
-                🌟 Light Level System
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Stack spacing={2}>
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#FFC107', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#FFC107', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF8F00' }} gutterBottom>
-                    📊 Light Level Scale (0-10)
-                  </Typography>
-                  <Stack spacing={1}>
-                    {[
-                      { range: '0-4', type: 'Dark', color: '#424242', icon: '🌑' },
-                      { range: '5', type: 'Neutral', color: '#9E9E9E', icon: '🌗' },
-                      { range: '6-10', type: 'Bright/Light', color: '#FFC107', icon: '☀️' }
-                    ].map((light, index) => (
-                      <Box 
-                        key={index}
-                        display="flex" 
-                        alignItems="center" 
-                        gap={2}
-                        p={1.5} 
-                        sx={{ 
-                          bgcolor: alpha(light.color, 0.1), 
-                          borderRadius: 1,
-                          border: `1px solid ${alpha(light.color, 0.3)}`
-                        }}
-                      >
-                        <Typography variant="h5">{light.icon}</Typography>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle2" fontWeight="bold" sx={{ color: light.color, fontSize: '0.9rem' }}>
-                            Light Level {light.range}
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{light.type}</Typography>
-                        </Box>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Paper>
-                  
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#FFC107', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#FFC107', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF8F00' }} gutterBottom>
-                    💡 Light Source Effects
-                  </Typography>
-                  <Box sx={{ p: 1.5, bgcolor: alpha('#FFC107', 0.1), borderRadius: 1 }}>
-                    <Typography variant="body2" fontWeight="medium" gutterBottom sx={{ fontSize: '0.85rem' }}>
-                      Area Replacement
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                      Light sources replace the area's natural light level within their range
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Stack>
-            </Box>
-          </Paper>
-                
-          {/* Concealment System */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#2196F3', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #2196F3'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                👁️ Concealment Effects
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.85rem' }}>
-                Concealment affects sight-based checks (penalties) and stealth checks (bonuses)
-              </Typography>
-          
-              <Stack spacing={2}>
-                {[
-                  {
-                    level: 'Level 1',
-                    sources: ['Light to medium mist', 'Waist-high grass/foliage', 'Light levels 2 or 8'],
-                    effect: '1 setback (sight) / 1 boost (stealth)',
-                    color: '#4CAF50',
-                    icon: '🌫️'
-                  },
-                  {
-                    level: 'Level 2', 
-                    sources: ['Light to medium fog', 'Shoulder-high grass/foliage', 'Light levels 1 or 9'],
-                    effect: '2 setback (sight) / 2 boost (stealth)',
-                    color: '#FF9800',
-                    icon: '🌁'
-                  },
-                  {
-                    level: 'Level 3',
-                    sources: ['Heavy fog/thick smoke', 'Head-high grass/foliage', 'Light levels 0 or 10'],
-                    effect: '3 setback (sight) / 3 boost (stealth)',
-                    color: '#F44336',
-                    icon: '🌊'
-                  }
-                ].map((concealment, index) => (
-                  <Paper 
-                    key={index}
-                    elevation={1} 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: alpha(concealment.color, 0.03),
-                      borderRadius: 2,
-                      border: `1px solid ${alpha(concealment.color, 0.3)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2} mb={1}>
-                      <Typography variant="h4">{concealment.icon}</Typography>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: concealment.color }}>
-                          {concealment.level}
-                        </Typography>
-                        <Chip 
-                          label={concealment.effect} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: concealment.color, 
-                            color: 'white',
-                            fontSize: '0.7rem',
-                            mt: 0.5
-                          }} 
-                        />
-                      </Box>
-                    </Box>
-                    <Stack spacing={0.5} sx={{ pl: 1 }}>
-                      <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.85rem', color: concealment.color }}>
-                        Sources:
-                      </Typography>
-                      {concealment.sources.map((source, sourceIndex) => (
-                        <Typography key={sourceIndex} variant="body2" sx={{ fontSize: '0.8rem' }}>
-                          • {source}
-                        </Typography>
-                      ))}
-                    </Stack>
-                  </Paper>
-                ))}
-              </Stack>
-            </Box>
-          </Paper>
-              
-          {/* Quick Reference */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              p: 2, 
-              bgcolor: alpha('#FFC107', 0.05),
-              border: '1px dashed #FFC107',
-              borderRadius: 2
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant="h5">💡</Typography>
-              <Box>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF8F00' }}>
-                  Lighting Quick Tips
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  • Light levels 0-4 = Dark, 5 = Neutral, 6-10 = Bright
-                  • Light sources replace area's natural light level
-                  • Higher concealment = more sight penalties but better stealth bonuses
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Stack>
-      </Box>,
-
-      <Box key="exhaustion" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-        {/* Header Section */}
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 2, 
-            mb: 2,
-            background: 'linear-gradient(135deg, #FF5722 0%, #D84315 100%)',
-            borderRadius: 2,
-            color: 'white',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            😴 Exhaustion System
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Fatigue accumulation • Progressive penalties • Survival mechanics
-          </Typography>
-        </Paper>
-        
-        <Stack spacing={2}>
-          {/* Sources of Exhaustion */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#FF5722', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #FF5722'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF5722' }}>
-                ⚠️ Sources of Exhaustion
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Stack spacing={2}>
-                {[
-                  {
-                    source: 'Extreme Temperature',
-                    condition: '10 rounds in heat level 0 or 10 without protective gear',
-                    icon: '🌡️',
-                    color: '#FF9800'
-                  },
-                  {
-                    source: 'Critical Damage',
-                    condition: 'Choose exhaustion instead of critical injury/remark (after roll)',
-                    icon: '💔',
-                    color: '#F44336'
-                  },
-                  {
-                    source: 'Sleep Deprivation',
-                    condition: 'Difficulty 1 Resilience check after 24h without sleep (+1 difficulty each day)',
-                    icon: '😴',
-                    color: '#9C27B0'
-                  },
-                  {
-                    source: 'Starvation',
-                    condition: 'Difficulty 1 Resilience check after 24h without food (+1 difficulty each day)',
-                    icon: '🍞',
-                    color: '#795548'
-                  },
-                  {
-                    source: 'Dehydration',
-                    condition: 'Difficulty 1 Resilience check after 24h without water (+1 difficulty each day)',
-                    icon: '💧',
-                    color: '#2196F3',
-                    note: 'Causes 2 levels on failure'
-                  }
-                ].map((source, index) => (
-                  <Paper 
-                    key={index}
-                    elevation={1} 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: alpha(source.color, 0.03),
-                      borderRadius: 2,
-                      border: `1px solid ${alpha(source.color, 0.3)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2} mb={1}>
-                      <Typography variant="h4">{source.icon}</Typography>
-                      <Box sx={{ flex: 1 }}>
-                        <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                          <Typography variant="subtitle2" fontWeight="bold" sx={{ color: source.color }}>
-                            {source.source}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" sx={{ fontSize: '0.85rem', pl: 1 }}>
-                      {source.condition}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Stack>
-            </Box>
-          </Paper>
-              
-          {/* Exhaustion Effects */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#f44336', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #f44336'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-                📉 Exhaustion Level Effects
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Stack spacing={1}>
-                {[
-                  { level: 1, effect: 'Add 2 setback dice to all physical checks', color: '#4CAF50', severity: 'Tired' },
-                  { level: 2, effect: 'Maximum maneuvers per turn reduced to 1', color: '#8BC34A', severity: 'Fatigued' },
-                  { level: 3, effect: 'Add 1 difficulty dice to all physical checks', color: '#FFC107', severity: 'Weary' },
-                  { level: 4, effect: 'Wound threshold is halved', color: '#FF9800', severity: 'Drained' },
-                  { level: 5, effect: 'Become immobilized', color: '#FF5722', severity: 'Collapsed' },
-                  { level: '6+', effect: 'Death', color: '#D32F2F', severity: 'Fatal' }
-                ].map((exhaustion, index) => (
-                  <Paper 
-                    key={index}
-                    elevation={1} 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: alpha(exhaustion.color, 0.03),
-                      borderRadius: 2,
-                      border: `1px solid ${alpha(exhaustion.color, 0.3)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Box 
-                        sx={{ 
-                          width: 40, 
-                          height: 40, 
-                          borderRadius: 2, 
-                          bgcolor: exhaustion.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          flexShrink: 0
-                        }}
-                      >
-                        {exhaustion.level}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                          <Typography variant="subtitle2" fontWeight="bold" sx={{ color: exhaustion.color }}>
-                            Level {exhaustion.level}
-                          </Typography>
-                          <Chip 
-                            label={exhaustion.severity} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: exhaustion.color, 
-                              color: 'white',
-                              fontSize: '0.7rem'
-                            }} 
-                          />
-                        </Box>
-                        <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-                          {exhaustion.effect}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Paper>
-                ))}
-              </Stack>
-            </Box>
-          </Paper>
-              
-          {/* Quick Reference */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              p: 2, 
-              bgcolor: alpha('#FF5722', 0.05),
-              border: '1px dashed #FF5722',
-              borderRadius: 2
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant="h5">💡</Typography>
-              <Box>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF5722' }}>
-                  Exhaustion Quick Tips
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  • Level 6+ exhaustion = death
-                  • Dehydration causes 2 levels on failure
-                  • Physical checks become progressively harder
-                  • Level 5 = immobilized (cannot move)
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Stack>
-      </Box>,
-
-      <Box key="fear" maxHeight="750px" overflow="auto" sx={{ p: 1 }}>
-        {/* Header Section */}
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 2, 
-            mb: 2,
-            background: 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)',
-            borderRadius: 2,
-            color: 'white',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            😱 Fear & Sanity System
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Terror responses • Mental degradation • Sanity mechanics
-          </Typography>
-        </Paper>
-        
-        <Stack spacing={2}>
-          {/* Fear Mechanics */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#9C27B0', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #9C27B0'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-                😰 Fear Check Results
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2" sx={{ mb: 2, fontSize: '0.85rem' }}>
-                <strong>Fear Rule:</strong> Uses Sanity skill • Cannot be triggered by same source twice • Encounters otherworldly terrors
-              </Typography>
-          
-              <Stack spacing={2}>
-                {/* Failure Results */}
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#F44336', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#F44336', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#F44336' }} gutterBottom>
-                    ❌ Failure Results
-                  </Typography>
-                  <Stack spacing={1}>
-                    {[
-                      { threats: '0-1', effect: 'Disoriented for rest of encounter', color: '#FF9800' },
-                      { threats: '2-3', effect: 'Must spend next turn running from fear source', color: '#FF5722' },
-                      { threats: '4+/Despair', effect: 'Immobilized and Staggered until end of next turn', color: '#D32F2F' }
-                    ].map((failure, index) => (
-                      <Box 
-                        key={index}
-                        display="flex" 
-                        alignItems="center" 
-                        gap={2}
-                        p={1.5} 
-                        sx={{ 
-                          bgcolor: alpha(failure.color, 0.05),
-                          borderRadius: 1,
-                          border: `1px solid ${alpha(failure.color, 0.3)}`
-                        }}
-                      >
-                        <Chip 
-                          label={`${failure.threats} Threats`} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: failure.color, 
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: '0.7rem',
-                            minWidth: 80
-                          }} 
-                        />
-                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                          {failure.effect}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Paper>
-                  
-                {/* Success Results */}
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#4CAF50', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#4CAF50', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }} gutterBottom>
-                    ✅ Success Results
-                  </Typography>
-                  <Stack spacing={1}>
-                    {[
-                      { advantages: 'Any', effect: 'Boost next check + 3 strain damage', color: '#FF9800' },
-                      { advantages: '0-1', effect: 'Keep your nerves', color: '#4CAF50' },
-                      { advantages: '2-3', effect: 'Allies get boost dice vs same fear', color: '#2196F3' },
-                      { advantages: '4+/Triumph', effect: 'Allies auto-pass vs same fear', color: '#9C27B0' }
-                    ].map((success, index) => (
-                      <Box 
-                        key={index}
-                        display="flex" 
-                        alignItems="center" 
-                        gap={2}
-                        p={1.5} 
-                        sx={{ 
-                          bgcolor: alpha(success.color, 0.05),
-                          borderRadius: 1,
-                          border: `1px solid ${alpha(success.color, 0.3)}`
-                        }}
-                      >
-                        <Chip 
-                          label={`${success.advantages} Adv`} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: success.color, 
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: '0.7rem',
-                            minWidth: 80
-                          }} 
-                        />
-                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                          {success.effect}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Paper>
-                  
-                {/* Extreme Results */}
-                <Paper 
-                  elevation={1} 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: alpha('#2196F3', 0.03),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha('#2196F3', 0.3)}`
-                  }}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#2196F3' }} gutterBottom>
-                    🌟 Extreme Results
-                  </Typography>
-                  <Stack spacing={1}>
-                    <Box sx={{ p: 1.5, bgcolor: alpha('#D32F2F', 0.1), borderRadius: 1 }}>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: '#D32F2F', fontSize: '0.85rem' }} gutterBottom>
-                        Extreme Failure
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        5 threats / 2 despairs / 3 threats + despair<br />
-                        <strong>Effect:</strong> Gain sanity levels = fear difficulty
-                      </Typography>
-                    </Box>
-                    <Box sx={{ p: 1.5, bgcolor: alpha('#4CAF50', 0.1), borderRadius: 1 }}>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: '#4CAF50', fontSize: '0.85rem' }} gutterBottom>
-                        Extreme Success
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                        5 advantages / 2 triumphs / 3 advantages + triumph<br />
-                        <strong>Effect:</strong> Remove 1 sanity level
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
-              </Stack>
-            </Box>
-          </Paper>
-                
-          {/* Sanity Effects */}
-          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ 
-              bgcolor: alpha('#f44336', 0.1), 
-              p: 2, 
-              borderBottom: '3px solid #f44336'
-            }}>
-              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#f44336' }}>
-                🧠 Sanity Level Effects (Cumulative)
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.85rem' }}>
-                Each level includes all effects from previous levels
-              </Typography>
-          
-              <Stack spacing={1}>
-                {[
-                  { level: 1, effect: 'Setback dice to all social skills', color: '#FFC107', category: 'Social' },
-                  { level: 2, effect: 'Nothing', color: '#E0E0E0', category: 'None' },
-                  { level: 3, effect: 'Difficulty dice to all social skills', color: '#FF9800', category: 'Social' },
-                  { level: 4, effect: 'Nothing', color: '#E0E0E0', category: 'None' },
-                  { level: 5, effect: 'Setback dice to all non-social skills', color: '#FF5722', category: 'General' },
-                  { level: 6, effect: 'Nothing', color: '#E0E0E0', category: 'None' },
-                  { level: 7, effect: 'Difficulty dice to all non-social skills', color: '#F44336', category: 'General' },
-                  { level: 8, effect: 'Receive +1 strain damage whenever taking strain', color: '#D32F2F', category: 'Strain' },
-                  { level: 9, effect: 'Strain threshold is halved', color: '#B71C1C', category: 'Strain' },
-                  { level: '10+', effect: 'Treat all skills as tier 0', color: '#000000', category: 'Catastrophic' }
-                ].map((sanity, index) => (
-                  <Paper 
-                    key={index}
-                    elevation={1} 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: alpha(sanity.color, 0.03),
-                      borderRadius: 2,
-                      border: `1px solid ${alpha(sanity.color, 0.3)}`
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Box 
-                        sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          borderRadius: 1, 
-                          bgcolor: sanity.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: sanity.color === '#E0E0E0' ? '#000' : 'white',
-                          fontWeight: 'bold',
-                          fontSize: '0.85rem',
-                          flexShrink: 0
-                        }}
-                      >
-                        {sanity.level}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Box display="flex" alignItems="center" gap={2} mb={0.5}>
-                          <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.9rem' }}>
-                            Level {sanity.level}
-                          </Typography>
-                          <Chip 
-                            label={sanity.category} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: sanity.color, 
-                              color: sanity.color === '#E0E0E0' ? '#000' : 'white',
-                              fontSize: '0.7rem'
-                            }} 
-                          />
-                        </Box>
-                        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                          {sanity.effect}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Paper>
-                ))}
-              </Stack>
-            </Box>
-          </Paper>
-              
-          {/* Quick Reference */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              p: 2, 
-              bgcolor: alpha('#9C27B0', 0.05),
-              border: '1px dashed #9C27B0',
-              borderRadius: 2
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant="h5">💡</Typography>
-              <Box>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#9C27B0' }}>
-                  Fear & Sanity Quick Tips
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                  • Fear uses Sanity skill, can't be triggered twice by same source
-                  • Extreme failure = gain sanity levels equal to fear difficulty
-                  • Sanity effects are cumulative (each level includes previous effects)
-                  • Level 10+ = all skills become tier 0 (catastrophic)
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Stack>
-      </Box>,
-
-      <Box key="resting" maxHeight="750px" overflow="auto">
-        <Stack spacing={2}>
-          {/* Main Header */}
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 2,
-              background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-              borderRadius: 2,
-              color: 'white',
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Rest & Recovery System
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Danger-based rest limits • Healing mechanics • Recovery bonuses
-            </Typography>
-          </Paper>
-          
-          {/* Rest Duration by Danger Level */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#2196F3', mb: 2, textAlign: 'center' }}>
-              Rest Duration by Danger Level
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ textAlign: 'center', mb: 2, color: 'text.secondary' }}>
-              <strong>Overtime Warning:</strong> Resting beyond the time limit significantly increases threat appearance chances
-            </Typography>
-            
-            <Grid container spacing={2}>
-              {[
-                { danger: 0, time: 'Unlimited', description: 'Safe areas', color: '#4CAF50', icon: '🏠' },
-                { danger: 1, time: '72 hours', description: 'Low threat', color: '#8BC34A', icon: '🛡️' },
-                { danger: 2, time: '24 hours', description: 'Moderate threat', color: '#FFC107', icon: '⚠️' },
-                { danger: 3, time: '3 hours', description: 'High threat', color: '#FF9800', icon: '🚨' },
-                { danger: '4-5', time: 'No rest', description: 'Extreme danger', color: '#F44336', icon: '💀' }
-              ].map((rest, index) => (
-                <Grid item xs={6} sm={4} md={2.4} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 2,
-                      borderRadius: 2,
-                      border: `2px solid ${rest.color}`,
-                      textAlign: 'center',
-                      height: '140px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h4" sx={{ mb: 1 }}>{rest.icon}</Typography>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: rest.color }}>
-                        DANGER {rest.danger}
-                      </Typography>
-                    </Box>
-                    
-                    <Box>
-                      <Box sx={{ 
-                        bgcolor: rest.color, 
-                        color: 'white',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        mb: 0.5
-                      }}>
-                        {rest.time}
-                      </Box>
-                      <Typography variant="caption">
-                        {rest.description}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-            
-          {/* Rest Healing Effects */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#4CAF50', mb: 2, textAlign: 'center' }}>
-              Rest Healing Effects
-            </Typography>
-            
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              {[
-                {
-                  duration: 'Per Hour',
-                  healing: '1 wound + 2 strain',
-                  icon: '⏰',
-                  color: '#4CAF50'
-                },
-                {
-                  duration: '8 Hours (Sleep)',
-                  healing: '+5 wounds, +10 strain, -1 exhaustion',
-                  icon: '😴',
-                  color: '#2196F3'
-                },
-                {
-                  duration: '24 Hours',
-                  healing: '-2 sanity, remove all exhaustion',
-                  icon: '📅',
-                  color: '#9C27B0'
-                },
-                {
-                  duration: '1 Week (168h)',
-                  healing: 'Full recovery + critical injury check',
-                  icon: '🏥',
-                  color: '#FF9800'
-                }
-              ].map((effect, index) => (
-                <Grid item xs={6} sm={3} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 2,
-                      borderRadius: 2,
-                      border: `2px solid ${effect.color}`,
-                      textAlign: 'center',
-                      height: '140px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h4" sx={{ mb: 1 }}>{effect.icon}</Typography>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: effect.color }}>
-                        {effect.duration.toUpperCase()}
-                      </Typography>
-                    </Box>
-                    
-                    <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
-                      {effect.healing}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-            
-            {/* Week Recovery Details */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 2,
-                borderRadius: 2,
-                border: `2px solid #FF9800`,
-                bgcolor: alpha('#FF9800', 0.05)
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#FF9800', mb: 1 }}>
-                ONE WEEK RECOVERY DETAILS
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Complete healing of all wounds, strain, exhaustion, and sanity. Make Resilience check against critical injuries:
-              </Typography>
-              <Box sx={{ p: 1, bgcolor: alpha('#FF9800', 0.1), borderRadius: 1 }}>
-                <Typography variant="caption">
-                  • <strong>Success:</strong> Remove one critical injury<br />
-                  • <strong>Triumph/5 Advantages:</strong> Remove next lowest severity critical injury as well
-                </Typography>
-              </Box>
-            </Paper>
-          </Box>
-            
-          {/* 24-Hour Rest Bonuses */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#9C27B0', mb: 2, textAlign: 'center' }}>
-              24-Hour Rest Bonuses (Choose Up to 2)
-            </Typography>
-            
-            <Grid container spacing={2}>
-              {[
-                {
-                  bonus: '1',
-                  name: 'Temporary Wounds',
-                  effect: 'Gain 5 temporary wounds (damage reduction)',
-                  icon: '❤️',
-                  color: '#F44336'
-                },
-                {
-                  bonus: '2', 
-                  name: 'Temporary Strain',
-                  effect: 'Gain 5 temporary strain (strain reduction)',
-                  icon: '🧠',
-                  color: '#9C27B0'
-                },
-                {
-                  bonus: '3',
-                  name: 'Enhanced Performance',
-                  effect: '2 boost dice to all checks for 8 hours (stacks to 4)',
-                  icon: '⚡',
-                  color: '#FFC107'
-                },
-                {
-                  bonus: '4',
-                  name: 'Efficient Movement',
-                  effect: 'No strain cost for second maneuver (24 hours)',
-                  icon: '🏃',
-                  color: '#4CAF50'
-                },
-                {
-                  bonus: '5',
-                  name: 'Resilient Mind',
-                  effect: 'Ignore next sanity/exhaustion/critical injury (24 hours)',
-                  icon: '🛡️',
-                  color: '#2196F3'
-                }
-              ].map((bonus, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 2,
-                      borderRadius: 2,
-                      border: `2px solid ${bonus.color}`,
-                      height: '140px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Box 
-                        sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          borderRadius: 1, 
-                          bgcolor: bonus.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        {bonus.bonus}
-                      </Box>
-                      <Typography variant="h5">{bonus.icon}</Typography>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: bonus.color, fontSize: '0.85rem' }}>
-                        {bonus.name.toUpperCase()}
-                      </Typography>
-                    </Box>
-                      
-                    <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
-                      {bonus.effect}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Stack>
-      </Box>,
-
-      <Box key="atmosphere" maxHeight="750px" overflow="auto">
-        <Stack spacing={2}>
-          {/* Main Header */}
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 2,
-              background: 'linear-gradient(135deg, #607D8B 0%, #455A64 100%)',
-              borderRadius: 2,
-              color: 'white',
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Atmospheric Hazards
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Toxic atmospheres • Temperature extremes • Environmental dangers
-            </Typography>
-          </Paper>
-          
-          {/* Corrosive/Toxic System Overview */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#4CAF50', mb: 2, textAlign: 'center' }}>
-              Corrosive/Toxic Atmosphere System
-            </Typography>
-            <Typography variant="body2" sx={{ textAlign: 'center', mb: 2, color: 'text.secondary' }}>
-              <strong>Resilience Check:</strong> Beginning of each turn • Difficulty = ½ rating (rounded up) • Holding breath negates effects
-            </Typography>
-
-            {/* Base Effect */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2,
-                    borderRadius: 2,
-                    border: `2px solid #FF5722`,
-                    textAlign: 'center',
-                    height: '100px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
-                    <Typography variant="h4">💀</Typography>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#FF5722' }}>
-                        BASE EFFECT
-                      </Typography>
-                      <Typography variant="body2">
-                        Wound damage = Atmosphere rating
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              </Grid>
-            </Grid>
-                
-            {/* Atmosphere Rating Effects */}
-            <Typography variant="subtitle1" fontWeight="bold" sx={{ textAlign: 'center', mb: 2 }}>
-              Additional Effects by Rating
-            </Typography>
-            <Grid container spacing={2}>
-              {[
-                { rating: '1-2', effect: 'No additional effects', color: '#4CAF50', icon: '✅' },
-                { rating: '3-4', effect: 'Receive 1 strain damage', color: '#8BC34A', icon: '😷' },
-                { rating: '5-6', effect: 'Receive 3 strain damage', color: '#FFC107', icon: '🤢' },
-                { rating: '7-8', effect: 'Receive 5 strain damage', color: '#FF9800', icon: '🤮' },
-                { rating: '9-10', effect: 'Receive a critical injury', color: '#F44336', icon: '☠️' }
-              ].map((atmo, index) => (
-                <Grid item xs={6} sm={4} md={2.4} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 1.5,
-                      borderRadius: 2,
-                      border: `2px solid ${atmo.color}`,
-                      textAlign: 'center',
-                      height: '120px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h4" sx={{ mb: 0.5 }}>{atmo.icon}</Typography>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: atmo.color }}>
-                        RATING {atmo.rating}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
-                      {atmo.effect}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-            
-          {/* Temperature Hazards */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#FF9800', mb: 2, textAlign: 'center' }}>
-              Temperature Hazards (Heat Levels 0-10)
-            </Typography>
-            
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              {/* Extreme Cold */}
-              <Grid item xs={12} md={6}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2,
-                    borderRadius: 2,
-                    border: `2px solid #2196F3`,
-                    height: '180px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Typography variant="h3">🧊</Typography>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" color="primary.main">
-                        EXTREME COLD
-                      </Typography>
-                      <Box sx={{ 
-                        bgcolor: '#2196F3', 
-                        color: 'white',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold',
-                        display: 'inline-block'
-                      }}>
-                        Heat Level 0-1
-                      </Box>
-                    </Box>
-                  </Box>
-                    
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption">• All movement becomes difficult terrain</Typography>
-                    <Typography variant="caption">• Add 1 difficulty to all physical checks</Typography>
-                    <Typography variant="caption">• Body begins to slow down</Typography>
-                  </Stack>
-                </Paper>
-              </Grid>
-                    
-              {/* Extreme Heat */}
-              <Grid item xs={12} md={6}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2,
-                    borderRadius: 2,
-                    border: `2px solid #F44336`,
-                    height: '180px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Typography variant="h3">🔥</Typography>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#F44336' }}>
-                        EXTREME HEAT
-                      </Typography>
-                      <Box sx={{ 
-                        bgcolor: '#F44336', 
-                        color: 'white',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold',
-                        display: 'inline-block'
-                      }}>
-                        Heat Level 9-10
-                      </Box>
-                    </Box>
-                  </Box>
-                    
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption">• Each maneuver deals 1 strain damage</Typography>
-                    <Typography variant="caption">• Pushing yourself in unbearable heat</Typography>
-                    <Typography variant="caption">• Rapid exhaustion from exertion</Typography>
-                  </Stack>
-                </Paper>
-              </Grid>
-            </Grid>
-                    
-            {/* Equipment Protection */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 2,
-                borderRadius: 2,
-                border: `2px solid #4CAF50`,
-                bgcolor: alpha('#4CAF50', 0.05),
-                textAlign: 'center'
-              }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
-                <Typography variant="h5">🛡️</Typography>
-                <Box>
-                  <Typography variant="subtitle2" fontWeight="bold" color="#4CAF50">
-                    EQUIPMENT PROTECTION
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Appropriate protective gear completely negates temperature effects
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
-        </Stack>
-      </Box>,
-
-      <Box key="actions" maxHeight="750px" overflow="auto">
-        <Stack spacing={2}>
-          {/* Main Header */}
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: 2,
-              color: 'white',
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="h5" fontWeight="bold" gutterBottom>
-              Turn Structure
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              What you can do each turn in combat and encounters
-            </Typography>
-          </Paper>
-          
-          {/* Actions Section */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#4CAF50', mb: 2, textAlign: 'center' }}>
-              One Action Per Turn
-            </Typography>
-            <Grid container spacing={2}>
-              {[
-                { icon: '⚔️', title: 'Use a maneuver', desc: 'Perform tactical movement' },
-                { icon: '⚡', title: 'Activate an ability', desc: 'Use special powers or talents' },
-                { icon: '🎯', title: 'Perform a skill check', desc: 'Use your expertise' },
-                { icon: '🗡️', title: 'Perform a combat check', desc: 'Attack or defend' }
-              ].map((action, index) => (
-                <Grid item xs={6} sm={3} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 2,
-                      borderRadius: 2,
-                      border: `2px solid #4CAF50`,
-                      textAlign: 'center',
-                      height: '140px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h4" sx={{ mb: 1 }}>{action.icon}</Typography>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                        {action.title.toUpperCase()}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
-                      {action.desc}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-            
-          {/* Maneuvers Section */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#2196F3', mb: 2, textAlign: 'center' }}>
-              Two Maneuvers Per Turn
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ textAlign: 'center', mb: 2, color: 'text.secondary' }}>
-              Tactical options and positioning (Page 98-100)
-            </Typography>
-            <Grid container spacing={1.5}>
-              {[
-                { icon: '🎯', name: 'Aim' },
-                { icon: '🤝', name: 'Assist' },
-                { icon: '🛡️', name: 'Guarded Stance' },
-                { icon: '🔧', name: 'Interact with Environment' },
-                { icon: '🎒', name: 'Manage Gear' },
-                { icon: '🐎', name: 'Mount or Dismount' },
-                { icon: '🏃', name: 'Move' },
-                { icon: '🤲', name: 'Drop prone or Stand from prone' },
-                { icon: '⏳', name: 'Preparation' },
-                { icon: '✨', name: 'Other non-check actions' }
-              ].map((maneuver, index) => (
-                <Grid item xs={6} sm={4} md={2.4} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 1.5,
-                      borderRadius: 2,
-                      border: `2px solid #2196F3`,
-                      textAlign: 'center',
-                      height: '80px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Typography variant="h5" sx={{ mb: 0.5 }}>{maneuver.icon}</Typography>
-                    <Typography variant="caption" fontWeight="bold" sx={{ 
-                      color: '#2196F3',
-                      lineHeight: 1.1,
-                      textAlign: 'center'
-                    }}>
-                      {maneuver.name}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-            
-          {/* Incidentals Section */}
-          <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#FF9800', mb: 2, textAlign: 'center' }}>
-              Three Incidentals Per Turn
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ textAlign: 'center', mb: 2, color: 'text.secondary' }}>
-              Quick, minor actions that don't require much effort
-            </Typography>
-            
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              {[
-                { icon: '💬', text: 'Speak to another character', type: 'Communication' },
-                { icon: '📦', text: 'Drop a held item or object', type: 'Item Management' },
-                { icon: '👀', text: 'Minor movements like looking behind you or peeking around a corner', type: 'Awareness' },
-                { icon: '⚡', text: 'Another action that takes very little time or has no measurable impact', type: 'Miscellaneous' }
-              ].map((incidental, index) => (
-                <Grid item xs={12} sm={6} key={index}>
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 2,
-                      borderRadius: 2,
-                      border: `2px solid #FF9800`,
-                      height: '120px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography variant="h4">{incidental.icon}</Typography>
-                      <Box sx={{ 
-                        bgcolor: alpha('#FF9800', 0.1), 
-                        color: '#F57C00',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold'
-                      }}>
-                        {incidental.type}
-                      </Box>
-                    </Box>
-                    
-                    <Typography variant="caption" sx={{ lineHeight: 1.2 }}>
-                      {incidental.text}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-            
-            {/* Special Rule */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 2,
-                borderRadius: 2,
-                border: `2px dashed #FF5722`,
-                bgcolor: alpha('#FF5722', 0.05),
-                textAlign: 'center'
-              }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="center" gap={2} sx={{ mb: 1 }}>
-                <Typography variant="h5">⚠️</Typography>
-                <Typography variant="subtitle2" fontWeight="bold" color="#FF5722">
-                  OUTSIDE YOUR TURN
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                You may perform <strong>1 incidental</strong> from the above list during other players' turns
-              </Typography>
-            </Paper>
-          </Box>
-        </Stack>
-      </Box>
-    ];
-
-    return effectContent[effectValue] || effectContent[0];
-  };
-                      
-
-  const DisplayLethalTab = () => {
-    const lethalContent = [
-      // General Rulings
-      <Box key="general" maxHeight="750px" overflow="auto">
-        <Typography>1. You may use your scanner as an incidental on your turn</Typography>
-        <Typography>2. Previously explored rooms are traversed at double the speed</Typography>
-        <Typography>3. Should you die, you may remove 1 critical injury at random. Sometimes the injury is chosen if it makes sense</Typography>
-        <Typography>4. All rooms except for the factory, locker, and Storage rooms are considered medium distance from door to door. These are considered long.</Typography>
-        <Typography>5. You no longer receive 20 xp per session. Instead, you receive 10 xp per day completed.</Typography>
-      </Box>,
-
-      // Weight and Objects
-      <Box key="weight" maxHeight="750px" overflow="auto">
-        <Typography>Your Encumbrance is 20 times your brawn plus 10</Typography>
-        <Typography>For every 20 weight over, receive 1 setback dice to all agility and brawn based checks</Typography>
-        <Typography>While encumbered past your threshold plus 20 times your brawn, you lose your free maneuver per turn.</Typography>
-        <Typography>While holding a 2-handed object, your action may be spent on a maneuver only.</Typography>
-      </Box>,
-
-      // Weather
-      <Box key="weather" maxHeight="750px" overflow="auto">
-        <Typography><strong>Clear:</strong> No Effect</Typography>
-        <Typography><strong>Rainy:</strong> Every turn, there is a 1/6 chance you walk into a puddle. A difficulty 2 athletics or coordination check is then made. On a fail, you sink further in and must repeat the save again at 1 higher difficulty. After 3 fails, you die</Typography>
-        <Typography><strong>Stormy:</strong> Every turn, there is a x/4 chance of lightning striking you where x is the amount of conductive items in your inventory. The difficulty is set at 1 + x</Typography>
-        <Typography><strong>Foggy:</strong> Every turn, the fog shifts in or out and makes seeing harder or easier. The difficulty is based on the fog level</Typography>
-        <Typography><strong>Flooded:</strong> The planet slowly floods. This value is kept hidden.</Typography>
-        <Typography><strong>Eclipsed:</strong> An extra, unknown, amount of entities begin spawned within the facility. Also, night entities begin spawning immediately.</Typography>
-      </Box>,
-
-      // Ship
-      <Box key="ship" maxHeight="750px" overflow="auto">
-        <Typography>The ship door may be opened or closed, but it can only remain closed for so long.</Typography>
-        <Typography>While the door is open, the atmosphere may enter into the ship. After the door is closed, it takes 1 extra round for it to be filtered out.</Typography>
-        <Typography>Once the ship door is closed, it spends 1 power per round. The door has 6 power.</Typography>
-        <Typography>While the door is open, each round it regains 2 power.</Typography>
-        <br />
-        <Divider>Actions</Divider>
-        <Typography><strong>Scan Room:</strong> You may view a room adjacent to a player, whether it has a direct entrance or not. Movement will not be observed using this method.</Typography>
-        <Typography><strong>Seek Entity:</strong> You may determine if an Entity is within two rooms of a player. This does not work diagonally.</Typography>
-        <Typography><strong>Activate Teleporter:</strong> You may use either teleporter. This may be used as an out-of-turn incidental.</Typography>
-        <Typography><strong>Access system:</strong> You may make an Access Systems check to gain access to a trap within the facility. The difficulty varies based on the trap. This uses the Computers skill and initiates a hacking encounter.</Typography>
-        <Typography><strong>Override Security Program:</strong> You may make a difficulty 2 Computers check to override a security program within the system after succeeding on an Access System action. You must get at least as many successes as the program's strength to succeed. Failure may result in some negative effect.</Typography>
-        <Typography><strong>Repair system:</strong> You may make a repair check to any system of component of the ship.</Typography>
-        <br />
-        <Divider>Maneuvers</Divider>
-        <Typography><strong>Toggle Trap [NOT USED. ARCHIVE.]</strong> You may activate or deactivate any trap within the facility. A maximum of 3 may be activated at once. One must be re-enabled before disabling a 4th.</Typography>
-        <Typography><strong>Send Message:</strong> You may send a message no more than 10 characters long to all players.</Typography>
-        <Typography><strong>Planetary Scan:</strong> You may scan the outdoors as though it were a normal scanner.</Typography>
-        <Typography><strong>Enact Command:</strong> While you have access to a system, you may cause the system to do a command, so long as you have access to that part of the system.</Typography>
-        <Typography><strong>Activate Programs:</strong> You may activate some kind of security program. As a hacker, this can be done to introduce an unknown roadblock for the defender.</Typography>
-        <br />
-        <Divider>Incidentals</Divider>
-        <Typography><strong>Check Time:</strong> You may move outside to check the time. If crouching, this will take two Incidentals.</Typography>
-        <Typography><strong>Use Walkie-Talkie:</strong> Out-of-turn, you may use the Walkie Talkie to assist a player in a non-physical skill check. The difficulty of the check is reduced by 1 and both you and the player make the check. If either one passes, the check is considered passed.</Typography>
-        <Typography><strong>Operate Ship Door:</strong> You may open or close the ship door.</Typography>
-      </Box>,
-
-      // Death
-      <Box key="death" maxHeight="750px" overflow="auto">
-        <Divider>Alterations</Divider>
-        <Typography>You may carry a single one-handed item with a weight less than or equal to 30. If you have Bulked Load, you may carry a two-handed item and the weight maximum becomes 40.</Typography>
-        <Typography>You may use either an Action or a Maneuver each turn, instead of both. Strain may not be used to perform an extra Maneuver.</Typography>
-        <Typography>You may not speak or use any items such as Walkie-Talkies and Flashlights.</Typography>
-        <Typography>You can not be seen or heard by players who are alive, but can see any items you are carrying.</Typography>
-        <br />
-        <Divider>Actions</Divider>
-        <Typography><strong>Possess:</strong> You may attempt to possess an entity by rolling a Coercion check. The difficulty is based on the health of the entity. With no wounds, the difficulty is 5. At half or lower, the difficulty is 4. At over half, the difficulty is 3. While you are possessing an entity, you may use its free maneuver each turn. Also, the entity may not spend strain on a maneuver</Typography>
-        <Typography><strong>Assist:</strong> You may prepare to assist a player with a physical skill check. The difficulty is reduced by 1 for that player. You may also make this skill check but at 1 difficulty higher instead of 1 lower. If either succeeds, the check is considered passed.</Typography>
-        <br />
-        <Divider>Incidentals</Divider>
-        <Typography><strong>Flicker:</strong> Out-of-turn you may cause a flashlight to flicker to alert a player of danger. The player gains two boost dice to the next check that player makes.</Typography>
-      </Box>,
-
-      // Lighting
-      <Box key="lighting" maxHeight="750px" overflow="auto">
-        <Typography>Flashlights have a power of 4 and last for 13 rounds</Typography>
-        <Typography>Pro-Flashlights have a power of 7 and last for 28 rounds</Typography>
-        <Typography>Flashlights lose power if on at the beginning of your turn. You may spend a maneuver to turn it off before the power is lost</Typography>
-      </Box>,
-
-      // Homebrew
-      <Box key="homebrew" maxHeight="750px" overflow="auto">
-        <Divider>Items</Divider>
-        <Typography><strong>Painkillers:</strong> Costs 200 credits to buy. Weight 5. Has 5 uses. </Typography>
-        <Typography><strong>Medkits:</strong> Costs 50 credits to buy. Weight 12. Has 5 uses.</Typography>
-        <Typography><strong>20 Experience Points:</strong> Costs 1000 credits to buy.</Typography>
-        <Typography><strong>Flare:</strong> Costs 110 credits to buy. Weight 3. Has 1 use. It may be used to prevent all navigation checks on the current planet to be higher than two difficulty.</Typography>
-        <Typography><strong>Signal Upgrader:</strong> Costs 400 credits to buy. Upgrades the Signal Translator to allow for 30 characters instead of 10 and the message is sent instantly.</Typography>
-        <Typography><strong>Teleporter Upgrade:</strong> Costs 1400 credits to buy. Upgrades the teleporter to become instant and items are not dropped upon teleport.</Typography>
-        <Typography><strong>Brass Knuckles:</strong> Costs 150 credits to buy.</Typography>
-        <Typography><strong>Shotgun Shell:</strong> Costs 25 credits to buy. Weight 0. May stack 2 per inventory slot.</Typography>
-        <Typography><strong>Revolver Bullet:</strong> Costs 15 credits to buy. Weight 0. May stack 6 per inventory slot.</Typography>
-        <Typography><strong>Assault Rifle Clip (30):</strong> Costs 300 credits to buy. Weight 5.</Typography>
-        <Typography><strong>Assault Rifle:</strong> Costs 800 credits to buy.</Typography>
-        <Typography><strong>Revolver:</strong> Costs 400 credits to buy.</Typography>
-        <br />
-        <Divider>Talents</Divider>
-        <Typography><strong>Stronger Scanner:</strong> Tier: 1. Activation: Passive. Add a boost dice to scans.</Typography>
-        <Typography><strong>Stronger Scanner II:</strong> Tier: 2. Activation: Passive. Requirement: Stronger Scanner. Upgrade one ability dice for scans. If no ability dice can be upgraded, add one to the dice pool.</Typography>
-        <Typography><strong>Stronger Scanner III:</strong> Tier: 3. Activation: Passive. Requirement: Stronger Scanner II. All obstacles are now ignored by the scanner. All adjacent rooms with an open door are scanned as well.</Typography>
-        <Typography><strong>Bulked-Load:</strong> Tier: 2. Activation: Passive. Requirement: 4 or higher Brawn. You may carry an extra 2-handed item.</Typography>
-        <Typography><strong>Expanded Inventory:</strong> Tier: 5. Activation: Passive. Ranked: Yes. You may now carry an additional item in your inventory. You may not exceed 8 slots.</Typography>
-      </Box>,
-
-      // Suit Effects
-      <Box key="suits" maxHeight="750px" overflow="auto">
-        <Typography>When buying a suit, you receive a singular suit rather than for the entire group.</Typography>
-        <Typography>Suits may be swapped between while in orbit at will.</Typography>
-        <Typography>Suits that have a choice of effect may be swapped while in orbit at will.</Typography>
-        <br />
-        <Divider>Suit Effects</Divider>
-        <br />
-        <Typography><strong>Decoy:</strong> Soak: 1. Defense: 0.</Typography>
-        <Typography><strong>Brown:</strong> Soak: 0. Defense: 1.</Typography>
-        <Typography><strong>Green:</strong> Soak: 2. Defense: 0. You add two boost dice to all stealth checks.</Typography>
-        <Typography><strong>Purple:</strong> Soak: 0. Defense: 2.</Typography>
-        <Typography><strong>Hazard:</strong> Soak: 3. Defense: 0. You add two setback dice to all stealth checks.</Typography>
-        <Typography><strong>Bee:</strong> Soak: 1. Defense: 0. You do not take any damage from bees. You add two boost dice to attacks made against the Bunker Spider, Hoarding Bug, Snare Flea, and Spore Lizard.</Typography>
-        <Typography><strong>Bunny:</strong></Typography>
-        <Typography>Option 1: Soak: 1. Defense: 2.</Typography>
-        <Typography>Option 2: Soak: 0. Defense: 0. You gain an extra free maneuver per turn. You may now take 3 maneuvers per turn.</Typography>
-        <Typography><strong>Pajama:</strong></Typography>
-        <Typography>Option 1: Soak: 0. Defense: 0. You gain an extra action per turn and you may ignore the strain costs spent on maneuvers 3 times per day.</Typography>
-        <Typography>Option 2: Soak: 0. Defense: 3.</Typography>
-        <Typography>Option 3: Soak: 2. Defense: 2.</Typography>
-      </Box>,
-
-      // Additional Rules
-      <Box key="additional" maxHeight="750px" overflow="auto">
-        <Typography>Some additional rules, taken from the above rules and altered slightly, are as follows:</Typography>
-        <Typography>1. Hacking system is added to the ship actions.</Typography>
-        <Typography>2. Sanity is added. Every 8 rounds, or 2 hours, a sanity roll is made.</Typography>
-        <Typography>3. Fear is added. Each entity will have a fear rating and will be enacted on when encountering the entity.</Typography>
-        <Typography>4. Exhaustion, specifically the portion about healing it and gaining a level in exchange for a critical injury.</Typography>
-        <Typography>5. Durability for weapons and armor. The weapon durability effects are described in "General Rules" under "Durability and Repairs".</Typography>
-        <br />
-        <Divider>System structures</Divider>
-        <Typography>Normally, the structure is kept hidden but due to this being testing material, the structure is shown for all.</Typography>
-        <br />
-        <Typography>A door trap has a difficulty of 1 to access the system. The door has no security programs.</Typography>
-        <Typography>A landmine trap has a difficulty of 2 to access the system. The landmine has a Firewall defending shutdown.</Typography>
-        <Typography>A spike trap has a difficulty of 4 to access the system. The spike trap has a Firewall defending shutdown and a Sentry defending sensors. Shutdown is only accessible when Sensors has been overridden.</Typography>
-        <Typography>A turret has a difficulty of 4 to access the system. The turret has a Firewall defending shutdown, a Sentry defending sensors, and a Gate defending the firing section. Shutdown is only accessible when Sensors and Firing has been overridden.</Typography>
-        <br />
-        <Divider>Armor Durability</Divider>
-        <br />
-        <Typography>Suits may be broken down through enemy triumphs or own despairs. Suits have a durability of 3.</Typography>
-        <Typography>The effects are as follows:</Typography>
-        <Typography>3: No effects</Typography>
-        <Typography>2: Your suit cracks or rips slightly. This allows the potentially toxic atmosphere to get into your suit. It however is not broken enough to cause loss of breath</Typography>
-        <Typography>1: Your suit is too broken to absorb damage. Your suit loses its soak.</Typography>
-        <Typography>0: The suit is unusable. Your suit loses its defense and you become unable to breathe while outside or in a room with outside atmosphere in it</Typography>
-      </Box>,
-
-      // Weapon Statistics
-      <Box key="weapons" maxHeight="750px" overflow="auto">
-        <Typography><strong>Shotgun:</strong> Ranged; Damage 10; Critical 3; Range [Short]</Typography>
-        <Typography><strong>Shovel:</strong> Melee; Damage +4; Critical 3; Range [Engaged]; Cumbersome 3; Pierce 2; Vicious 1. Weight is 16.</Typography>
-        <Typography><strong>Sign:</strong> Melee; Damage +4; Critical 2; Range [Engaged]; Defensive 1; Pierce 1; Unwieldy 3. Weight is 14.</Typography>
-        <Typography><strong>Brass Knuckles:</strong> Brawl; Damage +1; Critical 4; Range [Engaged]; Disorient 3; Flurry 2. Weight is 4.</Typography>
-        <Typography><strong>Revolver:</strong> Ranged; Damage 6; Critical 4; Range [Medium]; Accurate 1. Weight is 8.</Typography>
-        <Typography><strong>Assault Rifle</strong> Ranged; Damage 8; Critical 3; Range [Long]; Auto-fire. Weight is 24.</Typography>
-      </Box>,
-
-      // Ship Integrity
-      <Box key="integrity" maxHeight="750px" overflow="auto">
-        <Typography>As the days go on and the ship systems are used more, the components may begin to break. The ship is split into four categories: Teleporter, Inverse Teleporter, Console, and Nav System.</Typography>
-        <br />
-        <Divider>Component Responsibilities</Divider>
-        <Typography><strong>Teleporter:</strong> Teleports players to the ship.</Typography>
-        <Typography><strong>Inverse Teleporter:</strong> Teleports players inside the facility.</Typography>
-        <Typography><strong>Console:</strong> Planetary scanning, Entity Scanning, Hacking related things, and messages.</Typography>
-        <Typography><strong>Nav System:</strong> Movement from orbit to a specified moon, Weather types on the different moons, and Map view of players.</Typography>
-        <br />
-        <Divider>Integrity Loss</Divider>
-        <Typography textAlign="center">Each component has 3 integrity, degrading as time goes on. Below are the effects on each section and are accumulative.</Typography>
-        <br />
-        <Stack direction="row" spacing={2}>
-          <Box width="25%">
-            <Typography><strong>Teleporter</strong></Typography>
-            <Typography>3: Works as expected.</Typography>
-            <Typography>2: Has a 20% chance to not work but still places the teleporter on cooldown.</Typography>
-            <Typography>1: Has a 50% chance to teleport an unintended entity or player.</Typography>
-            <Typography>0: Does not work.</Typography>
-          </Box>
-          <Box width="25%">
-            <Typography><strong>Inverse Teleporter</strong></Typography>
-            <Typography>3: Works as expected.</Typography>
-            <Typography>2: Has a 20% chance to not work but still places the teleporter on cooldown.</Typography>
-            <Typography>1: Has a 50% chance to teleport the player outside of the facility at a random location.</Typography>
-            <Typography>0: Does not work.</Typography>
-          </Box>
-          <Box width="25%">
-            <Typography><strong>Console</strong></Typography>
-            <Typography>3: Works as expected.</Typography>
-            <Typography>2: Planetary scanning now may display unknown entities or false reports.</Typography>
-            <Typography>1: The difficulty of all hacking actions is increased by 1. Also, messages may now be half the size.</Typography>
-            <Typography>0: The Seek Entity and Planetary Scan maneuvers no longer work.</Typography>
-          </Box>
-          <Box>
-            <Typography><strong>Nav System</strong></Typography>
-            <Typography>3: Works as expected.</Typography>
-            <Typography>2: Weather types are no longer displayed.</Typography>
-            <Typography>1: The map no longer displays. The Scan Room maneuver no longer works.</Typography>
-            <Typography>0: When traveling to a different moon, it is now selected at random.</Typography>
-          </Box>
-        </Stack>
-        <br />
-        <Divider>Repairing</Divider>
-        <Typography>Components of the ship may be repaired for 50 credits per integrity. Credits or scrap may be used to repair, but any excess value within the scrap is not returned. The skill used to repair is based on the scrap used as credits.</Typography>
-        <Typography>Actual credits and glass use the Crafting [General] skill.</Typography>
-        <Typography>Metal uses the Metalworking skill.</Typography>
-        <Typography>Leather, cloth, fabric, and plastic use the Leatherworking skill.</Typography>
-        <Typography>If more than one type is present, the type donating the most credit value determines the skill used.</Typography>
-      </Box>
-    ];
-
-    return lethalContent[lethalValue] || lethalContent[0];
+  // Expand all sections
+  const expandAll = () => {
+    const allExpanded = {};
+    Object.keys(expandedSections).forEach(key => {
+      allExpanded[key] = true;
+    });
+    setExpandedSections(allExpanded);
   };
 
-  if (!isLoggedIn) {
-    return <NotLoggedIn />;
-  }
+  // Collapse all sections
+  const collapseAll = () => {
+    const allCollapsed = {};
+    Object.keys(expandedSections).forEach(key => {
+      allCollapsed[key] = false;
+    });
+    setExpandedSections(allCollapsed);
+  };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', mr: 'auto', ml: 'auto', py: 4 }} maxWidth={{sm: "100%", md: '75%'}}>
-      <Paper elevation={3} sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-        <Typography variant="h3" gutterBottom textAlign="center" fontWeight="bold">
-          RPG Information System
-        </Typography>
-        <Typography variant="h6" textAlign="center" sx={{ opacity: 0.9 }}>
-          Complete rulebook for tabletop RPG campaigns
-        </Typography>
-      </Paper>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900">
+      {/* Header */}
+      <div className="bg-black/30 backdrop-blur-sm border-b border-white/10 shadow-2xl">
+        <div className="max-w-full px-4 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div>
+              <h1 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Game Rules Reference
+              </h1>
+              <p className="text-blue-300 mt-1 text-sm lg:text-lg">Complete Rules & Mechanics Guide</p>
+            </div>
 
-      <Stack spacing={3}>
+            {/* Control Buttons */}
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={expandAll}
+                className="bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm"
+              >
+                Expand All
+              </button>
+              <button 
+                onClick={collapseAll}
+                className="bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 px-3 py-2 rounded-lg transition-all duration-300 text-sm"
+              >
+                Collapse All
+              </button>
+              <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-xl">
+                <span className="text-white text-xl lg:text-2xl">📚</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rules Sections */}
+      <div className="max-w-full px-4 py-4 space-y-4">
+
         {/* General Rules */}
-        <Accordion defaultExpanded>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-indigo-600/30 transition-all duration-300"
+            onClick={() => toggleSection('general')}
           >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                General Rules
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
-            <Tabs 
-              value={generalValue} 
-              onChange={(e, val) => setGeneralValue(val)} 
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
-            >
-              <Tab label="Actions per Turn" />
-              <Tab label="Max Stats" />
-              <Tab label="Dice Spending" />
-              <Tab label="Status Effects" />
-              <Tab label="Combat" />
-              <Tab label="Hacking" />
-              <Tab label="Healing" />
-              <Tab label="Time" />
-              <Tab label="Durability" />
-              <Tab label="Diseases" />
-            </Tabs>
-            <Box sx={{ p: 3 }}>
-              <DisplayGeneralTab />
-            </Box>
-          </AccordionDetails>
-        </Accordion>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">📜</span>
+                <span className="text-white font-semibold text-base lg:text-lg">General Rules</span>
+                <span className="text-xs bg-blue-500/30 text-blue-300 px-2 py-1 rounded ml-2">
+                  Foundation
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.general ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.general 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-blue-300 mb-2">📜 Foundation Rules</div>
+                  <div className="text-white/90 text-sm">
+                    Core mechanics and systems that form the foundation of gameplay in the Genesys system.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-blue-300 font-semibold mb-4">Check Types</h4>
+
+                  <div className="space-y-4">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">Opposed Checks</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>When to use:</strong> Your character's action is directly opposed by a single individual (lying vs. detecting lies, sneaking vs. spotting, social influence vs. resistance).</div>
+                        <div><strong>How it works:</strong> The opponent's skill and characteristic become purple Difficulty dice and red Challenge dice in your pool instead of fixed difficulty. Higher of opponent's skill/characteristic = number of Difficulty dice. Lower value upgrades that many Difficulty dice to Challenge dice.</div>
+                        <div><strong>Example:</strong> Sneaking past a guard uses opposed Stealth vs. Vigilance.</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-2">Competitive Checks</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>When to use:</strong> Multiple characters attempt the same goal simultaneously to determine who performs best (racing, debates, contests).</div>
+                        <div><strong>How it works:</strong> GM sets one difficulty level. All participants roll against that difficulty. Winner = most net successes. Tiebreaker: most Triumph, then most Advantage. If none succeed, it's a draw.</div>
+                        <div><strong>Example:</strong> Multiple runners compete in a Hard Athletics check to see who wins the race.</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Assisted Checks</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>When to use:</strong> Characters work together on a single task where one person leads and others help.</div>
+                        <div><strong>Skilled Assistance:</strong> When helper has higher characteristic OR skill than primary actor, combine the higher characteristic from one person with higher skill from the other person.</div>
+                        <div><strong>Unskilled Assistance:</strong> When helper has lower ratings in both areas, add 1 Boost die per helper (within reason, GM discretion).</div>
+                        <div><strong>Limit:</strong> Generally only one skilled assistant allowed, but multiple unskilled assistants possible.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-blue-300 font-semibold mb-4">Narrative Mechanics</h4>
+
+                  <div className="space-y-4">
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-2">Story Points and Their Uses</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>Starting Pool:</strong> Begin each session with 1 Story Point per player in the Player Pool, and 1 Story Point in the GM Pool.</div>
+                        <div><strong>Movement:</strong> When spent, Story Points move to the opposite pool after the action resolves. Players can only spend from Player Pool, GM only from GM Pool.</div>
+                        <div><strong>Player Uses:</strong> Upgrade 1 Ability die to Proficiency die, upgrade 1 Difficulty die to Challenge die (against NPCs), activate special talents, introduce narrative facts ("Good thing we packed space suits!").</div>
+                        <div><strong>GM Uses:</strong> Upgrade 1 Difficulty die to Challenge die, upgrade 1 Ability die to Proficiency die (for NPCs), activate NPC abilities, create complications.</div>
+                        <div><strong>Limit:</strong> Only 1 Story Point can be spent per participant per action.</div>
+                      </div>
+                    </div>                    
+
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-200 mb-2">Using Motivations</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>Four Types:</strong> Each character has one Desire (what drives them forward), Fear (what they avoid/dread), Strength (greatest positive trait), and Flaw (greatest weakness).</div>
+                        <div><strong>Discovery:</strong> Use Advantage/Threat in social encounters to learn opponent's motivations, or make Perception vs. Cool check to observe and deduce them.</div>
+                        <div><strong>Playing to Motivations:</strong> When your actions align with someone's Strength or Desire, add Boost dice to social checks. When actions satisfy their Flaw or Fear appropriately, gain advantage.</div>
+                        <div><strong>Playing Against Motivations:</strong> When your approach conflicts with their motivations or you misread them, add Setback dice to your social checks.</div>
+                        <div><strong>Roleplay Reward:</strong> Playing to your own motivations can earn bonus XP at session end.</div>
+                      </div>
+                    </div>                    
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-2">Cliffhanger Rules</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>When triggered:</strong> Session ends on a tense, dramatic moment with unresolved danger or critical situation.</div>
+                        <div><strong>Next session start:</strong> All Story Points from both pools move to the Player Pool.</div>
+                        <div><strong>Player options with combined Story Points:</strong></div>
+                        <div className="ml-4 space-y-1">
+                          <div>• <strong>Don't spend:</strong> Keep the points and proceed normally</div>
+                          <div>• <strong>Spend all to escape:</strong> With GM approval, spend all points to escape the dangerous situation</div>
+                          <div>• <strong>Spend all to revive:</strong> Heal all dead/incapacitated characters to half wounds and 0 strain</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-blue-300 font-semibold mb-4">Equipment & Economy</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-blue-200 mb-3">Selling Items</h5>
+                      <div className="space-y-3">
+                        <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-teal-200 mb-2">Selling Procedure</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Check Required:</strong> Negotiation vs. item's rarity difficulty</div>
+                            <div><strong>Base Sale Price:</strong> 1/4 of item's listed cost on success</div>
+                            <div><strong>Two Successes:</strong> 1/2 of item's listed cost</div>
+                            <div><strong>Three+ Successes:</strong> 3/4 of item's listed cost</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-2">Rarity & Difficulty</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Rarity 0-1:</strong> Simple (-)</div>
+                            <div><strong>Rarity 2-3:</strong> Easy (d)</div>
+                            <div><strong>Rarity 4-5:</strong> Average (dd)</div>
+                            <div><strong>Rarity 6-7:</strong> Hard (ddd)</div>
+                            <div><strong>Rarity 8-9:</strong> Daunting (dddd)</div>
+                            <div><strong>Rarity 10:</strong> Formidable (ddddd)</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-2">Difficulty Modifiers</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>-1 Difficulty:</strong> Consumer-Driven Economy, Major Metropolitan Area, or Trading Hub</div>
+                            <div><strong>No Change:</strong> Mid-sized Metropolitan Area or Civilized Location</div>
+                            <div><strong>+1 Difficulty:</strong> Rural or Agrarian Location or State-Regulated Economy</div>
+                            <div><strong>+2 Difficulty:</strong> Frontier location or Laws Prohibiting Ownership</div>
+                            <div><strong>+3 Difficulty:</strong> Active War Zone</div>
+                            <div><strong>+4 Difficulty:</strong> Post-Disaster Wasteland</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-2">Trading & Commerce</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Legal Items:</strong> Use Negotiation check</div>
+                            <div><strong>Illegal Items:</strong> Use Streetwise check</div>
+                            <div><strong>Profit Formula:</strong> Base cost × rarity increase multiplier</div>
+                            <div><strong>Rarity +2:</strong> ×2 cost increase</div>
+                            <div><strong>Rarity +3:</strong> ×3 cost increase</div>
+                            <div><strong>Rarity +4:</strong> ×4 cost increase</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-blue-200 mb-3">Item Maintenance & Repair</h5>
+                      <div className="space-y-3">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-2">Damage Categories</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Minor Damage:</strong> Add 1 Setback die to use</div>
+                            <div><strong>Moderate Damage:</strong> Upgrade difficulty once when using</div>
+                            <div><strong>Major Damage:</strong> Item is unusable until repaired</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-2">Repair Check (Metalworking, Leatherworking, or Crafting)</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Minor Repairs:</strong> Easy (d) difficulty</div>
+                            <div><strong>Moderate Repairs:</strong> Average (dd) difficulty</div>
+                            <div><strong>Major Repairs:</strong> Hard (ddd) difficulty</div>
+                            <div><strong>Time:</strong> 1-2 hours per difficulty level</div>
+                            <div><strong>Rushed Work:</strong> +1 difficulty if done in half time</div>
+                            <div><strong>No Tools:</strong> +1 difficulty without proper tools</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-2">Repair Costs</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Minor Repairs:</strong> 25% of item's base cost</div>
+                            <div><strong>Moderate Repairs:</strong> 50% of item's base cost</div>
+                            <div><strong>Major Repairs:</strong> 100% of item's base cost</div>
+                            <div><strong>Self-Repair Discount:</strong> Reduce cost by 10% per Advantage rolled</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-2">Equipment Failure</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Trigger:</strong> Despair results may indicate malfunction</div>
+                            <div><strong>Effects:</strong> Jammed, broken down, misfired, or inoperable</div>
+                            <div><strong>Ammo Depletion:</strong> Use Despair to make ranged weapons run out of ammo</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-blue-300 font-semibold mb-4">Medical & Recovery</h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-blue-200 mb-3">Medical Care</h5>
+                      <div className="space-y-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-2">Medicine Check Procedure</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Each character may only receive one Medicine check per encounter</div>
+                            <div>• Self-treatment increases difficulty by two</div>
+                            <div>• No medical equipment increases difficulty by one</div>
+                            <div>• Target heals wounds equal to successes generated</div>
+                            <div>• Target heals strain equal to advantages generated</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-2">Medicine Check Difficulty by Health State</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>Easy (d):</strong> Current wounds at or under half wound threshold</div>
+                            <div><strong>Average (dd):</strong> Current wounds over half wound threshold</div>
+                            <div><strong>Hard (ddd):</strong> Current wounds exceed wound threshold</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-2">Treating Critical Injuries</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Make Medicine check with difficulty = Critical Injury severity rating</div>
+                            <div>• One Medicine check per week per Critical Injury</div>
+                            <div>• Success removes the Critical Injury completely</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-blue-200 mb-3">Painkillers (Auto-Healing Items)</h5>
+                      <div className="space-y-3">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-2">Diminishing Returns System</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div><strong>1st painkiller:</strong> Heals 5 wounds</div>
+                            <div><strong>2nd painkiller:</strong> Heals 4 wounds</div>
+                            <div><strong>3rd painkiller:</strong> Heals 3 wounds</div>
+                            <div><strong>4th painkiller:</strong> Heals 2 wounds</div>
+                            <div><strong>5th painkiller:</strong> Heals 1 wound</div>
+                            <div><strong>6th+ painkiller:</strong> No effect (oversaturated)</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-2">Usage Requirements</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Requires one maneuver to administer</div>
+                            <div>• Must be engaged with target to treat them</div>
+                            <div>• Can self-administer with a free hand</div>
+                            <div>• <strong>Cannot heal Critical Injuries</strong></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-blue-200 mb-3">Strain Recovery</h5>
+                      <div className="space-y-3">
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-2">End of Encounter Recovery</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Make Simple (-) Discipline or Cool check</div>
+                            <div>• Recover 1 strain per success generated</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Spending Your Rolls */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-green-600/20 to-emerald-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-green-600/30 hover:to-emerald-600/30 transition-all duration-300"
+            onClick={() => toggleSection('spending')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🎲</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Spending Your Rolls</span>
+                <span className="text-xs bg-green-500/30 text-green-300 px-2 py-1 rounded ml-2">
+                  Dice Mechanics
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.spending ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.spending 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-green-300 mb-2">🎲 Spending Your Dice Results</div>
+                  <div className="text-white/90 text-sm">
+                    The narrative dice system allows for creative storytelling beyond simple success and failure. Here's how to spend your Advantage, Threat, Triumph, and Despair results across different contexts.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-green-300 font-semibold mb-4">Spending Advantage & Triumph</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-green-200 mb-3 flex items-center">
+                        <span className="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs font-bold mr-3">COMBAT</span>
+                        Combat Encounter Options
+                      </h5>
+                      
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">1 Advantage Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Recover Strain</div>
+                            <div className="text-white/70 text-xs">Recover 1 strain per advantage spent</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Add Boost to Ally</div>
+                            <div className="text-white/70 text-xs">Next check by ally within short range gains 1 boost die</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Notice Important Detail</div>
+                            <div className="text-white/70 text-xs">Spot something useful in the environment or about an enemy</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">2 Advantages Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Perform Free Maneuver</div>
+                            <div className="text-white/70 text-xs">Perform one additional maneuver this turn</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Add Setback to Target</div>
+                            <div className="text-white/70 text-xs">Target's next check gains 1 setback die</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">3 Advantages Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Remove Defense</div>
+                            <div className="text-white/70 text-xs">Remove 1 melee or ranged defense from target until end of turn</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Ignore Environmental Penalties</div>
+                            <div className="text-white/70 text-xs">Ignore environmental setback dice for this action</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Skip Target's Turn</div>
+                            <div className="text-white/70 text-xs">Forgo damage to force target to skip their next turn</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Gain Defense</div>
+                            <div className="text-white/70 text-xs">Gain 1 melee or ranged defense until start of next turn</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Disarm Target</div>
+                            <div className="text-white/70 text-xs">Remove one weapon from target's grasp</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Inflict Critical Injury</div>
+                            <div className="text-white/70 text-xs">Target suffers critical injury (if weapon has crit rating)</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-yellow-300 mb-2 text-sm">1 Triumph Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Any Advantage Effect</div>
+                            <div className="text-white/70 text-xs">Can substitute for any advantage-based effect</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Add Difficulty to Target</div>
+                            <div className="text-white/70 text-xs">Target's next check gains 1 difficulty die</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Upgrade Ally's Check</div>
+                            <div className="text-white/70 text-xs">Ally upgrades their next check once</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Do Something Vital</div>
+                            <div className="text-white/70 text-xs">Accomplish something crucial to the narrative</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Initiative Free Maneuver</div>
+                            <div className="text-white/70 text-xs">On initiative roll, perform a free maneuver</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Damage Equipment</div>
+                            <div className="text-white/70 text-xs">Damage target's armor or weapon</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h6 className="font-semibold text-yellow-300 mb-2 text-sm">2 Triumphs Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-yellow-600/15 border border-yellow-600/25 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Destroy Weapon</div>
+                            <div className="text-white/70 text-xs">Completely destroy target's weapon (if possible)</div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-green-200 mb-3 flex items-center">
+                        <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs font-bold mr-3">SOCIAL</span>
+                        Social Encounter Options
+                      </h5>
+                      
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">1 Advantage Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Recover Strain</div>
+                            <div className="text-white/70 text-xs">Recover 1 strain per advantage spent</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Add Boost to Ally</div>
+                            <div className="text-white/70 text-xs">Next social check by ally gains 1 boost die</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Notice Important Detail</div>
+                            <div className="text-white/70 text-xs">Learn something useful about the situation or target</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">2 Advantages Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Perform Free Maneuver</div>
+                            <div className="text-white/70 text-xs">Perform one additional maneuver this turn</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Add Setback to Target</div>
+                            <div className="text-white/70 text-xs">Target's next social check gains 1 setback die</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Learn Strength or Flaw</div>
+                            <div className="text-white/70 text-xs">Discover target's strength or flaw motivation</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">3 Advantages Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Learn Desire or Fear</div>
+                            <div className="text-white/70 text-xs">Discover target's desire or fear motivation</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Conceal True Goal</div>
+                            <div className="text-white/70 text-xs">Hide your real objective from the target</div>
+                          </div>
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Learn Target's True Goal</div>
+                            <div className="text-white/70 text-xs">Discover what the target really wants</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="font-semibold text-green-300 mb-2 text-sm">4 Advantages Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-green-200 text-xs">Inflict Critical Remark</div>
+                            <div className="text-white/70 text-xs">Make a devastating social attack that causes strain</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h6 className="font-semibold text-yellow-300 mb-2 text-sm">1 Triumph Required</h6>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Any Advantage Effect</div>
+                            <div className="text-white/70 text-xs">Can substitute for any advantage-based effect</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Add Difficulty to Target</div>
+                            <div className="text-white/70 text-xs">Target's next social check gains 1 difficulty die</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Upgrade Ally's Check</div>
+                            <div className="text-white/70 text-xs">Ally upgrades their next social check once</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Do Something Vital</div>
+                            <div className="text-white/70 text-xs">Accomplish something crucial to the social situation</div>
+                          </div>
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                            <div className="font-semibold text-yellow-200 text-xs">Initiative Free Maneuver</div>
+                            <div className="text-white/70 text-xs">On initiative roll, perform a free maneuver</div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-green-200 mb-3 flex items-center">
+                        <span className="bg-gray-500/20 text-gray-300 px-2 py-1 rounded text-xs font-bold mr-3">GENERAL</span>
+                        Any Context Options
+                      </h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Recover Strain</span>
+                            <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">1 ADV</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Recover 1 strain per advantage spent</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Add Boost to Next Check</span>
+                            <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">1 ADV</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Your next check gains 1 boost die</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Notice Detail</span>
+                            <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">1 ADV</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Spot something useful or interesting in the environment</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Perform Additional Maneuver</span>
+                            <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">2 ADV</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Perform one additional maneuver this turn</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Reduce Time Required</span>
+                            <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">2 ADV</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Reduce time needed for extended tasks</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Remarkable Success</span>
+                            <span className="bg-purple-500/30 text-purple-300 px-1 py-0.5 rounded text-xs">TRIUMPH</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Achieve an extraordinary outcome or gain major story benefit</div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4">Spending Threat & Despair</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3 flex items-center">
+                        <span className="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs font-bold mr-3">COMBAT</span>
+                        Combat Encounter Effects
+                      </h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Suffer Strain</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Character suffers 1 strain per threat spent</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Lose Free Maneuver</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Character cannot perform free maneuver this turn</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Add Setback to Ally</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Ally's next check gains 1 setback die</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Fall Prone</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Character falls prone or loses balance</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Enemy Gets Free Maneuver</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">One enemy immediately performs a maneuver</div>
+                        </div>
+
+                        <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Weapon Malfunction</span>
+                            <span className="bg-purple-500/30 text-purple-300 px-1 py-0.5 rounded text-xs">DESPAIR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Weapon breaks, jams, or causes major complication</div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3 flex items-center">
+                        <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs font-bold mr-3">SOCIAL</span>
+                        Social Encounter Effects
+                      </h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Reveal Weakness</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Accidentally reveal one of your motivations to target</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Upgrade Target's Next Check</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Target upgrades their next social check against you</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Anger Bystanders</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Offend onlookers or damage your reputation</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Suffer Strain</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Character suffers 1 strain from social stress</div>
+                        </div>
+
+                        <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Major Social Disaster</span>
+                            <span className="bg-purple-500/30 text-purple-300 px-1 py-0.5 rounded text-xs">DESPAIR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Catastrophic social failure with lasting consequences</div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3 flex items-center">
+                        <span className="bg-gray-500/20 text-gray-300 px-2 py-1 rounded text-xs font-bold mr-3">GENERAL</span>
+                        Any Context Effects
+                      </h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Suffer Strain</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Character suffers 1 strain per threat spent</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Add Setback to Next Check</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">1 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Your next check gains 1 setback die</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Environmental Complication</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Create minor environmental hazard or complication</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Increase Time Required</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">2 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Increase time needed for extended tasks</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Immediate Danger</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">3 THR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Create immediate threat requiring action</div>
+                        </div>
+
+                        <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Catastrophic Failure</span>
+                            <span className="bg-purple-500/30 text-purple-300 px-1 py-0.5 rounded text-xs">DESPAIR</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Major complication with lasting story consequences</div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-blue-300 mb-3">Quick Reference</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Resolution Order</div>
+                      <div className="text-white/80 text-xs">1. Success/Failure 2. Advantage/Threat 3. Triumph/Despair</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Player Control</div>
+                      <div className="text-white/80 text-xs">Players spend their own Advantage and Triumph</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">GM Control</div>
+                      <div className="text-white/80 text-xs">GM spends Threat and Despair against players</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Multiple Uses</div>
+                      <div className="text-white/80 text-xs">Most effects can be used multiple times with enough symbols</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Context Tags</div>
+                      <div className="text-white/80 text-xs">ALL = Any context, specific tags for limited use</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Narrative Priority</div>
+                      <div className="text-white/80 text-xs">Always describe what happens, not just the mechanical effect</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Effects */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-red-600/20 to-pink-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-red-600/30 hover:to-pink-600/30 transition-all duration-300"
+            onClick={() => toggleSection('status')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">💫</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Status Effects</span>
+                <span className="text-xs bg-red-500/30 text-red-300 px-2 py-1 rounded ml-2">
+                  Conditions
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.status ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.status 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-red-300 mb-2">💡 Status Effect Rules</div>
+                  <div className="text-white/90 text-sm">
+                    Status effects persist until removed by specific actions, abilities, or time limits. Multiple instances of the same effect may stack or refresh duration depending on the specific effect.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4 flex items-center">
+                    <span className="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs font-bold mr-3">NEGATIVE</span>
+                    Detrimental Status Effects
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Blinded</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Vision</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot see anything. Upgrade difficulty of checks relying on sight twice. When making ranged combat checks, must spend 2 Advantage to hit target in engaged range band.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Burning</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Damage</span>
+                      </div>
+                      <p className="text-white/80 text-sm">At the end of each turn, suffer wounds based on the burn severity. Can attempt Coordination check as action to extinguish flames. Water or similar substances automatically end this effect.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Confused</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Mental</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot tell friend from foe. At start of turn, roll d10: 1-3 act normally, 4-6 do nothing, 7-10 attack nearest character (friend or foe). Lasts until end of encounter or removed.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Deafened</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Hearing</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot hear anything. Add 2 Setback to Perception checks and social checks relying on verbal communication. Cannot benefit from audio-based advantages or warnings.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Disoriented</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Mental</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Add 1 Setback to all skill checks. Multiple instances can stack, adding additional 1 Setback per instance. Usually lasts a specific number of rounds.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Ensnared/Entangled</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Physical</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot perform move maneuvers. Can attempt opposed Athletics vs. ensnare rating as action to break free. Being attacked by weapon with Breach may automatically free you.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Exhausted</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Physical</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Progressive levels of fatigue with increasingly severe penalties. See Exhaustion Rules section for complete mechanics and recovery methods.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Frightened</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Mental</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Add 2 Setback to all checks when the source of fear is present. Cannot voluntarily move closer to the source of fear. Make Discipline check at end of each turn to overcome.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Immobilized</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Physical</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot perform move maneuvers of any kind. Can still perform actions and other maneuvers that don't involve changing position. Typically removed by specific conditions or abilities.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Incapacitated</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Severe</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot perform actions, maneuvers, or incidentals. Effectively unconscious or helpless. Usually results from exceeding wound or strain thresholds.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Poisoned</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Damage</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Suffer ongoing damage (wounds or strain) at specified intervals. May have additional effects like 1 Setback to checks. Resilience checks may reduce duration or severity.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Prone</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Position</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Lying on the ground. Add 1 Setback to Brawl and Melee checks. Ranged attacks against you add 1 Setback. Standing up requires maneuver or talent like Jump Up.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Sickened</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Disease</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Add 1 Setback to all Brawn and Agility checks. May have additional symptoms. Usually part of disease mechanics with specific recovery conditions.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Silenced</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Speech</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot speak or make vocal sounds. Cannot use abilities requiring speech or verbal components. Add 2 Setback to social interactions requiring verbal communication.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Slowed</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Movement</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Can only perform one maneuver per turn (instead of the normal two). Actions are unaffected. Multiple maneuvers require spending strain as normal.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Staggered</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Action</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot perform actions, only maneuvers and incidentals. Can still move and perform simple tasks but cannot take complex actions like attacks or skill checks.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Stunned</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Strain</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Suffer additional strain when taking damage. The amount is specified by the effect that caused the stunned condition. Usually temporary.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-red-200">Unconscious</h5>
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs">Severe</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Cannot perform any actions, maneuvers, or incidentals. Unaware of surroundings. Attacks against unconscious targets gain significant bonuses. Often result of critical injuries.</p>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-green-300 font-semibold mb-4 flex items-center">
+                    <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs font-bold mr-3">POSITIVE</span>
+                    Beneficial Status Effects
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-green-200">Inspired</h5>
+                        <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs">Mental</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Add 1 Boost to all skill checks. Often granted by leadership abilities or inspiring actions. Usually lasts for a specific duration or until used.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-green-200">Protected</h5>
+                        <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs">Defense</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Increase defense rating against specific types of attacks. May provide damage resistance or other protective benefits. Duration and type varies by source.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-green-200">Regenerating</h5>
+                        <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs">Healing</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Automatically heal wounds or strain at specified intervals. Rate of healing depends on the source of regeneration. May have specific conditions or limitations.</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-bold text-green-200">Enhanced</h5>
+                        <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs">Ability</span>
+                      </div>
+                      <p className="text-white/80 text-sm">Improve specific characteristics or skills temporarily. May add bonus dice, reduce difficulty, or provide other mechanical benefits to certain actions.</p>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-blue-300 mb-3">Status Effect Interactions</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Stacking Effects</div>
+                      <div className="text-white/80 text-xs">Some effects stack (like Disoriented), while others replace previous instances (like Burning).</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Duration</div>
+                      <div className="text-white/80 text-xs">Effects last until specifically removed, end of encounter, or a set number of rounds.</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Removal</div>
+                      <div className="text-white/80 text-xs">Effects can be removed by Medicine checks, abilities, items, or specific actions.</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Immunity</div>
+                      <div className="text-white/80 text-xs">Some creatures or equipment provide immunity to specific status effects.</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lighting Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-yellow-600/30 hover:to-orange-600/30 transition-all duration-300"
+            onClick={() => toggleSection('lighting')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">💡</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Lighting Rules</span>
+                <span className="text-xs bg-yellow-500/30 text-yellow-300 px-2 py-1 rounded ml-2">
+                  Visibility
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.lighting ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.lighting 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-yellow-300 mb-2">💡 Zone-Based Lighting System</div>
+                  <div className="text-white/90 text-sm">
+                    Rooms are divided into zones based on size. Each zone can have different light levels, creating realistic lighting variation and tactical opportunities.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-yellow-300 font-semibold mb-4">Room Zone System</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-2">Small Rooms</div>
+                      <div className="text-white/80 text-sm mb-2">Bathrooms, closets, small offices</div>
+                      <div className="text-white/70 text-xs">
+                        <strong>Zones:</strong> 1 zone (uniform lighting throughout)
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-2">Medium Rooms</div>
+                      <div className="text-white/80 text-sm mb-2">Bedrooms, offices, kitchens</div>
+                      <div className="text-white/70 text-xs">
+                        <strong>Zones:</strong> 3 zones (Left / Center / Right)
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-2">Large Rooms</div>
+                      <div className="text-white/80 text-sm mb-2">Warehouses, cafeterias, lobbies</div>
+                      <div className="text-white/70 text-xs">
+                        <strong>Option A:</strong> 3 zones (Near / Center / Far)<br/>
+                        <strong>Option B:</strong> 5 zones (Center + 4 Corners)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-yellow-300 font-semibold mb-4">Light Levels</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3">
+                      <div className="font-semibold text-gray-200 mb-1">Pitch Black (0)</div>
+                      <div className="text-white/70 text-xs">Complete darkness, no visibility</div>
+                    </div>
+
+                    <div className="bg-gray-800/50 border border-gray-600/50 rounded-lg p-3">
+                      <div className="font-semibold text-gray-200 mb-1">Dark (1)</div>
+                      <div className="text-white/70 text-xs">Emergency lighting, distant glow</div>
+                    </div>
+
+                    <div className="bg-gray-700/50 border border-gray-500/50 rounded-lg p-3">
+                      <div className="font-semibold text-gray-200 mb-1">Dim (2)</div>
+                      <div className="text-white/70 text-xs">Candlelight, dawn/dusk conditions</div>
+                    </div>
+
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Average (3)</div>
+                      <div className="text-white/70 text-xs">Standard indoor lighting, overcast day</div>
+                    </div>
+
+                    <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Bright (4)</div>
+                      <div className="text-white/70 text-xs">Well-lit room, flashlight beam</div>
+                    </div>
+
+                    <div className="bg-yellow-500/30 border border-yellow-400/40 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-100 mb-1">Very Bright (5)</div>
+                      <div className="text-white/70 text-xs">Sunny day, floodlights</div>
+                    </div>
+
+                    <div className="bg-white/20 border border-white/30 rounded-lg p-3">
+                      <div className="font-semibold text-white mb-1">Blinding (6)</div>
+                      <div className="text-white/70 text-xs">Searchlights, direct sunlight</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-yellow-300 font-semibold mb-4">Light Source Effects</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-yellow-200 mb-3">Personal Light Sources</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Flashlight</div>
+                          <div className="text-white/80 text-xs">Lights your current zone and one adjacent zone</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Lantern</div>
+                          <div className="text-white/80 text-xs">Lights your zone and all adjacent zones</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Phone Light</div>
+                          <div className="text-white/80 text-xs">Only lights your current zone</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-yellow-200 mb-3">Room Light Sources</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Overhead Light</div>
+                          <div className="text-white/80 text-xs">Lights center zone, adjacent zones get partial light</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Desk Lamp</div>
+                          <div className="text-white/80 text-xs">Only lights the zone it's located in</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Emergency Lighting</div>
+                          <div className="text-white/80 text-xs">Provides minimal light to all zones</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Window (Daytime)</div>
+                          <div className="text-white/80 text-xs">Lights the zone nearest to it</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-yellow-300 font-semibold mb-4">Lighting Effects on Gameplay</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-semibold text-yellow-200 mb-3">Sight-Based Check Penalties</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="bg-gray-900/50 border border-gray-700/50 rounded p-3">
+                          <span className="font-semibold text-gray-200">Pitch Black (0)</span>
+                          <div className="text-white/80 text-xs">+3 Setback to all sight-based checks</div>
+                        </div>
+                        <div className="bg-gray-800/50 border border-gray-600/50 rounded p-3">
+                          <span className="font-semibold text-gray-200">Dark (1)</span>
+                          <div className="text-white/80 text-xs">+1 Setback to all sight-based checks</div>
+                        </div>
+                        <div className="bg-blue-600/20 border border-blue-500/30 rounded p-3">
+                          <span className="font-semibold text-blue-200">Dim (2) - Bright (4)</span>
+                          <div className="text-white/80 text-xs">No penalties to sight-based checks</div>
+                        </div>
+                        <div className="bg-yellow-500/30 border border-yellow-400/40 rounded p-3">
+                          <span className="font-semibold text-yellow-200">Very Bright (5)</span>
+                          <div className="text-white/80 text-xs">+1 Setback to all sight-based checks</div>
+                        </div>
+                        <div className="bg-white/20 border border-white/30 rounded p-3">
+                          <span className="font-semibold text-white">Blinding (6)</span>
+                          <div className="text-white/80 text-xs">+3 Setback to all sight-based checks</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-yellow-200 mb-3">Stealth Check Bonuses</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="bg-gray-900/50 border border-gray-700/50 rounded p-3">
+                          <span className="font-semibold text-gray-200">Pitch Black (0)</span>
+                          <div className="text-white/80 text-xs">+3 Boost to Stealth checks</div>
+                        </div>
+                        <div className="bg-gray-800/50 border border-gray-600/50 rounded p-3">
+                          <span className="font-semibold text-gray-200">Dark (1)</span>
+                          <div className="text-white/80 text-xs">+1 Boost to Stealth checks</div>
+                        </div>
+                        <div className="bg-blue-600/20 border border-blue-500/30 rounded p-3">
+                          <span className="font-semibold text-blue-200">Dim (2) - Bright (4)</span>
+                          <div className="text-white/80 text-xs">No bonuses to Stealth checks</div>
+                        </div>
+                        <div className="bg-yellow-500/30 border border-yellow-400/40 rounded p-3">
+                          <span className="font-semibold text-yellow-200">Very Bright (5)</span>
+                          <div className="text-white/80 text-xs">No bonuses to Stealth checks</div>
+                        </div>
+                        <div className="bg-white/20 border border-white/30 rounded p-3">
+                          <span className="font-semibold text-white">Blinding (6)</span>
+                          <div className="text-white/80 text-xs">No bonuses to Stealth checks</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-blue-600/10 border border-blue-500/30 rounded-lg p-3">
+                    <div className="font-semibold text-blue-300 mb-2">Sight-Based Checks Include:</div>
+                    <div className="text-white/80 text-sm">
+                      Combat attacks, Perception, Vigilance, skill checks requiring visual identification, and any other actions that rely primarily on vision.
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Temperature Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-red-600/20 to-orange-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-red-600/30 hover:to-orange-600/30 transition-all duration-300"
+            onClick={() => toggleSection('temperature')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🌡️</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Temperature Rules</span>
+                <span className="text-xs bg-red-500/30 text-red-300 px-2 py-1 rounded ml-2">
+                  Climate
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.temperature ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.temperature 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4">Temperature Levels</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-blue-900/60 border border-blue-800/60 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Deadly Cold</div>
+                      <div className="text-white/70 text-xs">Arctic conditions, -40°F and below</div>
+                    </div>
+
+                    <div className="bg-blue-800/50 border border-blue-700/50 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Extreme Cold</div>
+                      <div className="text-white/70 text-xs">Freezing winter, 0-32°F</div>
+                    </div>
+
+                    <div className="bg-blue-700/40 border border-blue-600/40 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Very Cold</div>
+                      <div className="text-white/70 text-xs">Cold winter day, 33-45°F</div>
+                    </div>
+
+                    <div className="bg-blue-600/30 border border-blue-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Cold</div>
+                      <div className="text-white/70 text-xs">Cool autumn day, 46-60°F</div>
+                    </div>
+
+                    <div className="bg-cyan-600/20 border border-cyan-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-200 mb-1">Cool</div>
+                      <div className="text-white/70 text-xs">Mild spring day, 61-70°F</div>
+                    </div>
+
+                    <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">Comfortable</div>
+                      <div className="text-white/70 text-xs">Room temperature, 71-75°F</div>
+                    </div>
+
+                    <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Warm</div>
+                      <div className="text-white/70 text-xs">Summer day, 76-85°F</div>
+                    </div>
+
+                    <div className="bg-orange-600/30 border border-orange-500/40 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Hot</div>
+                      <div className="text-white/70 text-xs">Hot summer day, 86-95°F</div>
+                    </div>
+
+                    <div className="bg-red-600/40 border border-red-500/50 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Very Hot</div>
+                      <div className="text-white/70 text-xs">Desert day, 96-110°F</div>
+                    </div>
+
+                    <div className="bg-red-700/50 border border-red-600/60 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Extreme Heat</div>
+                      <div className="text-white/70 text-xs">Death Valley conditions, 111-130°F</div>
+                    </div>
+
+                    <div className="bg-red-800/60 border border-red-700/70 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Deadly Heat</div>
+                      <div className="text-white/70 text-xs">Furnace-like, 130°F+</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4">Temperature Sources</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Heating Systems</div>
+                      <div className="text-white/80 text-xs">Raise room temperature by 2-3 levels when functional</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Fires/Fireplaces</div>
+                      <div className="text-white/80 text-xs">Raise room temperature by 1-2 levels</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Boiler Rooms/Mechanical Areas</div>
+                      <div className="text-white/80 text-xs">Naturally hot (Hot to Extreme Heat range typically)</div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Freezer/Cold Storage</div>
+                      <div className="text-white/80 text-xs">Naturally cold (Extreme Cold to Very Cold range typically)</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Electronic Heat</div>
+                      <div className="text-white/80 text-xs">Servers/machinery can raise temperature by 1 level</div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1">Broken/Malfunctioning HVAC</div>
+                      <div className="text-white/80 text-xs">Can cause extreme temperatures in either direction</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4">Temperature Effects</h4>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Extreme Cold Temperatures (Deadly Cold to Very Cold)</div>
+                      <div className="text-white/80 text-xs space-y-1">
+                        <div>• 2 Setback to all physical checks</div>
+                        <div>• Suffer 1 strain per 10 minutes of exposure without protection</div>
+                        <div>• After 1 hour of exposure, make a Hard Resilience check or suffer hypothermia</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-cyan-600/20 border border-cyan-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-200 mb-2">Cold Temperature</div>
+                      <div className="text-white/80 text-xs space-y-1">
+                        <div>• 1 Setback to physical checks</div>
+                        <div>• No immediate damage but discomfort</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">Comfortable Temperatures (Cool to Warm)</div>
+                      <div className="text-white/80 text-xs">No penalties or bonuses</div>
+                    </div>
+
+                    <div className="bg-orange-600/20 border border-orange-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-2">Hot Temperature</div>
+                      <div className="text-white/80 text-xs">1 Setback to physical checks</div>
+                    </div>
+
+                    <div className="bg-red-600/20 border border-red-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Extreme Heat Temperatures (Very Hot to Deadly Heat)</div>
+                      <div className="text-white/80 text-xs space-y-1">
+                        <div>• 2 Setback to all physical checks</div>
+                        <div>• Suffer 1 strain per 10 minutes of exposure without protection</div>
+                        <div>• After 30 minutes of exposure, make a Hard Resilience check or suffer heat stroke</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-red-300 font-semibold mb-4">Temperature-Related Conditions</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Hypothermia</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div>• Gain the Sickened status effect (1 Setback to all Brawn and Agility checks)</div>
+                        <div>• Must make another Hard Resilience check every 30 minutes or gain 1 Exhaustion</div>
+                        <div>• Removed by warming up to Cool temperature or higher for at least 1 hour</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-600/20 border border-red-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Heat Stroke</div>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div>• Gain the Sickened status effect (1 Setback to all Brawn and Agility checks)</div>
+                        <div>• Must make another Hard Resilience check every 15 minutes or gain 1 Exhaustion</div>
+                        <div>• Removed by cooling down to Warm temperature or lower for at least 1 hour</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Resting Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-teal-600/20 to-blue-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-teal-600/30 hover:to-blue-600/30 transition-all duration-300"
+            onClick={() => toggleSection('resting')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🛌</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Resting Rules</span>
+                <span className="text-xs bg-teal-500/30 text-teal-300 px-2 py-1 rounded ml-2">
+                  Recovery
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.resting ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.resting 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-teal-500/10 border border-teal-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-teal-300 mb-2">🛌 The Basic Rule</div>
+                  <div className="text-white/90 text-sm">
+                    In Genesys, a night's rest heals all strain and 1 wound. In the Backrooms, <strong>danger determines how much total rest time you get</strong> before entities find you.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-teal-300 font-semibold mb-4">Total Rest Time by Danger Level</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">🏠 Danger 0</div>
+                      <div className="text-white/80 text-sm">Unlimited rest time</div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">🛡️ Danger 1</div>
+                      <div className="text-white/80 text-sm">48 hours total before entity encounter</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">⚠️ Danger 2</div>
+                      <div className="text-white/80 text-sm">16 hours total before entity encounter</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">🚨 Danger 3</div>
+                      <div className="text-white/80 text-sm">4 hours total before entity encounter</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">💀 Danger 4+</div>
+                      <div className="text-white/80 text-sm">No rest possible</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
+                    <div className="font-semibold text-blue-300 mb-1">Rest Time Rules</div>
+                    <div className="text-white/80 text-sm">
+                      Mix and match rest types within your time limit. Leaving and returning resets the timer.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-teal-300 font-semibold mb-4">Rest Types</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                      <h5 className="font-semibold text-cyan-200 mb-2">Short Rest (1 hour)</h5>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Make <strong>Simple Discipline check</strong></div>
+                        <div>• <strong>Recover strain = successes rolled</strong></div>
+                        <div><strong>Danger 3:</strong> Roll d10 - on 1-2, entity encounter interrupts rest</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <h5 className="font-semibold text-purple-200 mb-2">Full Rest (8 hours sleep)</h5>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• <strong>Recover all strain + 1 wound</strong> (standard Genesys)</div>
+                        <div><strong>Danger 2:</strong> Roll d10 - on 1-2, entity encounter interrupts rest</div>
+                        <div><strong>Danger 3:</strong> Roll d10 - on 1-3, entity encounter interrupts rest</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <h5 className="font-semibold text-indigo-200 mb-2">Extended Rest (24 hours)</h5>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• <strong>Recover all strain + half total wounds (rounded up)</strong></div>
+                        <div><strong>Danger 1:</strong> Roll d10 - on 1, entity encounter interrupts rest</div>
+                        <div><strong>Danger 2:</strong> Roll d10 - on 1-2, entity encounter interrupts rest</div>
+                        <div><strong>Danger 3:</strong> Roll d10 - on 1-4, entity encounter interrupts rest</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h5 className="font-semibold text-orange-200 mb-3">Sanity Recovery</h5>
+                  <div className="space-y-3">
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1">Short Rest</div>
+                      <div className="text-white/80 text-sm">No sanity recovery</div>
+                    </div>
+
+                    <div className="bg-purple-600/15 border border-purple-600/25 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1">Full Rest</div>
+                      <div className="text-white/80 text-sm">Recover 1 sanity</div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-1">Extended Rest</div>
+                      <div className="text-white/80 text-sm">Recover 3 sanity</div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Group Rest</div>
+                      <div className="text-white/80 text-sm">+1 sanity recovery bonus when resting with others</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Exhaustion Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-orange-600/20 to-red-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-orange-600/30 hover:to-red-600/30 transition-all duration-300"
+            onClick={() => toggleSection('exhaustion')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">😴</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Exhaustion Rules</span>
+                <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-1 rounded ml-2">
+                  Fatigue
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.exhaustion ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.exhaustion 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-orange-300 mb-2">😴 Physical Fatigue in the Endless Maze</div>
+                  <div className="text-white/90 text-sm">
+                    Exhaustion represents physical deterioration from environmental stress and basic needs. It affects only physical capabilities, leaving mental faculties for the sanity system.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Gaining Exhaustion</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Environmental Sources</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Extreme Temperature</div>
+                          <div className="text-white/80 text-sm">1 Exhaustion per hour in Very Cold/Very Hot or worse conditions</div>
+                        </div>
+
+                        <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-gray-200 mb-1">Poor Lighting</div>
+                          <div className="text-white/80 text-sm">1 Exhaustion per 8 hours in Pitch Black (0) or Blinding (6) light</div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Sleep Deprivation</div>
+                          <div className="text-white/80 text-sm">1 Exhaustion per 24 hours without Full Rest (8+ hours sleep)</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">No Rations</div>
+                          <div className="text-white/80 text-sm">1 Exhaustion per 24 hours without food/water</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Other Sources</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Critical Injuries</div>
+                          <div className="text-white/80 text-sm">May gain 1 Exhaustion if critical injury roll is 80 or lower (after modifiers)</div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1">Overexertion</div>
+                          <div className="text-white/80 text-sm">Repeated strain threshold hits in short periods</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Exhaustion Effects</h4>
+                  <div className="mb-3 text-white/80 text-sm italic">Affects only physical capabilities</div>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Level 1</div>
+                      <div className="text-white/80 text-sm">Add 1 Setback die to all Brawn and Agility checks</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Level 2</div>
+                      <div className="text-white/80 text-sm">Add 2 Setback dice to all Brawn and Agility checks</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Level 3</div>
+                      <div className="text-white/80 text-sm">Add 3 Setback dice to all Brawn and Agility checks</div>
+                    </div>
+
+                    <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Level 4</div>
+                      <div className="text-white/80 text-sm">Add 4 Setback dice to all Brawn and Agility checks</div>
+                    </div>
+
+                    <div className="bg-red-800/30 border border-red-700/40 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Level 5</div>
+                      <div className="text-white/80 text-sm">Character becomes Incapacitated until exhaustion is reduced</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Removing Exhaustion</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Through Rest</h5>
+                      <div className="space-y-3">
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-1">Short Rest (1 hour)</div>
+                          <div className="text-white/80 text-sm">No exhaustion removal</div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Full Rest (8 hours)</div>
+                          <div className="text-white/80 text-sm">Remove 1 level of exhaustion</div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1">Extended Rest (24 hours)</div>
+                          <div className="text-white/80 text-sm">Remove ALL exhaustion levels</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Environmental Requirements</h5>
+                      <div className="space-y-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">Temperature</div>
+                          <div className="text-white/80 text-sm">Must rest in Comfortable range (Cool to Warm) to remove exhaustion</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Extreme Conditions</div>
+                          <div className="text-white/80 text-sm">No exhaustion removal if resting in Very Cold/Very Hot or worse</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-blue-300 mb-3">Special Notes</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Maximum</div>
+                      <div className="text-white/80 text-xs">Exhaustion caps at Level 5 (Incapacitated)</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Physical Focus</div>
+                      <div className="text-white/80 text-xs">Only affects Brawn/Agility - mental faculties remain sharp</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Basic Needs</div>
+                      <div className="text-white/80 text-xs">Rations and proper rest are essential for physical maintenance</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Tracking</div>
+                      <div className="text-white/80 text-xs">Simple 1-5 scale for easy gameplay tracking</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fear and Sanity Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-indigo-600/30 transition-all duration-300"
+            onClick={() => toggleSection('fear')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">😱</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Sanity & Fear Rules</span>
+                <span className="text-xs bg-purple-500/30 text-purple-300 px-2 py-1 rounded ml-2">
+                  Mental Effects
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.fear ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.fear 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-purple-300 mb-2">😱 Mental Deterioration in the Infinite Maze</div>
+                  <div className="text-white/90 text-sm">
+                    Sanity represents mental stability and cognitive function. Fear causes sanity loss, affecting mental capabilities while leaving physical abilities intact.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-purple-300 font-semibold mb-4">Fear System</h4>
+                  
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                    <h5 className="font-semibold text-indigo-200 mb-3">Fear Check Results</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="text-white/80">
+                        <strong className="text-green-300">Success:</strong> No immediate effect, maintain composure
+                      </div>
+                      <div className="text-white/80">
+                        <strong className="text-yellow-300">Failure:</strong> Gain <strong>Frightened</strong> status + lose sanity based on failure severity
+                      </div>
+                      <div className="text-white/80">
+                        <strong className="text-red-300">Despair:</strong> Lose 2 additional sanity + potential <strong>Confused</strong> status
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-purple-300 font-semibold mb-4">Sanity System</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-purple-200 mb-3">Sanity Loss</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Failed Fear Check</div>
+                          <div className="text-white/80 text-sm">Lose 1 sanity per net failure</div>
+                        </div>
+
+                        <div className="bg-red-600/15 border border-red-600/25 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Despair on Fear Check</div>
+                          <div className="text-white/80 text-sm">Lose 2 additional sanity</div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1">Witnessing Death</div>
+                          <div className="text-white/80 text-sm">Lose 1-3 sanity (depending on circumstances)</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Entity Attack</div>
+                          <div className="text-white/80 text-sm">Lose 1 sanity regardless of physical damage</div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Sleep Deprivation</div>
+                          <div className="text-white/80 text-sm">Lose 1 sanity per 48 hours without Full Rest</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-purple-200 mb-3">Sanity Effects</h5>
+                      <div className="mb-3 text-white/80 text-sm italic">Affects mental capabilities (Intellect, Cunning, Willpower)</div>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">80-100% Sanity</div>
+                          <div className="text-white/80 text-sm">No penalties</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">60-79% Sanity</div>
+                          <div className="text-white/80 text-sm">Add 1 Setback die to all mental checks</div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1">40-59% Sanity</div>
+                          <div className="text-white/80 text-sm">Add 2 Setback dice to all mental checks</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">20-39% Sanity</div>
+                          <div className="text-white/80 text-sm">Add 3 Setback dice to all mental checks + gain <strong>Disoriented</strong></div>
+                        </div>
+
+                        <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">1-19% Sanity</div>
+                          <div className="text-white/80 text-sm">Add 4 Setback dice to all mental checks + gain <strong>Confused</strong></div>
+                        </div>
+
+                        <div className="bg-red-800/30 border border-red-700/40 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">0 Sanity</div>
+                          <div className="text-white/80 text-sm">Character becomes <strong>Incapacitated</strong> until sanity restored</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-600/10 border border-blue-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-blue-300 mb-3">Special Notes</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Maximum</div>
+                      <div className="text-white/80 text-xs">Sanity starts at 100, cannot exceed starting value</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Mental Focus</div>
+                      <div className="text-white/80 text-xs">Only affects Intellect/Cunning/Willpower checks</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Group Support</div>
+                      <div className="text-white/80 text-xs">Characters can help each other resist fear through teamwork</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-blue-200 mb-1">Percentage Tracking</div>
+                      <div className="text-white/80 text-xs">Track as 0-100 scale for clear thresholds</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fall Damage Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-gray-600/20 to-slate-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-gray-600/30 hover:to-slate-600/30 transition-all duration-300"
+            onClick={() => toggleSection('fall')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🪂</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Fall Damage Rules</span>
+                <span className="text-xs bg-gray-500/30 text-gray-300 px-2 py-1 rounded ml-2">
+                  Physics
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.fall ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.fall 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-gray-300 mb-2">🪂 Falling Damage System</div>
+                  <div className="text-white/90 text-sm">
+                    Falls are measured by range bands and cause both wounds and strain. Characters can attempt to reduce damage through skill checks or environmental factors.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-gray-300 font-semibold mb-4">Falling Damage Table</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">Short Range Fall</div>
+                      <div className="text-white/80 text-sm">
+                        <strong>Damage:</strong> 10 wounds + 10 strain<br/>
+                        <strong>Examples:</strong> Falling from a low wall, or first story window
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Medium Range Fall</div>
+                      <div className="text-white/80 text-sm">
+                        <strong>Damage:</strong> 30 wounds + 20 strain<br/>
+                        <strong>Examples:</strong> Falling from a second story, high wall, or tall tree
+                      </div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Long Range Fall</div>
+                      <div className="text-white/80 text-sm">
+                        <strong>Damage:</strong> Wound Threshold + 30 strain + crit 50<br/>
+                        <strong>Examples:</strong> Falling from a third story, tall building, or cliff
+                      </div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Extreme Range Fall</div>
+                      <div className="text-white/80 text-sm">
+                        <strong>Damage:</strong> Wound Threshold + 40 strain + crit 75<br/>
+                        <strong>Examples:</strong> Falling from a skyscraper, mountain, or terminal velocity
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-gray-300 font-semibold mb-4">Reducing Fall Damage</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-gray-200 mb-3">Skill Checks</h5>
+                      <div className="space-y-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">Athletics Check</div>
+                          <div className="text-white/80 text-sm">
+                            <strong>Difficulty:</strong> Average (dd)<br/>
+                            <strong>Success:</strong> Each success reduces wounds by 1<br/>
+                            <strong>Advantage:</strong> Each advantage reduces strain by 1
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Coordination Check</div>
+                          <div className="text-white/80 text-sm">
+                            <strong>Difficulty:</strong> Average (dd)<br/>
+                            <strong>Success:</strong> Each success reduces wounds by 1<br/>
+                            <strong>Advantage:</strong> Each advantage reduces strain by 1
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-gray-200 mb-3">Environmental Factors</h5>
+                      <div className="space-y-3">
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Triumph Result</div>
+                          <div className="text-white/80 text-sm">
+                            GM may reduce the fall distance by one range band (character grabs handhold, lands on something, etc.)
+                          </div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1">Soft Landing Surfaces</div>
+                          <div className="text-white/80 text-sm">
+                            <strong>Examples:</strong> Water, snow, hay, cushions<br/>
+                            <strong>Effect:</strong> GM may reduce damage or allow additional checks
+                          </div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Hard Landing Surfaces</div>
+                          <div className="text-white/80 text-sm">
+                            <strong>Examples:</strong> Concrete, rocks, spikes<br/>
+                            <strong>Effect:</strong> GM may increase damage or add setback to reduction checks
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-yellow-300 mb-3">Special Fall Situations</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Deliberate Jumps</div>
+                      <div className="text-white/80 text-xs">Characters may gain boost dice to reduction checks for planned falls</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Pushed/Thrown</div>
+                      <div className="text-white/80 text-xs">Add setback dice to reduction checks for involuntary falls</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Multiple Falls</div>
+                      <div className="text-white/80 text-xs">Each subsequent fall in same encounter adds 1 setback to reduction checks</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Equipment Assistance</div>
+                      <div className="text-white/80 text-xs">Ropes, grappling hooks, or other gear may provide boost dice or reduce fall distance</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Atmospheric Hazard Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-emerald-600/20 to-cyan-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-emerald-600/30 hover:to-cyan-600/30 transition-all duration-300"
+            onClick={() => toggleSection('atmospheric')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🌫️</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Atmospheric Hazard Rules</span>
+                <span className="text-xs bg-emerald-500/30 text-emerald-300 px-2 py-1 rounded ml-2">
+                  Environment
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.atmospheric ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.atmospheric 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-emerald-300 mb-2">🌫️ Poisonous Air in the Endless Maze</div>
+                  <div className="text-white/90 text-sm">
+                    Toxic atmospheres represent contaminated air that causes progressive damage over time. Different toxicity levels cause escalating effects from mild discomfort to life-threatening poisoning.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-emerald-300 font-semibold mb-4">Atmosphere Types</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">Level 1 - Minor Toxicity</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Sources:</strong> Mold spores, stagnant air, dust particles</div>
+                        <div><strong>Effect:</strong> 1 strain per hour of exposure</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-2">Level 2 - Mild Toxicity</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Sources:</strong> Chemical residue, heavy mold, old paint fumes</div>
+                        <div><strong>Effect:</strong> 1 strain per 10 minutes of exposure</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-2">Level 3 - Moderate Toxicity</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Sources:</strong> Industrial chemicals, sewage gases, cleaning solvents</div>
+                        <div><strong>Effect:</strong> 1 wound + 1 strain per 10 minutes of exposure</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Level 4 - Severe Toxicity</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Sources:</strong> Concentrated chemicals, acid vapors, toxic gas pockets</div>
+                        <div><strong>Effect:</strong> 2 wounds + 2 strain per 10 minutes + Poisoned status</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-700/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Level 5 - Deadly Toxicity</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Sources:</strong> Pure toxic gases, reality-warping chemicals, lethal compounds</div>
+                        <div><strong>Effect:</strong> 3 wounds + 3 strain per minute + Poisoned status</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-emerald-300 font-semibold mb-4">Toxic Effects</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <h5 className="font-semibold text-purple-200 mb-2">Poisoned Status (from Level 4+ exposure)</h5>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Add 1 Setback to all Brawn and Agility checks</div>
+                        <div>• Suffer ongoing damage as specified by atmosphere type</div>
+                        <div>• Make Hard Resilience check each hour to reduce severity</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <h5 className="font-semibold text-blue-200 mb-2">Atmospheric Adaptation</h5>
+                      <div className="text-white/80 text-sm space-y-2">
+                        <div><strong>Resilience Checks:</strong> Characters can attempt to resist effects</div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-xs">
+                          <div><strong>Level 1:</strong> Simple (-) difficulty</div>
+                          <div><strong>Level 2:</strong> Easy (d) difficulty</div>
+                          <div><strong>Level 3:</strong> Average (dd) difficulty</div>
+                          <div><strong>Level 4:</strong> Hard (ddd) difficulty</div>
+                          <div><strong>Level 5:</strong> Daunting (dddd) difficulty</div>
+                        </div>
+                        <div><strong>Success:</strong> Reduce damage by 1 (wounds/strain)</div>
+                        <div><strong>Advantage:</strong> Extend time before next damage interval</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-emerald-300 font-semibold mb-4">Environmental Integration</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Temperature</div>
+                      <div className="text-white/80 text-sm">Extreme heat/cold worsens toxic effects (+1 damage)</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Exhaustion</div>
+                      <div className="text-white/80 text-sm">Level 3+ exhaustion prevents effective resistance (add 2 Setback to Resilience checks)</div>
+                    </div>
+
+                    <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-gray-200 mb-1">Lighting</div>
+                      <div className="text-white/80 text-sm">Poor visibility makes identifying toxic areas difficult</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-cyan-600/10 border border-cyan-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-cyan-300 mb-3">Special Notes</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Holding Breath</div>
+                      <div className="text-white/80 text-xs">Can delay effects for rounds equal to Brawn rating</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Cumulative Exposure</div>
+                      <div className="text-white/80 text-xs">Multiple toxicity sources may stack effects</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Safe Zones</div>
+                      <div className="text-white/80 text-xs">Moving to clean air stops damage but doesn't remove Poisoned status</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Progressive Damage</div>
+                      <div className="text-white/80 text-xs">Effects continue until atmosphere changes or protection is used</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Hacking Rules */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-cyan-600/30 hover:to-blue-600/30 transition-all duration-300"
+            onClick={() => toggleSection('hacking')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">💻</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Hacking Rules</span>
+                <span className="text-xs bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded ml-2">
+                  Technology
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.hacking ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.hacking 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-cyan-300 mb-2">💻 Digital Infiltration in Technological Spaces</div>
+                  <div className="text-white/90 text-sm">
+                    Hacking uses structured time like combat. You fight against computer systems that defend themselves with security programs (ICE) and human operators (sysops).
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">System Security Levels</h4>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">Unsecured (-)</div>
+                      <div className="text-white/80 text-sm">Personal devices, basic cameras</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Low Security (d)</div>
+                      <div className="text-white/80 text-sm">Office computers, simple databases</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Medium Security (dd)</div>
+                      <div className="text-white/80 text-sm">Corporate systems, secure databases</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">High Security (ddd)</div>
+                      <div className="text-white/80 text-sm">Government systems, military networks</div>
+                    </div>
+
+                    <div className="bg-red-700/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Maximum Security (dddd)</div>
+                      <div className="text-white/80 text-sm">Black sites, classified systems</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">System Components</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Firewall</div>
+                      <div className="text-white/80 text-sm">Initial barrier that must be breached first. Uses system security level difficulty.</div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1">Data Nodes</div>
+                      <div className="text-white/80 text-sm">Contains information or controls. Each has its own difficulty. Once hacked, stays accessible via maneuver.</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Security Programs (ICE)</div>
+                      <div className="text-white/80 text-sm">Active defenses that scan, attack, or trace hackers. Deployed by sysops or triggered automatically.</div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-1">System Operator (Sysop)</div>
+                      <div className="text-white/80 text-sm">Human defender who can deploy ICE, trace users, and initiate countermeasures.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">Hacker Actions</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-indigo-200 mb-2">Breach (Action)</div>
+                        <div className="text-white/80 text-sm">Computers vs System Security Level to gain access to system/node</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Navigate (Maneuver)</div>
+                      <div className="text-white/80 text-sm">Move between accessible nodes. No check needed for already-hacked nodes</div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Extract Data (Action)</div>
+                      <div className="text-white/80 text-sm">Computers vs node difficulty to copy/steal information</div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-2">Cover Tracks (Action)</div>
+                      <div className="text-white/80 text-sm">Computers vs Trace Value. Each difficulty above 5 turns into 1 setback dice. Success: Reduce Trace by successes + 1</div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-2">Disable System (Action)</div>
+                      <div className="text-white/80 text-sm">Computers vs Trace Value + System Security Level. Each difficulty above 5 turns into 1 setback dice. Success: Shut down the system</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">Trace System</h4>
+                  
+                  <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                    <div className="font-semibold text-yellow-300 mb-2">How Trace Works</div>
+                    <div className="text-white/80 text-sm">
+                      Trace represents how close the system is to detecting and stopping you. It increases with Threat results and triggers security responses at key thresholds.
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">Trace 0-4: Undetected</div>
+                      <div className="text-white/80 text-sm">No penalties</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1">Trace 5: Security Alerts</div>
+                      <div className="text-white/80 text-sm">+1 difficulty to all hacker actions</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1">Trace 10: Active Countermeasures</div>
+                      <div className="text-white/80 text-sm">First ICE program activates (if no sysop present)</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Trace 15: Location Tracking</div>
+                      <div className="text-white/80 text-sm">Second ICE program activates, tracing real-world location</div>
+                    </div>
+
+                    <div className="bg-red-700/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1">Trace 20: System Lockout</div>
+                      <div className="text-white/80 text-sm">Complete lockdown, potential real-world consequences</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">Security Programs (ICE)</h4>
+                  
+                  <div className="bg-cyan-600/20 border border-cyan-500/30 rounded-lg p-3 mb-4">
+                    <div className="font-semibold text-cyan-300 mb-2">ICE Skill Formula</div>
+                    <div className="text-white/80 text-sm">
+                      ICE Computers skill = System breach difficulty rating (e.g., dd system = Computers 2-3, ddd system = Computers 3-4)
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Detection Scanner</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Action:</strong> Computers vs hacker's Computers - success increases Trace by 2</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Data Shredder</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Action:</strong> Computers vs Difficulty 2 - success causes strain</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Feedback Loop</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Action:</strong> Attack vs hacker - success causes wounds (biofeedback)</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Trace Daemon</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Passive:</strong> +2 Trace whenever hacker gains Threat</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-4">Example: 3-Round Hack</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-gray-800/50 border border-gray-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-gray-200 mb-2">Setup</div>
+                      <div className="text-white/80 text-sm">
+                        Maya hacks a Corporate Server (Medium Security - dd) to steal employee files. Active sysop defending. Trace starts at 0.
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-blue-300 mb-2">Round 1</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Maya:</strong> Breach Firewall - Computers vs dd</div>
+                        <div><strong>Roll:</strong> 2 Success, 1 Threat</div>
+                        <div><strong>Result:</strong> Through firewall! Trace = 1</div>
+                        <div><strong>Sysop:</strong> Deploys Detection Scanner</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-600/20 border border-purple-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-purple-300 mb-2">Round 2</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Scanner ICE:</strong> Computers vs Maya's Computers</div>
+                        <div><strong>Roll:</strong> 1 Success → Trace = 3</div>
+                        <div><strong>Maya:</strong> Access Employee Database - Computers vs dd</div>
+                        <div><strong>Roll:</strong> 1 Success, 2 Advantage</div>
+                        <div><strong>Result:</strong> Data accessed! Trace reduced to 1</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-green-300 mb-2">Round 3</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Scanner ICE:</strong> 2 Success, 2 Advantage → Trace = 5</div>
+                        <div><strong>Trigger:</strong> Security alerts! +1 difficulty</div>
+                        <div><strong>Maya:</strong> Extract data - Computers vs ddd (harder)</div>
+                        <div><strong>Roll:</strong> 1 Success → Got the files!</div>
+                        <div><strong>Maya:</strong> Jacks out safely with stolen data</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-yellow-300 mb-3">Quick Reference Q&A</h5>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Q: When do ICE programs activate?</div>
+                      <div className="text-white/80 text-xs"><strong>A:</strong> Immediately if active sysop present. At Trace 10+ if no sysop.</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Q: Do nodes stay hacked once accessed?</div>
+                      <div className="text-white/80 text-xs"><strong>A:</strong> Yes! Once hacked, you can return with just a maneuver (no roll).</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Q: How do Advantage/Threat work?</div>
+                      <div className="text-white/80 text-xs"><strong>A:</strong> Hacker Advantage reduces Trace, Threat increases it. ICE/Sysop Advantage can increase Trace or add effects.</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Q: What do I need to design a system?</div>
+                      <div className="text-white/80 text-xs"><strong>A:</strong> Firewall difficulty, what nodes exist, each node's difficulty, and what data/controls are in each node.</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Q: How many ICE programs can be deployed at once?</div>
+                      <div className="text-white/80 text-xs"><strong>A:</strong> One per System Breach Difficulty (e.g., dd system = 2, ddd system = 3)</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Diseases */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-lime-600/20 to-green-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-lime-600/30 hover:to-green-600/30 transition-all duration-300"
+            onClick={() => toggleSection('diseases')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🦠</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Diseases</span>
+                <span className="text-xs bg-lime-500/30 text-lime-300 px-2 py-1 rounded ml-2">
+                  Afflictions
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.diseases ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.diseases 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-lime-500/10 border border-lime-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-lime-300 mb-2">🦠 Sickness and Infection in the Endless Maze</div>
+                  <div className="text-white/90 text-sm">
+                    The Backrooms harbor deadly diseases that can spread through environmental contact, entity encounters, or poor self-care. Each disease progresses through distinct stages with unique mechanical effects.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-lime-300 font-semibold mb-4">Entity 19 - "The Disease"</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Transmission</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Source:</strong> Contact with moist/damp environments - rotten wallpaper, moss, stagnant water, decaying corpses</div>
+                        <div><strong>Contagion:</strong> Not contagious between people - only from environmental sources</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-yellow-200 mb-1">Stage 1 (5-24 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Hives on arms/chest/thighs, eye irritation, severe stomach pain<br/>
+                          <strong>Effect:</strong> Gain <strong>Sickened</strong> status, sanity loss doubled from all sources
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-orange-200 mb-1">Stage 2 (24-72 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Hives spread everywhere and harden, unbearable itching<br/>
+                          <strong>Effect:</strong> Gain <strong>Disoriented</strong> status, suffer 1 strain per hour from constant scratching
+                        </div>
+                      </div>
+
+                      <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Stage 3 (72+ hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Death if untreated<br/>
+                          <strong>Effect:</strong> <strong>Incapacitated</strong>, automatic death in 24 hours
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-lime-300 font-semibold mb-4">The Wretched Cycle</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Transmission</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Source:</strong> 1 full week without food OR water OR sleep, accelerated by isolation (halves time if alone)</div>
+                        <div><strong>Contagion:</strong> Not contagious - individual condition from poor self-care</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-yellow-200 mb-1">Stage 1 (1-2 weeks)</div>
+                        <div className="text-white/80 text-sm">
+                          Itchiness like poison ivy, erratic behavior<br/>
+                          <strong>Effect:</strong> Gain <strong>Confused</strong> status (lasts 1 round per day at random time), +1 Setback to social checks
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-orange-200 mb-1">Stage 2 (2-5 weeks)</div>
+                        <div className="text-white/80 text-sm">
+                          Skin/muscle dissolving, pustules, hair loss<br/>
+                          <strong>Effect:</strong> Gain <strong>Frightened</strong> status (of your own reflection), suffer 1 wound per week, all healing halved
+                        </div>
+                      </div>
+
+                      <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Stage 3 (5-6 weeks)</div>
+                        <div className="text-white/80 text-sm">
+                          Complete transformation preparation<br/>
+                          <strong>Effect:</strong> Gain <strong>Stunned 3</strong> status permanently, <strong>Blinded</strong> status (eyes constantly rolling), become NPC if not cured
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-lime-300 font-semibold mb-4">Sanguine Festivus Virus (SFV)</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-pink-200 mb-2">Transmission</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Source:</strong> Exposure to Level Fun or contact with infected Partygoers</div>
+                        <div><strong>Contagion:</strong> Highly contagious through bites, scratches, or prolonged contact with infected</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-yellow-200 mb-1">Stage 1 (2-6 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Mild soreness, tiredness<br/>
+                          <strong>Effect:</strong> All maneuvers cost +1 additional strain
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-orange-200 mb-1">Stage 2 (6 hours-3 days)</div>
+                        <div className="text-white/80 text-sm">
+                          Decreased energy, growing hunger<br/>
+                          <strong>Effect:</strong> All strain costs increased by +2, gain <strong>Sickened</strong> status
+                        </div>
+                      </div>
+
+                      <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Stage 3 (3+ days until cured)</div>
+                        <div className="text-white/80 text-sm">
+                          Violent urges, cannibalistic hunger<br/>
+                          <strong>Effect:</strong> Gain <strong>Confused</strong> and <strong>Frightened</strong> (of non-infected people) status effects permanently
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-lime-300 font-semibold mb-4">Hydrolitis Plague</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Transmission</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Source:</strong> Contact with untreated water or direct skin contact with contaminated sources</div>
+                        <div><strong>Contagion:</strong> Moderately contagious through skin-to-skin contact</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-cyan-600/20 border border-cyan-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-300 mb-2">Type Determination</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Pulmonary Type:</strong> Inhaling contaminated water vapor, mist, or droplets</div>
+                        <div><strong>Septicemic Type:</strong> Direct skin contact with contaminated water or through open wounds</div>
+                        <div><em>Note: Character develops ONE type, not both</em></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <h5 className="font-semibold text-blue-200 mb-3">Pulmonary Type (Respiratory)</h5>
+                        <div className="space-y-3">
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                            <div className="font-semibold text-yellow-200 mb-1">Stage 1 (3-5 days)</div>
+                            <div className="text-white/80 text-sm">
+                              Intense coughing, breathing difficulties<br/>
+                              <strong>Effect:</strong> All strain costs doubled, +2 Setback to Athletics/Coordination
+                            </div>
+                          </div>
+
+                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                            <div className="font-semibold text-orange-200 mb-1">Stage 2 (5-8 days)</div>
+                            <div className="text-white/80 text-sm">
+                              Hemoptysis (coughing blood), severe lung damage<br/>
+                              <strong>Effect:</strong> Gain <strong>Stunned 2</strong> status, suffer 1 wound per day
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h5 className="font-semibold text-red-200 mb-3">Septicemic Type (Bloodstream)</h5>
+                        <div className="space-y-3">
+                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                            <div className="font-semibold text-orange-200 mb-1">Stage 1 (6-18 hours)</div>
+                            <div className="text-white/80 text-sm">
+                              High fever (40°C+), chills, shock<br/>
+                              <strong>Effect:</strong> Exhaustion gained in half the time, gain <strong>Disoriented</strong> status
+                            </div>
+                          </div>
+
+                          <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                            <div className="font-semibold text-red-200 mb-1">Stage 2 (18-24 hours)</div>
+                            <div className="text-white/80 text-sm">
+                              Organ failure, extremely high mortality<br/>
+                              <strong>Effect:</strong> Gain <strong>Incapacitated</strong> status, suffer 2 wounds per hour
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-lime-300 font-semibold mb-4">Mandela Virus (PV-A)</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Transmission</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div><strong>Source:</strong> Skin contact with infected substances, liquids, or splashing</div>
+                        <div><strong>Contagion:</strong> Highly contagious through any bodily fluid contact</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-green-200 mb-1">Stage 1 (20-60 minutes)</div>
+                        <div className="text-white/80 text-sm">
+                          Tiredness, difficulty sleeping<br/>
+                          <strong>Effect:</strong> Cannot benefit from any rest (Short, Full, or Extended)
+                        </div>
+                      </div>
+
+                      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-yellow-200 mb-1">Stage 2 (1-3 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Headaches, energy loss<br/>
+                          <strong>Effect:</strong> All mental checks (Intellect/Cunning/Willpower) gain +2 Setback dice
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-orange-200 mb-1">Stage 3 (3-5 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Blood in urine, immune system fighting<br/>
+                          <strong>Effect:</strong> Gain <strong>Poisoned</strong> status, suffer 1 strain per hour
+                        </div>
+                      </div>
+
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Stage 4 (5-7 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Severe headaches, vomiting, appetite loss<br/>
+                          <strong>Effect:</strong> Gain <strong>Stunned 4</strong> status, cannot consume food/water, suffer 1 wound per hour
+                        </div>
+                      </div>
+
+                      <div className="bg-red-700/30 border border-red-600/40 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Stage 5 (7-17 hours)</div>
+                        <div className="text-white/80 text-sm">
+                          Hypothermia, organ failure<br/>
+                          <strong>Effect:</strong> Gain <strong>Incapacitated</strong> status, suffer 2 wounds per hour, automatic death in 6 hours
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-600/10 border border-green-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-green-300 mb-3">Disease Mechanics</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-green-200 mb-1">Progression</div>
+                      <div className="text-white/80 text-xs">Diseases advance through stages automatically unless treated or cured</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-green-200 mb-1">Status Effects</div>
+                      <div className="text-white/80 text-xs">Diseases apply existing status effects from the Status Effects section</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-green-200 mb-1">Multiple Diseases</div>
+                      <div className="text-white/80 text-xs">Characters can suffer from multiple diseases simultaneously</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-green-200 mb-1">Environmental Integration</div>
+                      <div className="text-white/80 text-xs">Diseases interact with exhaustion, temperature, and rest systems</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Character Creation */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha('#4CAF50', 0.1),
-              '&:hover': { bgcolor: alpha('#4CAF50', 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-cyan-600/30 hover:to-blue-600/30 transition-all duration-300"
+            onClick={() => toggleSection('character')}
           >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Character Creation and Experience Points
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: { xs: 2, sm: 3 } }}>
-            <Stack spacing={3}>
-              {/* Custom Species/Archetype */}
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2, 
-                  border: '2px solid #4CAF50',
-                  bgcolor: alpha('#4CAF50', 0.02)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#4CAF50' }}>
-                    Custom Species/Archetype
-                  </Typography>
-                </Box>
-                
-                <Grid container spacing={2}>
-                  {[
-                    { 
-                      step: '1', 
-                      title: 'Starting Characteristics', 
-                      desc: 'All characteristics begin at 1',
-                    },
-                    { 
-                      step: '2', 
-                      title: 'Free Skill Level', 
-                      desc: 'Gain 1 level in any skill of your choosing',
-                    },
-                    { 
-                      step: '3', 
-                      title: 'Wound Threshold', 
-                      desc: 'Choose between 8-12, then add your Brawn',
-                      example: 'Example: 9 chosen + 4 Brawn = 13 wounds',
-                    },
-                    { 
-                      step: '4', 
-                      title: 'Strain Threshold', 
-                      desc: '(20 - chosen wounds) + Willpower',
-                      example: 'Example: (20 - 9) + 3 Willpower = 14 strain',
-                    },
-                    { 
-                      step: '5', 
-                      title: 'Experience Points', 
-                      desc: '230 XP to spend + 2 custom abilities',
-                    },
-                    { 
-                      step: '6', 
-                      title: 'Bonus XP', 
-                      desc: 'Additional 50 XP for non-characteristics',
-                    }
-                  ].map((item, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
-                      <Paper 
-                        elevation={1} 
-                        sx={{ 
-                          p: { xs: 1.5, sm: 2 }, 
-                          minHeight: { xs: '120px', sm: '140px' },
-                          borderRadius: 2,
-                          border: `1px solid ${alpha('#4CAF50', 0.3)}`,
-                          bgcolor: 'white',
-                          display: 'flex',
-                          flexDirection: 'column'
-                        }}
-                      >
-                        <Box display="flex" alignItems="flex-start" gap={1.5}>
-                          <Box 
-                            sx={{ 
-                              width: { xs: 28, sm: 32 }, 
-                              height: { xs: 28, sm: 32 }, 
-                              borderRadius: '50%', 
-                              bgcolor: '#4CAF50',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'white',
-                              fontWeight: 'bold',
-                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                              flexShrink: 0
-                            }}
-                          >
-                            {item.step}
-                          </Box>
-                          <Box sx={{ minWidth: 0, flex: 1 }}>
-                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ 
-                              fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                              lineHeight: 1.2
-                            }}>
-                              {item.title}
-                            </Typography>
-                            <Typography variant="body2" sx={{ 
-                              mb: 1,
-                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                              lineHeight: 1.3
-                            }}>
-                              {item.desc}
-                            </Typography>
-                            {item.example && (
-                              <Typography variant="caption" sx={{ 
-                                color: '#666',
-                                fontStyle: 'italic',
-                                display: 'block',
-                                bgcolor: alpha('#4CAF50', 0.1),
-                                p: 0.5,
-                                borderRadius: 0.5,
-                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                lineHeight: 1.2
-                              }}>
-                                {item.example}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-                
-              {/* Custom Career */}
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2, 
-                  border: '2px solid #2196F3',
-                  bgcolor: alpha('#2196F3', 0.02)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                    Custom Career
-                  </Typography>
-                </Box>
-                
-                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                  You may choose 8 skills to be your career skills. Out of those 8, choose 4 to add a level in. 
-                  The skill chosen with your species/archetype may be chosen here.
-                </Typography>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">👤</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Character Creation</span>
+                <span className="text-xs bg-cyan-500/30 text-cyan-300 px-2 py-1 rounded ml-2">
+                  Build System
+                </span>
+              </div>
               
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Paper 
-                      elevation={1} 
-                      sx={{ 
-                        p: 2, 
-                        borderRadius: 2,
-                        border: `1px solid ${alpha('#2196F3', 0.3)}`,
-                        bgcolor: 'white',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                        STEP 1
-                      </Typography>
-                      <Typography variant="body2">
-                        Choose 8 skills to be part of your career
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Paper 
-                      elevation={1} 
-                      sx={{ 
-                        p: 2, 
-                        borderRadius: 2,
-                        border: `1px solid ${alpha('#2196F3', 0.3)}`,
-                        bgcolor: 'white',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                        STEP 2
-                      </Typography>
-                      <Typography variant="body2">
-                        Choose 4 out of the 8 to gain a level in
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </Paper>
+              <div className={`transform transition-transform duration-300 ${expandedSections.character ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.character 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 1: Character Concept</h4>
+                  <p className="text-white/90 mb-2">Define your character's basic concept and role in the world. This guides all other choices.</p>
+                  <ul className="text-white/70 text-sm space-y-1 ml-4">
+                    <li>• What is your character's profession or background?</li>
+                    <li>• What motivates them to explore the Backrooms?</li>
+                    <li>• What makes them unique or interesting?</li>
+                  </ul>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 2: Choose Archetype</h4>
+                  <p className="text-white/90 mb-3">Select one of the four human archetypes, or go custom for maximum flexibility.</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+                    <div className="bg-white/5 p-3 rounded border border-white/10">
+                      <div className="font-semibold text-cyan-200 mb-1">Average Human</div>
+                      <div className="text-white/70 text-xs mb-2">Balanced stats: Brawn 2, Agility 2, Intellect 2, Cunning 2, Willpower 2, Presence 2</div>
+                      <div className="text-white/80 text-xs"><strong>Ready For Anything:</strong> Once per session, take a Story Point from GM pool</div>
+                    </div>
                     
-              {/* Experience per Session */}
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2, 
-                  border: '2px solid #FF9800',
-                  bgcolor: alpha('#FF9800', 0.02)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#FF9800' }}>
-                    Experience per Session
-                  </Typography>
-                </Box>
-              
-                <Grid container spacing={2}>
-                  {[
-                    { 
-                      title: 'Baseline XP', 
-                      desc: 'You gain 5 XP as a baseline each session',
-                      color: '#4CAF50'
-                    },
-                    { 
-                      title: 'Encounter XP', 
-                      desc: 'For every social, combat, or hacking encounter you succeed in, gain 1 XP (maximum of 5)',
-                      color: '#2196F3'
-                    },
-                    { 
-                      title: 'Bonus XP', 
-                      desc: 'Special events and achievements may award additional experience',
-                      color: '#9C27B0'
-                    }
-                  ].map((xp, index) => (
-                    <Grid item xs={12} key={index}>
-                      <Paper 
-                        elevation={1} 
-                        sx={{ 
-                          p: 2, 
-                          borderRadius: 2,
-                          border: `1px solid ${alpha(xp.color, 0.3)}`,
-                          bgcolor: alpha(xp.color, 0.05)
-                        }}
-                      >
-                        <Box display="flex" alignItems="center" gap={2}>
-                          <Box>
-                            <Typography variant="subtitle2" fontWeight="bold" sx={{ color: xp.color }}>
-                              {xp.title.toUpperCase()}
-                            </Typography>
-                            <Typography variant="body2">
-                              {xp.desc}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Skills */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha('#2196F3', 0.1),
-              '&:hover': { bgcolor: alpha('#2196F3', 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Skills
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: { xs: 2, sm: 3 } }}>
-            <Stack spacing={3}>
-              {/* Important Notes */}
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2, 
-                  border: '2px solid #F44336',
-                  bgcolor: alpha('#F44336', 0.05)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#F44336' }}>
-                    Important Skill Rules
-                  </Typography>
-                </Box>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Paper 
-                      elevation={1} 
-                      sx={{ 
-                        p: { xs: 1.5, sm: 2 }, 
-                        borderRadius: 2,
-                        border: `1px solid ${alpha('#F44336', 0.3)}`,
-                        bgcolor: 'white',
-                        minHeight: { xs: '100px', sm: '120px' },
-                        display: 'flex',
-                        flexDirection: 'column'
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1 }}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ 
-                          color: '#F44336',
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' }
-                        }}>
-                          TIER 6 SKILLS
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ 
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        lineHeight: 1.3,
-                        flex: 1
-                      }}>
-                        Can only be acquired by having the skill at tier 5 and having a skill upgrade point. 
-                        These points are awarded for quests and achievements.
-                      </Typography>
-                    </Paper>
-                  </Grid>
+                    <div className="bg-white/5 p-3 rounded border border-white/10">
+                      <div className="font-semibold text-cyan-200 mb-1">Laborer</div>
+                      <div className="text-white/70 text-xs mb-2">Physical focus: Brawn 3, others at 2</div>
+                      <div className="text-white/80 text-xs"><strong>Tough As Nails:</strong> Once per session, reduce critical injury to weakest result</div>
+                    </div>
                     
-                  <Grid item xs={12} sm={6}>
-                    <Paper 
-                      elevation={1} 
-                      sx={{ 
-                        p: { xs: 1.5, sm: 2 }, 
-                        borderRadius: 2,
-                        border: `1px solid ${alpha('#F44336', 0.3)}`,
-                        bgcolor: 'white',
-                        minHeight: { xs: '100px', sm: '120px' },
-                        display: 'flex',
-                        flexDirection: 'column'
-                      }}
-                    >
-                      <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1 }}>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ 
-                          color: '#F44336',
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' }
-                        }}>
-                          REMOVED SKILLS
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ 
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        lineHeight: 1.3,
-                        flex: 1
-                      }}>
-                        The Alchemy skill has been completely removed from the game.
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </Paper>
+                    <div className="bg-white/5 p-3 rounded border border-white/10">
+                      <div className="font-semibold text-cyan-200 mb-1">Intellectual</div>
+                      <div className="text-white/70 text-xs mb-2">Mental focus: Intellect 3, others at 2</div>
+                      <div className="text-white/80 text-xs"><strong>Educated:</strong> Gain additional knowledge and mental capabilities</div>
+                    </div>
                     
-              {/* Custom Skills */}
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2, 
-                  border: '2px solid #2196F3',
-                  bgcolor: alpha('#2196F3', 0.02)
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 3 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#2196F3' }}>
-                    Custom Skills
-                  </Typography>
-                </Box>
+                    <div className="bg-white/5 p-3 rounded border border-white/10">
+                      <div className="font-semibold text-cyan-200 mb-1">Aristocrat</div>
+                      <div className="text-white/70 text-xs mb-2">Social focus: Presence 3, others at 2</div>
+                      <div className="text-white/80 text-xs"><strong>Wealthy:</strong> Start with additional resources and connections</div>
+                    </div>
+                  </div>
 
-                <Grid container spacing={2}>
-                  {[
-                    { 
-                      skill: 'Sanity', 
-                      stat: 'Willpower', 
-                      desc: 'Used to prevent yourself from going insane', 
-                      color: '#9C27B0'
-                    },
-                    { 
-                      skill: 'Knowledge [General]', 
-                      stat: 'Intellect', 
-                      desc: 'Used to determine non-specific knowledge on a subject', 
-                      color: '#4CAF50'
-                    },
-                    { 
-                      skill: 'Knowledge [Mechanics]', 
-                      stat: 'Intellect', 
-                      desc: 'Used to determine how a piece of machinery or technology operates', 
-                      color: '#FF9800'
-                    },
-                    { 
-                      skill: 'Knowledge [Lore]', 
-                      stat: 'Intellect', 
-                      desc: 'Used to understand or determine things about how the Backrooms came to be and about the levels and entities', 
-                      color: '#795548'
-                    },
-                    { 
-                      skill: 'Knowledge [Objects]', 
-                      stat: 'Intellect', 
-                      desc: 'Used to determine how an object works or should be interacted with', 
-                      color: '#607D8B'
-                    },
-                    { 
-                      skill: 'Metalworking', 
-                      stat: 'Brawn', 
-                      desc: 'Used to craft things using the Armorer, Blacksmith, or Goldsmith tools', 
-                      color: '#F44336'
-                    },
-                    { 
-                      skill: 'Leatherworking', 
-                      stat: 'Agility', 
-                      desc: 'Used to craft things using the Leatherworker and Weaver tools', 
-                      color: '#E91E63'
-                    },
-                    { 
-                      skill: 'Crafting [General]', 
-                      stat: 'Intellect', 
-                      desc: 'Used to craft things using the Alchemist, Carpenter, and Culinarian tools', 
-                      color: '#3F51B5'
-                    }
-                  ].map((skill, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <Paper 
-                        elevation={1} 
-                        sx={{ 
-                          p: { xs: 1.5, sm: 2 },
-                          borderRadius: 2,
-                          border: `2px solid ${skill.color}`,
-                          height: { xs: '140px', sm: '160px' },
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          bgcolor: alpha(skill.color, 0.02)
-                        }}
-                      >
-                        <Box>
-                          <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1 }}>
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight="bold" sx={{ 
-                                color: skill.color,
-                                fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                                lineHeight: 1.2
-                              }}>
-                                {skill.skill.toUpperCase()}
-                              </Typography>
-                              <Box sx={{ 
-                                bgcolor: skill.color, 
-                                color: 'white',
-                                px: 0.5,
-                                py: 0.25,
-                                borderRadius: 0.5,
-                                fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                                fontWeight: 'bold',
-                                display: 'inline-block',
-                                mt: 0.25
-                              }}>
-                                {skill.stat}
-                              </Box>
-                            </Box>
-                          </Box>
-                        </Box>
-                            
-                        <Typography variant="caption" sx={{ 
-                          lineHeight: 1.3,
-                          fontSize: { xs: '0.7rem', sm: '0.75rem' }
-                        }}>
-                          {skill.desc}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                    <div className="font-semibold text-yellow-300 mb-2">Alternative: Custom Archetype</div>
+                    <div className="text-white/90 text-sm mb-2">Instead of choosing a preset archetype, you can create a custom character:</div>
+                    <ul className="text-white/80 text-sm space-y-1 ml-4">
+                      <li>• Start with all characteristics at 1</li>
+                      <li>• No special archetype ability</li>
+                      <li>• Begin with 230 XP instead of 110 XP</li>
+                      <li>• Can purchase up to 2 custom abilities for 5 XP each</li>
+                    </ul>
+                    <div className="text-yellow-200 text-xs mt-2 italic">This option allows for complete customization but requires more planning</div>
+                  </div>
+                </div>
 
-        {/* Talents */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha('#FF9800', 0.1),
-              '&:hover': { bgcolor: alpha('#FF9800', 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 3: Select Career</h4>
+                  <p className="text-white/90 mb-3">Your career defines your role and provides career skills (cheaper to advance). Choose four career skills to gain one rank each.</p>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm mb-4">
+                    <div className="space-y-2">
+                      <div className="font-semibold text-cyan-200">Explorer</div>
+                      <div className="text-white/70 text-xs">Survival, Athletics, Perception, Vigilance, Knowledge, Cool, Coordination, Medicine</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="font-semibold text-cyan-200">Researcher</div>
+                      <div className="text-white/70 text-xs">Knowledge, Computers, Medicine, Perception, Education, Cool, Vigilance, Investigation</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="font-semibold text-cyan-200">Survivor</div>
+                      <div className="text-white/70 text-xs">Survival, Athletics, Vigilance, Cool, Stealth, Streetwise, Brawl, Ranged</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="font-semibold text-cyan-200">Technician</div>
+                      <div className="text-white/70 text-xs">Computers, Mechanics, Knowledge, Perception, Cool, Investigation, Medicine, Education</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                    <div className="font-semibold text-yellow-300 mb-2">Alternative: Custom Career</div>
+                    <div className="text-white/90 text-sm mb-2">Instead of choosing a preset career, you can create a custom skill set:</div>
+                    <ul className="text-white/80 text-sm space-y-1 ml-4">
+                      <li>• Choose any 8 skills as your career skills</li>
+                      <li>• Either gain 2 ranks in 2 different skills</li>
+                      <li>• Or gain 1 rank in 4 different skills</li>
+                    </ul>
+                    <div className="text-yellow-200 text-xs mt-2 italic">This allows you to build exactly the character concept you want</div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 4: Characteristics & Experience</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-white/90 mb-2">Starting Experience: 110 XP (spend during character creation)</p>
+                      <p className="text-white/80 text-sm mb-2"><strong>Important:</strong> Characteristics can only be increased during character creation!</p>
+                    </div>
+                    
+                    <div className="text-sm">
+                      <div className="font-semibold text-cyan-200 mb-2">Characteristic Costs:</div>
+                      <div className="text-white/70 space-y-1">
+                        <div>• Rank 1→2: 20 XP • Rank 2→3: 30 XP • Rank 3→4: 40 XP • Rank 4→5: 50 XP</div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm">
+                      <div className="font-semibold text-cyan-200 mb-2">Skill Costs:</div>
+                      <div className="text-white/70 space-y-1">
+                        <div>• Career Skills: 5×new rank XP</div>
+                        <div>• Non-Career Skills: 5×new rank +5 XP</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-300 mb-2">Skills may have a maximum of 2 ranks during character creation</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 5: Derived Attributes</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="space-y-2">
+                      <div><span className="text-cyan-200 font-semibold">Wound Threshold:</span> <span className="text-white/80">10 + Brawn</span></div>
+                      <div><span className="text-cyan-200 font-semibold">Strain Threshold:</span> <span className="text-white/80">10 + Willpower</span></div>
+                      <div><span className="text-cyan-200 font-semibold">Defense:</span> <span className="text-white/80">0 (modified by armor)</span></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div><span className="text-cyan-200 font-semibold">Soak:</span> <span className="text-white/80">Brawn value</span></div>
+                      <div><span className="text-cyan-200 font-semibold">Encumbrance:</span> <span className="text-white/80">5 + Brawn</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 6: Motivations</h4>
+                  <p className="text-white/90 mb-3">Define your character's four-part motivation system:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Desire</div>
+                      <div className="text-white/70">What drives your character forward</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Fear</div>
+                      <div className="text-white/70">What terrifies or concerns them</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Strength</div>
+                      <div className="text-white/70">Their greatest positive trait</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-cyan-200 mb-1">Flaw</div>
+                      <div className="text-white/70">Their greatest weakness or vice</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-cyan-300 font-semibold mb-3">Step 7: Final Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-white/90">Choose starting equipment</p>
+                    <p className="text-white/80">• A Flashlight, 2x AA Battery, 5x Water, and 5x Rations</p>
+                    <p className="text-white/80">• A Lantern, 1x C Battery, 5x Water, and 5x Rations</p>
+                    <p className="text-white/80">• A Tool, 10x Rations, and 10x Water</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Custom Content */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-pink-600/20 to-rose-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-pink-600/30 hover:to-rose-600/30 transition-all duration-300"
+            onClick={() => toggleSection('custom')}
           >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Talents
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: { xs: 2, sm: 3 } }}>
-            <Stack spacing={3}>
-              {/* Section Header */}
-              <Box textAlign="center">
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#FF9800', mb: 1 }}>
-                  Custom Talents
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Special abilities organized by tier and activation type
-                </Typography>
-              </Box>
-          
-              {/* Talents Grid */}
-              <Grid container spacing={2}>
-                {[
-                  { 
-                    name: 'Healer', 
-                    tier: 1, 
-                    activation: 'Active (Action)', 
-                    ranked: 'Yes', 
-                    desc: 'You may spend an action to perform a medicine check. This may be done equal to the amount of times this talent has been purchased per day.',
-                    color: '#4CAF50'
-                  },
-                  { 
-                    name: 'Lightning Striker', 
-                    tier: 1, 
-                    activation: 'Passive', 
-                    ranked: 'No', 
-                    desc: 'Weapons that use brawl have the reactive equipment trait.',
-                    color: '#FFC107'
-                  },
-                  { 
-                    name: 'Bulked Load', 
-                    tier: 2, 
-                    activation: 'Passive', 
-                    ranked: 'Yes', 
-                    desc: 'Your encumbrance threshold is now one higher.',
-                    color: '#2196F3'
-                  },
-                  { 
-                    name: 'Adjust Eyes (Dark)', 
-                    tier: 3, 
-                    activation: 'Active (Action)', 
-                    ranked: 'No', 
-                    desc: 'You may ignore all difficulties due to darkness for the next 5 rounds.',
-                    color: '#673AB7'
-                  },
-                  { 
-                    name: 'Adjust Eyes (Light)', 
-                    tier: 3, 
-                    activation: 'Active (Action)', 
-                    ranked: 'No', 
-                    desc: 'You may ignore all difficulties due to light for the next 5 rounds.',
-                    color: '#FF9800'
-                  },
-                  { 
-                    name: 'Savage Attacker', 
-                    tier: 4, 
-                    activation: 'Active (Incidental)', 
-                    ranked: 'No', 
-                    desc: 'When you inflict a critical injury, you may spend 2 strain and an incidental to activate this talent. You may select the critical injury inflicted that is within the same severity as the one rolled.',
-                    color: '#F44336'
-                  },
-                  { 
-                    name: 'Unshakable Will', 
-                    tier: 5, 
-                    activation: 'Passive', 
-                    ranked: 'No', 
-                    desc: 'You receive 5 points. These points may be spent to reduce one strain damage each. These points replenish at the beginning of your turn.',
-                    color: '#9C27B0'
-                  },
-                  { 
-                    name: 'Unwavering Resilience', 
-                    tier: 5, 
-                    activation: 'Passive', 
-                    ranked: 'No', 
-                    desc: 'Your wound threshold increases by 10.',
-                    requirements: 'Requires: Toughened 4',
-                    color: '#795548'
-                  },
-                  { 
-                    name: 'Unbreakable Fortitude', 
-                    tier: 5, 
-                    activation: 'Passive', 
-                    ranked: 'No', 
-                    desc: 'Your strain threshold increases by 5.',
-                    requirements: 'Requires: Grit 4',
-                    color: '#607D8B'
-                  }
-                ].map((talent, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={index}>
-                    <Paper 
-                      elevation={2} 
-                      sx={{ 
-                        p: { xs: 1.5, sm: 2 },
-                        borderRadius: 2,
-                        border: `2px solid ${talent.color}`,
-                        minHeight: { xs: '180px', sm: '200px' },
-                        display: 'flex',
-                        flexDirection: 'column',
-                        bgcolor: alpha(talent.color, 0.02)
-                      }}
-                    >
-                      {/* Header */}
-                      <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1.5 }}>
-                        <Box 
-                          sx={{ 
-                            width: { xs: 28, sm: 32 }, 
-                            height: { xs: 28, sm: 32 }, 
-                            borderRadius: 1, 
-                            bgcolor: talent.color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                            flexShrink: 0
-                          }}
-                        >
-                          T{talent.tier}
-                        </Box>
-                        <Typography variant="subtitle2" fontWeight="bold" sx={{ 
-                          color: talent.color, 
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          lineHeight: 1.2,
-                          flex: 1,
-                          minWidth: 0
-                        }}>
-                          {talent.name.toUpperCase()}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Properties */}
-                      <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-                        <Box display="flex" gap={1} flexWrap="wrap">
-                          <Box sx={{ 
-                            bgcolor: alpha(talent.color, 0.1), 
-                            px: 0.75,
-                            py: 0.25,
-                            borderRadius: 0.5,
-                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                            fontWeight: 'bold',
-                            color: talent.color,
-                            border: `1px solid ${alpha(talent.color, 0.3)}`
-                          }}>
-                            {talent.activation}
-                          </Box>
-                          <Box sx={{ 
-                            bgcolor: talent.ranked === 'Yes' ? alpha('#4CAF50', 0.1) : alpha('#F44336', 0.1), 
-                            px: 0.75,
-                            py: 0.25,
-                            borderRadius: 0.5,
-                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                            fontWeight: 'bold',
-                            color: talent.ranked === 'Yes' ? '#4CAF50' : '#F44336',
-                            border: `1px solid ${alpha(talent.ranked === 'Yes' ? '#4CAF50' : '#F44336', 0.3)}`
-                          }}>
-                            Ranked: {talent.ranked}
-                          </Box>
-                        </Box>
-                        
-                        {talent.requirements && (
-                          <Typography variant="caption" sx={{ 
-                            color: '#666',
-                            fontStyle: 'italic',
-                            fontSize: { xs: '0.65rem', sm: '0.7rem' }
-                          }}>
-                            {talent.requirements}
-                          </Typography>
-                        )}
-                      </Stack>
-                      
-                      {/* Description */}
-                      <Typography variant="caption" sx={{ 
-                        lineHeight: 1.3,
-                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'flex-end'
-                      }}>
-                        {talent.desc}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🎨</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Custom Content</span>
+                <span className="text-xs bg-pink-500/30 text-pink-300 px-2 py-1 rounded ml-2">
+                  Homebrew
+                </span>
+              </div>
 
-        {/* Equipment Traits */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha('#9C27B0', 0.1),
-              '&:hover': { bgcolor: alpha('#9C27B0', 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Equipment Traits
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: { xs: 2, sm: 3 } }}>
-            <Stack spacing={3}>
-              {/* Section Header */}
-              <Box textAlign="center">
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#9C27B0', mb: 1 }}>
-                  Custom Equipment Traits
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Special weapon and equipment properties for enhanced combat
-                </Typography>
-              </Box>
-          
-              {/* Equipment Traits Grid */}
-              <Grid container spacing={2}>
-                {[
-                  { 
-                    trait: 'AutoHit', 
-                    desc: 'The weapon automatically hits the target. The dice pool is always two ability and one proficiency dice.',
-                    color: '#4CAF50',
-                    type: 'Guaranteed'
-                  },
-                  { 
-                    trait: 'Reactive', 
-                    desc: 'A weapon with the reactive trait allows an attack to be made as an out-of-turn incidental when an enemy leaves engaged range. This attack may not be dual-wielded.',
-                    color: '#FF9800',
-                    type: 'Defensive'
-                  },
-                  { 
-                    trait: 'Reach', 
-                    desc: 'A weapon with reach may be used one range further than its maximum range.',
-                    color: '#2196F3',
-                    type: 'Range'
-                  },
-                  { 
-                    trait: 'Breaking', 
-                    desc: 'Each time this weapon is used, it reduces its durability by 1.',
-                    color: '#F44336',
-                    type: 'Durability'
-                  },
-                  { 
-                    trait: 'Flurry', 
-                    desc: 'After a successful hit, you may spend 1 advantage to hit with this weapon again. This can be done x times where x is the rank of this trait.',
-                    color: '#9C27B0',
-                    type: 'Combo'
-                  },
-                  { 
-                    trait: 'Sneak', 
-                    desc: 'The first attack with this weapon in an encounter adds two successes automatically.',
-                    color: '#607D8B',
-                    type: 'Stealth'
-                  }
-                ].map((trait, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Paper 
-                      elevation={2} 
-                      sx={{ 
-                        p: { xs: 1.5, sm: 2 },
-                        borderRadius: 2,
-                        border: `2px solid ${trait.color}`,
-                        minHeight: { xs: '140px', sm: '160px' },
-                        display: 'flex',
-                        flexDirection: 'column',
-                        bgcolor: alpha(trait.color, 0.02)
-                      }}
-                    >
-                      {/* Header */}
-                      <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 1.5 }}>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="subtitle1" fontWeight="bold" sx={{ 
-                            color: trait.color, 
-                            fontSize: { xs: '0.9rem', sm: '1rem' },
-                            lineHeight: 1.2
-                          }}>
-                            {trait.trait.toUpperCase()}
-                          </Typography>
-                          <Box sx={{ 
-                            bgcolor: alpha(trait.color, 0.1), 
-                            px: 0.75,
-                            py: 0.25,
-                            borderRadius: 0.5,
-                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                            fontWeight: 'bold',
-                            color: trait.color,
-                            border: `1px solid ${alpha(trait.color, 0.3)}`,
-                            display: 'inline-block',
-                            mt: 0.5
-                          }}>
-                            {trait.type}
-                          </Box>
-                        </Box>
-                      </Box>
-                        
-                      {/* Description */}
-                      <Typography variant="body2" sx={{ 
-                        lineHeight: 1.4,
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}>
-                        {trait.desc}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+              <div className={`transform transition-transform duration-300 ${expandedSections.custom ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-        {/* Environmental Effects */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha(theme.palette.error.main, 0.1),
-              '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.custom 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+
+                <div className="bg-pink-500/10 border border-pink-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-pink-300 mb-2">🎨 Custom Rules & Content</div>
+                  <div className="text-white/90 text-sm">
+                    House rules, custom skills, talents, and equipment modifications for enhanced gameplay.
+                  </div>
+                </div>
+        
+                {/* Custom Skills */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-pink-300 font-semibold mb-4">Custom Skills</h4>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1 text-sm flex items-center">
+                        <span className="bg-red-500/20 text-red-300 px-2 py-0.5 rounded text-xs font-bold mr-2">WIL</span>
+                        Sanity
+                      </div>
+                      <div className="text-white/80 text-xs">Used to prevent yourself from going insane</div>
+                    </div>
+        
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1 text-sm flex items-center">
+                        <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded text-xs font-bold mr-2">INT</span>
+                        Knowledge [General]
+                      </div>
+                      <div className="text-white/80 text-xs">Non-specific knowledge on a subject</div>
+                    </div>
+        
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-200 mb-1 text-sm flex items-center">
+                        <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded text-xs font-bold mr-2">INT</span>
+                        Knowledge [Mechanics]
+                      </div>
+                      <div className="text-white/80 text-xs">How machinery or technology operates</div>
+                    </div>
+        
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-1 text-sm flex items-center">
+                        <span className="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded text-xs font-bold mr-2">INT</span>
+                        Knowledge [Lore]
+                      </div>
+                      <div className="text-white/80 text-xs">Backrooms origins, levels, and entities</div>
+                    </div>
+        
+                    <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-teal-200 mb-1 text-sm flex items-center">
+                        <span className="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded text-xs font-bold mr-2">INT</span>
+                        Knowledge [Objects]
+                      </div>
+                      <div className="text-white/80 text-xs">How objects work or should be used</div>
+                    </div>
+        
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1 text-sm flex items-center">
+                        <span className="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded text-xs font-bold mr-2">BR</span>
+                        Metalworking
+                      </div>
+                      <div className="text-white/80 text-xs">Armorer, Blacksmith, Goldsmith tools</div>
+                    </div>
+        
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1 text-sm flex items-center">
+                        <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs font-bold mr-2">AG</span>
+                        Leatherworking
+                      </div>
+                      <div className="text-white/80 text-xs">Leatherworker and Weaver tools</div>
+                    </div>
+        
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1 text-sm flex items-center">
+                        <span className="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded text-xs font-bold mr-2">INT</span>
+                        Crafting
+                      </div>
+                      <div className="text-white/80 text-xs">Alchemist, Carpenter, Culinarian tools</div>
+                    </div>
+                  </div>
+                </div>
+        
+                {/* Custom Talents */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-pink-300 font-semibold mb-4">Custom Talents</h4>
+
+                  <div className="space-y-4">
+                    {/* Tier 1-2 Talents */}
+                    <div>
+                      <h5 className="font-semibold text-pink-200 mb-3">Tier 1-2 Talents</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Healer</span>
+                            <div className="flex space-x-1">
+                              <span className="bg-green-500/30 text-green-300 px-1 py-0.5 rounded text-xs">Action</span>
+                              <span className="bg-blue-500/30 text-blue-300 px-1 py-0.5 rounded text-xs">Ranked</span>
+                            </div>
+                          </div>
+                          <div className="text-white/80 text-xs">Perform medicine check equal to ranks per day</div>
+                        </div>
+        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Lightning Striker</span>
+                            <span className="bg-gray-500/30 text-gray-300 px-1 py-0.5 rounded text-xs">Passive</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Brawl weapons gain reactive trait</div>
+                        </div>
+        
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Bulked Load</span>
+                            <div className="flex space-x-1">
+                              <span className="bg-gray-500/30 text-gray-300 px-1 py-0.5 rounded text-xs">Passive</span>
+                              <span className="bg-blue-500/30 text-blue-300 px-1 py-0.5 rounded text-xs">Ranked</span>
+                            </div>
+                          </div>
+                          <div className="text-white/80 text-xs">Encumbrance threshold +1</div>
+                        </div>
+                      </div>
+                    </div>
+        
+                    {/* Tier 3-4 Talents */}
+                    <div>
+                      <h5 className="font-semibold text-pink-200 mb-3">Tier 3-4 Talents</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Adjust Eyes (Dark)</span>
+                            <span className="bg-indigo-500/30 text-indigo-300 px-1 py-0.5 rounded text-xs">Action</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Ignore darkness penalties for 5 rounds</div>
+                        </div>
+        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Adjust Eyes (Light)</span>
+                            <span className="bg-yellow-500/30 text-yellow-300 px-1 py-0.5 rounded text-xs">Action</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Ignore light penalties for 5 rounds</div>
+                        </div>
+        
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Savage Attacker</span>
+                            <span className="bg-red-500/30 text-red-300 px-1 py-0.5 rounded text-xs">Incidental</span>
+                          </div>
+                          <div className="text-white/80 text-xs">Choose critical injury result (2 strain)</div>
+                        </div>
+                      </div>
+                    </div>
+        
+                    {/* Tier 5 Talents */}
+                    <div>
+                      <h5 className="font-semibold text-pink-200 mb-3">Tier 5 Talents</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1 text-sm flex items-center justify-between">
+                            <span>Unshakable Will</span>
+                            <span className="bg-gray-500/30 text-gray-300 px-1 py-0.5 rounded text-xs">Passive</span>
+                          </div>
+                          <div className="text-white/80 text-xs">5 points to reduce strain, refresh per turn</div>
+                        </div>
+        
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1 text-sm">
+                            <span>Unwavering Resilience</span>
+                            <span className="bg-gray-500/30 text-gray-300 px-1 py-0.5 rounded text-xs ml-2">Passive</span>
+                          </div>
+                          <div className="text-white/80 text-xs">
+                            <div><em className="text-orange-300">Req: Toughened 4</em></div>
+                            <div>Wound threshold +10</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-1 text-sm">
+                            <span>Unbreakable Fortitude</span>
+                            <span className="bg-gray-500/30 text-gray-300 px-1 py-0.5 rounded text-xs ml-2">Passive</span>
+                          </div>
+                          <div className="text-white/80 text-xs">
+                            <div><em className="text-cyan-300">Req: Grit 4</em></div>
+                            <div>Strain threshold +5</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        
+                {/* Custom Equipment Traits */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-pink-300 font-semibold mb-4">Custom Equipment Traits</h4>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 text-sm flex items-center">
+                        Reactive
+                      </div>
+                      <div className="text-white/80 text-xs">Out-of-turn attack when enemy leaves engaged range</div>
+                    </div>
+        
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1 text-sm flex items-center">
+                        Reach
+                      </div>
+                      <div className="text-white/80 text-xs">Use weapon one range band further</div>
+                    </div>
+        
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-1 text-sm flex items-center">
+                        Breaking
+                      </div>
+                      <div className="text-white/80 text-xs">Durability -1 each use</div>
+                    </div>
+        
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1 text-sm flex items-center">
+                        Flurry
+                      </div>
+                      <div className="text-white/80 text-xs">Spend advantage for additional hits (x times)</div>
+                    </div>
+        
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1 text-sm flex items-center">
+                        Sneak
+                      </div>
+                      <div className="text-white/80 text-xs">First attack adds 2 successes automatically</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 text-sm flex items-center">
+                        Lethal
+                      </div>
+                      <div className="text-white/80 text-xs">If the weapon would incapacitate, it kills instead</div>
+                    </div>
+                  </div>
+                </div>
+        
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Equipment Creation */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-indigo-600/30 hover:to-purple-600/30 transition-all duration-300"
+            onClick={() => toggleSection('equipment')}
           >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Environmental Effects
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
-            <Tabs 
-              value={effectValue} 
-              onChange={(e, val) => setEffectValue(val)} 
-              variant="scrollable"
-              sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
-            >
-              <Tab label="Lighting" />
-              <Tab label="Exhaustion" />
-              <Tab label="Fear & Sanity" />
-              <Tab label="Resting" />
-              <Tab label="Atmosphere" />
-              <Tab label="Falling" />
-            </Tabs>
-            <Box sx={{ p: 3 }}>
-              <DisplayEffectTab />
-            </Box>
-          </AccordionDetails>
-        </Accordion>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">⚒️</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Equipment Creation</span>
+                <span className="text-xs bg-indigo-500/30 text-indigo-300 px-2 py-1 rounded ml-2">
+                  Design System
+                </span>
+              </div>
+
+              <div className={`transform transition-transform duration-300 ${expandedSections.equipment ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.equipment 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+
+                <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-indigo-300 mb-2">⚒️ Custom Equipment Design</div>
+                  <div className="text-white/90 text-sm">
+                    Guidelines for creating balanced custom armor, weapons, and attachment systems for your campaign.
+                  </div>
+                </div>
+        
+                {/* Armor Creation */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-indigo-300 font-semibold mb-4">Armor Design</h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Core Attributes</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Soak Value</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Range: 0-3 (3 is rare and expensive)</div>
+                            <div>• Most important armor attribute</div>
+                            <div>• Reliably reduces damage from all hits</div>
+                            <div>• High soak should come with drawbacks</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Defense Value</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Adds setback dice directly to attacker's dice pool</div>
+                            <div>• More valuable than soak (prevents hits entirely)</div>
+                            <div>• Keep values low to control dice pool size</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">Encumbrance</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Range: 2-5 (5 for heavy armor only)</div>
+                            <div>• Reduces by 3 when worn vs. carried</div>
+                            <div>• Higher encumbrance for higher soak</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+        
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Armor Cost Calculation</h5>
+                      <div className="w-1/2 bg-gray-800/50 border border-gray-600/30 rounded-lg p-3 overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-600/30">
+                              <th className="text-left text-gray-200 pb-2">Attribute</th>
+                              <th className="text-right text-gray-200 pb-2">Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-white/80 space-y-1">
+                            <tr><td>+1 Defense</td><td className="text-right">50</td></tr>
+                            <tr><td>+2 Defense</td><td className="text-right">500</td></tr>
+                            <tr><td>+3 Defense</td><td className="text-right">2,000</td></tr>
+                            <tr><td>+4 Defense</td><td className="text-right">5,000</td></tr>
+                            <tr><td>+1 Soak</td><td className="text-right">50</td></tr>
+                            <tr><td>+2 Soak</td><td className="text-right">500</td></tr>
+                            <tr><td>+3 Soak</td><td className="text-right">1,000</td></tr>
+                            <tr><td>+4 Soak</td><td className="text-right">2,500</td></tr>
+                            <tr><td>-1 Encumbrance</td><td className="text-right">75</td></tr>
+                            <tr><td>-2 Encumbrance</td><td className="text-right">250</td></tr>
+                            <tr><td>-3 Encumbrance</td><td className="text-right">500</td></tr>
+                            <tr><td>Reinforced Quality</td><td className="text-right">3,000</td></tr>
+                            <tr><td>Other Positive Qualities</td><td className="text-right">50</td></tr>
+                            <tr><td>Other Negative Qualities</td><td className="text-right">-50</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="mt-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 w-1/2">
+                        <div className="font-semibold text-yellow-300 mb-2">Combination Modifiers</div>
+                        <div className="text-white/80 text-sm space-y-1">
+                          <div>• Low soak + Low defense: +100-250 cost</div>
+                          <div>• Low value + High value: +250-500 cost</div>
+                          <div>• High value + High value: +1,000-2,000 cost</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        
+                {/* Weapon Creation */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-indigo-300 font-semibold mb-4">Weapon Design</h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Universal Attributes</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Base Damage</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Consider it deals 1-2 more damage on average</div>
+                            <div>• Successes from attack rolls add to base damage</div>
+                            <div>• Balance against other weapon attributes</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1">Critical Rating</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Range: 1-6 (1 and 6 are very rare)</div>
+                            <div>• Default: 3 (balanced frequency)</div>
+                            <div>• Lower = more deadly, Higher = safer</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Encumbrance by Skill</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Brawl: 1</div>
+                            <div>• Melee/Ranged: 1-4</div>
+                            <div>• Gunnery: 5-9</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+        
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Weapon Cost Calculation</h5>
+                      <div className="bg-gray-800/50 border border-gray-600/30 rounded-lg p-3 overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-600/30">
+                              <th className="text-left text-gray-200 pb-2">Characteristic</th>
+                              <th className="text-right text-gray-200 pb-2">Cost</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-white/80">
+                            <tr><td>4-5 Damage</td><td className="text-right">100</td></tr>
+                            <tr><td>6-7 Damage</td><td className="text-right">250</td></tr>
+                            <tr><td>8-9 Damage</td><td className="text-right">500</td></tr>
+                            <tr><td>10-12 Damage</td><td className="text-right">1,000</td></tr>
+                            <tr><td>13+ Damage</td><td className="text-right">3,000</td></tr>
+                            <tr><td>Crit Rating 5-6</td><td className="text-right">0</td></tr>
+                            <tr><td>Crit Rating 4</td><td className="text-right">50</td></tr>
+                            <tr><td>Crit Rating 3</td><td className="text-right">150</td></tr>
+                            <tr><td>Crit Rating 2</td><td className="text-right">300</td></tr>
+                            <tr><td>Crit Rating 1</td><td className="text-right">600</td></tr>
+                            <tr><td>Short Range</td><td className="text-right">0</td></tr>
+                            <tr><td>Medium Range</td><td className="text-right">100</td></tr>
+                            <tr><td>Long Range</td><td className="text-right">300</td></tr>
+                            <tr><td>Extreme Range</td><td className="text-right">600</td></tr>
+                            <tr><td>Cumbersome/Unwieldy</td><td className="text-right">-100 per rank</td></tr>
+                            <tr><td>Burn/Ensnare/Linked</td><td className="text-right">200 per rank</td></tr>
+                            <tr><td>Defensive/Deflection</td><td className="text-right">Use armor defense costs</td></tr>
+                            <tr><td>Disorient/Accurate/Stun</td><td className="text-right">50 per rank</td></tr>
+                            <tr><td>Concussive</td><td className="text-right">1,000 per rank</td></tr>
+                            <tr><td>Other Positive Qualities</td><td className="text-right">100 per rank</td></tr>
+                            <tr><td>Other Negative Qualities</td><td className="text-right">-75 per rank</td></tr>
+                            <tr><td>Melee/Brawl Weapon</td><td className="text-right">Reduce to 50% total</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        
+                {/* Hard Points System */}
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-indigo-300 font-semibold mb-4">Hard Points & Attachments</h4>
+
+                  <div className="space-y-4">
+                    <div className="bg-cyan-600/20 border border-cyan-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-cyan-300 mb-2">Hard Points Formula</div>
+                      <div className="text-white/80 text-sm">
+                        Hard Points = ½ Base Encumbrance (rounded up)
+                      </div>
+                    </div>
+        
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Hard Point Examples</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">Light Items</div>
+                          <div className="text-white/80 text-sm">
+                            Encumbrance 1-2 = 1 Hard Point
+                          </div>
+                        </div>
+        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1">Medium Items</div>
+                          <div className="text-white/80 text-sm">
+                            Encumbrance 3-4 = 2 Hard Points
+                          </div>
+                        </div>
+        
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1">Heavy Items</div>
+                          <div className="text-white/80 text-sm">
+                            Encumbrance 5-6 = 3 Hard Points
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+        
+                    <div>
+                      <h5 className="font-semibold text-indigo-200 mb-3">Installing Attachments</h5>
+                      <div className="space-y-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-2">Installation Process</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Requires approximately 1 hour of work</div>
+                            <div>• Make Average Mechanics check</div>
+                            <div>• Each attachment requires specific number of hard points</div>
+                            <div>• Once installed, hard points are occupied permanently</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-2">Installation Results</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• <strong>Success:</strong> Attachment installed properly</div>
+                            <div>• <strong>Failure:</strong> Installation fails, try again</div>
+                            <div>• <strong>Despair:</strong> Attachment destroyed in process</div>
+                            <div>• <strong>Success with Despair:</strong> Attachment may malfunction at worst time</div>
+                          </div>
+                        </div>
+        
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-2">Design Guidelines</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>• Attachments should provide meaningful but balanced benefits</div>
+                            <div>• Consider trade-offs (weight, cost, complexity)</div>
+                            <div>• Don't allow combinations that break game balance</div>
+                            <div>• Limit total improvements to prevent "super items"</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+        
+                <div className="bg-purple-600/10 border border-purple-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-purple-300 mb-3">Design Philosophy</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-purple-200 mb-1">Combat Pacing</div>
+                      <div className="text-white/80 text-xs">Every hit should threaten characters - avoid over-protecting</div>
+                    </div>
+        
+                    <div>
+                      <div className="font-semibold text-purple-200 mb-1">Dice Pool Control</div>
+                      <div className="text-white/80 text-xs">Keep defense values reasonable to maintain manageable dice pools</div>
+                    </div>
+        
+                    <div>
+                      <div className="font-semibold text-purple-200 mb-1">Meaningful Choices</div>
+                      <div className="text-white/80 text-xs">High-value items should come with significant trade-offs</div>
+                    </div>
+        
+                    <div>
+                      <div className="font-semibold text-purple-200 mb-1">Quality Balance</div>
+                      <div className="text-white/80 text-xs">Avoid redundant qualities (Pierce + Breach) on same item</div>
+                    </div>
+                  </div>
+                </div>
+        
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Lethal Company Rules */}
-        <Accordion>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            sx={{ 
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.15) },
-              p: { xs: 2, sm: 3 }
-            }}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-orange-600/20 to-yellow-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-orange-600/30 hover:to-yellow-600/30 transition-all duration-300"
+            onClick={() => toggleSection('lethalcompany')}
           >
-            <Box display="flex" alignItems="center" gap={2}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight="600">
-                Lethal Company Rules
-              </Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
-            <Tabs 
-              value={lethalValue} 
-              onChange={(e, val) => setLethalValue(val)} 
-              variant="scrollable"
-              sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
-            >
-              <Tab label="General" />
-              <Tab label="Weight" />
-              <Tab label="Weather" />
-              <Tab label="Ship" />
-              <Tab label="Death" />
-              <Tab label="Lighting" />
-              <Tab label="Homebrew" />
-              <Tab label="Suits" />
-              <Tab label="Additional" />
-              <Tab label="Weapons" />
-              <Tab label="Ship Systems" />
-            </Tabs>
-            <Box sx={{ p: 3 }}>
-              <DisplayLethalTab />
-            </Box>
-          </AccordionDetails>
-        </Accordion>
-      </Stack>
-    </Box>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">⚡</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Lethal Company Rules</span>
+                <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-1 rounded ml-2">
+                  Company Protocols
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.lethalcompany ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.lethalcompany 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-orange-300 mb-2">⚡ Company Operational Protocols</div>
+                  <div className="text-white/90 text-sm">
+                    Special rules for corporate operations, equipment management, ship systems, and post-mortem assistance protocols.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">General Operations</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Equipment & Actions</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• You may scan once per new room per turn as an incidental</div>
+                        <div>• When using an item with battery, the item loses 1 charge at the end of the turn if it was on at any time during your turn</div>
+                        <div>• While holding a two-handed item, you may not perform any actions except for downgrading to a maneuver</div>
+                        <div>• Picking up an item is an incidental or a maneuver if over 30 weight. While holding a two-handed item, you may not pick up any item</div>
+                        <div>• Putting an item down is an incidental</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Entity Encounters & Stealth</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Whenever an entity and player enter the same room, a contested Stealth (Entity) vs. Perception (Player) check is made</div>
+                        <div>• You may enter/exit stealth mode at the start of any round. While stealthed, your maximum maneuvers per turn is 1, the roles for the above roll is reversed to Stealth (Player) vs. Perception (Entity) with 2 boost dice added</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Stress & Critical Events</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Sanity checks occur the first time a new entity is seen, witnessing a player's death and being alone within the facility 5 consecutive turns</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">Mission Rewards</div>
+                      <div className="text-white/80 text-sm">
+                        You will receive 20xp for each moon you complete
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Weight & Encumbrance System</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-300 mb-2">Base Encumbrance</div>
+                      <div className="text-white/80 text-sm">
+                        Every 15 weight carried counts as 1 encumbrance
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-orange-200 mb-1">Over Encumbrance Limit</div>
+                        <div className="text-white/80 text-sm">
+                          Each encumbrance over your limit adds 1 setback dice to all brawn and agility checks
+                        </div>
+                      </div>
+
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Heavy Load (Encumbrance + Brawn)</div>
+                        <div className="text-white/80 text-sm">
+                          Maneuvers cost 2 strain to perform
+                        </div>
+                      </div>
+
+                      <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                        <div className="font-semibold text-red-200 mb-1">Maximum Load (Encumbrance + Brawn + 2)</div>
+                        <div className="text-white/80 text-sm">
+                          Only 1 maneuver may be taken each turn
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1">Weight Relief</div>
+                      <div className="text-white/80 text-sm">
+                        Should an item be dropped and your encumbrance goes below a certain threshold, the effect immediately goes away
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Ship Operations</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Actions</h5>
+                      <div className="space-y-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Monitor System - Identify Threat</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 2 Perception/Computers check to clearly identify scrap, enemies, traps, or hazards within the same room and all adjacent rooms to the target crew member
+                          </div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1">Navigation System - Predict Weather Event</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 2 Survival/Computers check to determine when the next weather event will occur
+                          </div>
+                        </div>
+
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-1">Terminal System - Hack System</div>
+                          <div className="text-white/80 text-sm space-y-1">
+                            <div>Make a Computers check to remotely disable traps or override secure doors</div>
+                            <div><strong>Base difficulties:</strong> Secure Door (1), Landmine/Spike Trap (2), Turret (3), Laser Grid (4)</div>
+                            <div>Each system can be hacked multiple times with increasing difficulty (+1 per previous hack attempt on same target)</div>
+                            <div>Success disables target for 5 rounds; Advantage extends duration by 2 rounds per Advantage</div>
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Inverse Teleporter - Precision Deployment</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 3 Mechanics check to teleport crew to specific facility location
+                          </div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1">Ship Door - Force Door Override</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 3 Mechanics check to bypass ship door cooldown requirements and operate immediately
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Maneuvers</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1 text-sm">Monitor System - Change Target Player</div>
+                          <div className="text-white/80 text-xs">Switch to a different player on the monitor system</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm">Navigation System - Planetary Scan</div>
+                          <div className="text-white/80 text-xs">Scan the planet for outdoor entities and traps within 10 tiles</div>
+                        </div>
+
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-1 text-sm">Terminal System - Send Basic Command</div>
+                          <div className="text-white/80 text-xs">Input simple facility commands</div>
+                        </div>
+
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1 text-sm">Inverse Teleporter - Random Facility Drop</div>
+                          <div className="text-white/80 text-xs">Teleport crew to random location within facility</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1 text-sm">Signal Translator - Send Message</div>
+                          <div className="text-white/80 text-xs">Input a message to the console for all players to see</div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1 text-sm">Ship Door - Toggle Door</div>
+                          <div className="text-white/80 text-xs">Open or close ship door</div>
+                        </div>
+
+                        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-orange-200 mb-1 text-sm">Assist Planetary Navigation</div>
+                          <div className="text-white/80 text-xs">Find the direction required to go to the ship, fire exit, or main entrance for the currently targeted player</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-orange-200 mb-3">Incidentals</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1 text-sm">Monitor System - Observe Feeds</div>
+                          <div className="text-white/80 text-xs">Passively watch crew activities through monitor displays</div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm">Navigation System - Check Time</div>
+                          <div className="text-white/80 text-xs">View current mission time and departure countdown</div>
+                        </div>
+
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-cyan-200 mb-1 text-sm">Terminal System - Read System Status</div>
+                          <div className="text-white/80 text-xs">Check basic terminal readouts and system information</div>
+                        </div>
+
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-red-200 mb-1 text-sm">Teleporter - Emergency Extraction (Out-of-Turn)</div>
+                          <div className="text-white/80 text-xs">Instantly teleport crew member in immediate danger to the ship. Can be used outside of normal turn order during emergencies</div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-yellow-200 mb-1 text-sm">Signal Translator - Emergency Broadcast (Out-of-Turn)</div>
+                          <div className="text-white/80 text-xs">Instantly transmit urgent warnings to crew. Can be used outside of normal turn order during critical situations</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-orange-300 font-semibold mb-4">Post-Mortem Operations</h4>
+                  <div className="mb-3 text-white/80 text-sm italic">Available to deceased crew members</div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3">Actions</h5>
+                      <div className="space-y-3">
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-purple-200 mb-1">Teleport</div>
+                          <div className="text-white/80 text-sm">Teleport directly to a living player</div>
+                        </div>
+
+                        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-indigo-200 mb-1">Supernatural Interference</div>
+                          <div className="text-white/80 text-sm">Distract an enemy for 1 round. If it is attacked, this effect ends</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3">Maneuvers</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-green-200 mb-1 text-sm">Stealth Assistance</div>
+                          <div className="text-white/80 text-xs">Add a boost dice to a living player's next Stealth check</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1 text-sm">On Alert</div>
+                          <div className="text-white/80 text-xs">Add a boost dice to a living player's next perception check</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-red-200 mb-3">Incidentals</h5>
+                      <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                        <div className="font-semibold text-cyan-200 mb-1">Observe</div>
+                        <div className="text-white/80 text-sm">Remotely observe a living player's location as though through the monitor on the ship</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-600/10 border border-yellow-500/30 rounded-lg p-4">
+                  <h5 className="font-semibold text-yellow-300 mb-3">Quick Reference</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Encumbrance Formula</div>
+                      <div className="text-white/80 text-xs">Weight ÷ 15 = Encumbrance levels</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Critical Injury Option</div>
+                      <div className="text-white/80 text-xs">Roll ≤80: Take Exhaustion instead</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Stealth Mode</div>
+                      <div className="text-white/80 text-xs">1 maneuver max, +2 boost to stealth</div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-yellow-200 mb-1">Battery Drain</div>
+                      <div className="text-white/80 text-xs">-1 charge if used during turn</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
-}
+};
+
+export default RulesPage;

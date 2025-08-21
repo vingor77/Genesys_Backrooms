@@ -10,7 +10,6 @@ import Information from './Main_Pages/information'
 import Crafting from './Main_Pages/crafting'
 import Navbar from './Components/navbar'
 import PeopleOfInterest from './Main_Pages/peopleOfInterest'
-import Bethal from './Bethal/bethalBompany'
 import MundaneObjects from './Main_Pages/mundaneObjects'
 import Armor from './Main_Pages/armor'
 import Weapons from './Main_Pages/weapons'
@@ -20,6 +19,7 @@ import Login from './Components/login'
 import NotLoggedIn from './Components/notLoggedIn'
 import SignUp from './Components/signUp'
 import SetBonuses from './Main_Pages/setBonuses'
+import WeatherApp from './Bethal/weatherApp'
 
 function App() {
   return (
@@ -37,7 +37,6 @@ function App() {
           <Route path='/information' element={<Information />} />
           <Route path='/crafting' element={<Crafting />} />
           <Route path='/interest' element={<PeopleOfInterest />} />
-          <Route path='/bethal' element={<Bethal />} />
           <Route path='/mundane' element={<MundaneObjects />} />
           <Route path='/armor' element={<Armor />} />
           <Route path='/weapons' element={<Weapons />} />
@@ -47,6 +46,7 @@ function App() {
           <Route path='/notLoggedIn' element={<NotLoggedIn />} />
           <Route path='/signUp' element={<SignUp />} />
           <Route path='/sets' element={<SetBonuses />} />
+          <Route path='/lethal' element={<WeatherApp />} />
         </Routes>
       </Router>
     </>

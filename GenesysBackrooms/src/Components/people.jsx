@@ -1,291 +1,212 @@
-import { Box, Button, Card, Dialog, Typography, CardContent,CardHeader,Avatar,Chip,Stack,IconButton,Tooltip,Fade,Paper } from "@mui/material";
-import db from '../Components/firebase';
+import React, { useState } from 'react';
 import { doc, updateDoc } from "firebase/firestore";
+import db from '../Components/firebase';
 import EntityItem from "./entityItem";
-import { useState } from "react";
-import { Person,Visibility,VisibilityOff,Group,Psychology,Star,FitnessCenter,Close,Info } from '@mui/icons-material';
 
 export default function People(props) {
-  const [open, setOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [showCombatStats, setShowCombatStats] = useState(false);
 
   const affiliations = props.currPerson.importantAffiliations
     ? props.currPerson.importantAffiliations.split('/').filter(Boolean)
     : [];
 
-  const flipHidden = () => {
-    updateDoc(doc(db, 'PeopleOfInterest', props.currPerson.name), {
-      hidden: props.currPerson.hidden === 'Yes' ? 'No' : 'Yes'
-    })
-  }
+  // Get person theme based on fighter status and group
+  const getPersonTheme = () => {
+    if (props.currPerson.fighter === 'Yes') {
+      return {
+        primary: '#dc2626',
+        secondary: '#ef4444',
+        accent: '#f87171',
+        name: 'FIGHTER',
+        icon: '⚔️',
+        gradient: 'from-red-600 to-red-700',
+        ring: 'ring-red-500/30',
+        bg: 'bg-red-500/10'
+      };
+    }
+    
+    if (props.currPerson.associatedGroup) {
+      return {
+        primary: '#7c3aed',
+        secondary: '#8b5cf6',
+        accent: '#a78bfa',
+        name: 'SOCIAL',
+        icon: '👤',
+        gradient: 'from-purple-600 to-purple-700',
+        ring: 'ring-purple-500/30',
+        bg: 'bg-purple-500/10'
+      };
+    }
+    
+    return {
+      primary: '#0ea5e9',
+      secondary: '#3b82f6',
+      accent: '#60a5fa',
+      name: 'CIVILIAN',
+      icon: '🧑',
+      gradient: 'from-blue-600 to-blue-700',
+      ring: 'ring-blue-500/30',
+      bg: 'bg-blue-500/10'
+    };
+  };
 
-  const isAdmin = localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN';
+  const personTheme = getPersonTheme();
+  const isAdmin = localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
   const isHidden = props.currPerson.hidden === 'Yes';
   const isFighter = props.currPerson.fighter === 'Yes';
 
-  // Get background color based on person's group/role
-  const getCardGradient = () => {
-    if (isHidden && isAdmin) {
-      return 'linear-gradient(135deg, #666 0%, #999 100%)';
-    }
-    if (isFighter) {
-      return 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
-    }
-    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  const flipHidden = () => {
+    updateDoc(doc(db, 'PeopleOfInterest', props.currPerson.name), {
+      hidden: props.currPerson.hidden === 'Yes' ? 'No' : 'Yes'
+    });
   };
 
-  const InfoSection = ({ icon, title, content, chips = [] }) => (
-    <Paper 
-      elevation={1} 
-      sx={{ 
-        p: 2, 
-        mb: 2, 
-        borderRadius: 2,
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(10px)'
-      }}
-    >
-      <Box display="flex" alignItems="center" gap={1} mb={1}>
-        {icon}
-        <Typography variant="h6" fontWeight="bold" color="white">
-          {title}
-        </Typography>
-      </Box>
-      {content && (
-        <Typography 
-          variant="body1" 
-          color="rgba(255,255,255,0.9)"
-          sx={{ lineHeight: 1.6, mb: chips.length > 0 ? 1 : 0 }}
-        >
-          {content}
-        </Typography>
-      )}
-      {chips.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-          {chips.map((chip, index) => (
-            <Chip
-              key={index}
-              label={chip}
-              size="small"
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
-                }
-              }}
-            />
-          ))}
-        </Stack>
-      )}
-    </Paper>
-  );
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const infoSections = [
+    { key: 'introduction', label: 'Introduction', content: props.currPerson.introduction, icon: '📋' },
+    { key: 'reason', label: 'Reason for Interest', content: props.currPerson.reason, icon: '🎯' },
+    { key: 'personality', label: 'Personality', content: props.currPerson.personality, icon: '🧠' },
+  ];
 
   return (
     <>
-      <Fade in timeout={500}>
-        <Card 
-          elevation={8}
-          sx={{
-            width: { xs: '100%', md: '520px' },
-            height: '600px',
-            borderRadius: 4,
-            background: getCardGradient(),
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden',
-            '&:hover': {
-              transform: 'translateY(-4px)',
-              transition: 'transform 0.3s ease',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.3)'
-            }
-          }}
-        >
-          {/* Header with Avatar and Name */}
-          <CardHeader
-            title={
-              <Typography variant="h4" fontWeight="bold" color="white">
-                {props.currPerson.name}
-              </Typography>
-            }
-            action={
-              <Stack direction="row" spacing={1}>
-                {isFighter && (
-                  <Tooltip title="Fighter - Has Combat Stats">
-                    <Chip
-                      icon={<FitnessCenter />}
-                      label="Fighter"
-                      size="small"
-                      sx={{
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        color: 'white'
-                      }}
-                    />
-                  </Tooltip>
-                )}
-                {isHidden && isAdmin && (
-                  <Tooltip title="Hidden from Players">
-                    <Chip
-                      icon={<VisibilityOff />}
-                      label="Hidden"
-                      size="small"
-                      color="error"
-                      sx={{
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        color: 'white'
-                      }}
-                    />
-                  </Tooltip>
-                )}
-              </Stack>
-            }
-            sx={{ pb: 1 }}
-          />
-
-          {/* Content */}
-          <CardContent sx={{ 
-            height: 'calc(100% - 120px)', 
-            overflow: 'auto',
-            p: 2,
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: 'rgba(255,255,255,0.3)',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: 'rgba(255,255,255,0.5)',
-            },
-          }}>
+      <div className="w-96 h-[700px] bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-auto flex flex-col">
+        
+        {/* Header Section */}
+        <div className={`relative p-6 bg-gradient-to-br ${personTheme.gradient}`}>
+          {/* Main Header Info */}
+          <div className="text-center text-white">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-2xl flex items-center justify-center text-3xl backdrop-blur-sm">
+              {personTheme.icon}
+            </div>
+            <h2 className="text-2xl font-bold mb-2">{props.currPerson.name}</h2>
             
-            <InfoSection
-              icon={<Info />}
-              title="Introduction"
-              content={props.currPerson.introduction}
-            />
-
-            <InfoSection
-              icon={<Star />}
-              title="Reason for Interest"
-              content={props.currPerson.reason}
-            />
-
-            <InfoSection
-              icon={<Psychology />}
-              title="Personality"
-              content={props.currPerson.personality}
-            />
-
-            <InfoSection
-              icon={<Group />}
-              title="Associated Group"
-              content={props.currPerson.associatedGroup}
-            />
-
-            {affiliations.length > 0 && (
-              <InfoSection
-                icon={<Person />}
-                title="Individual Affiliations"
-                chips={affiliations}
-              />
-            )}
-          </CardContent>
-
-          {/* Action Buttons */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 16,
-              left: 16,
-              right: 16,
-              display: 'flex',
-              gap: 1,
-              justifyContent: 'center',
-              flexWrap: 'wrap'
-            }}
-          >
-            {isAdmin && (
-              <Button
-                onClick={flipHidden}
-                variant="contained"
-                startIcon={isHidden ? <Visibility /> : <VisibilityOff />}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  backdropFilter: 'blur(10px)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)'
-                  },
-                  borderRadius: 3
-                }}
-              >
-                {isHidden ? 'Show Person' : 'Hide Person'}
-              </Button>
-            )}
+            {/* Status Badge */}
+            <div className="inline-flex items-center px-3 py-1 bg-white/20 rounded-full text-sm font-semibold mb-3 backdrop-blur-sm">
+              <span className="mr-1">{personTheme.icon}</span>
+              {personTheme.name}
+            </div>
             
+            {props.currPerson.associatedGroup && (
+              <div className="text-sm opacity-90 bg-white/10 rounded-full px-3 py-1 inline-block backdrop-blur-sm">
+                {props.currPerson.associatedGroup}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="flex-1 p-6 flex flex-col">
+          
+          {/* Affiliations */}
+          {affiliations.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-white font-semibold mb-3 flex items-center">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                Affiliations ({affiliations.length})
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {affiliations.map((affiliation, idx) => (
+                  <span key={idx} className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm border border-green-500/30">
+                    {affiliation}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Expandable Info Sections */}
+          <div className="flex-1 mb-4">
+            <div className="h-64 overflow-y-auto space-y-3 pr-2">
+              {infoSections.map((section) => 
+                section.content ? (
+                  <div key={section.key} className="border border-slate-600 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSection(section.key)}
+                      className="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 transition-colors flex items-center justify-between text-left"
+                    >
+                      <div className="flex items-center">
+                        <span className="mr-3 text-lg">{section.icon}</span>
+                        <span className="text-white font-medium">{section.label}</span>
+                      </div>
+                      <span className={`text-gray-400 transition-transform ${expandedSection === section.key ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+                    {expandedSection === section.key && (
+                      <div className="px-4 py-3 bg-slate-750 border-t border-slate-600">
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                          {section.content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons - Always takes same space */}
+          <div className="space-y-2 h-20 flex flex-col justify-end">
             {isFighter && (
-              <Button
-                onClick={() => setOpen(true)}
-                variant="contained"
-                startIcon={<FitnessCenter />}
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  backdropFilter: 'blur(10px)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)'
-                  },
-                  borderRadius: 3
-                }}
+              <button
+                onClick={() => setShowCombatStats(true)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center"
               >
-                Combat Stats
-              </Button>
+                <span className="mr-2">⚔️</span>
+                View Combat Stats
+              </button>
             )}
-          </Box>
-        </Card>
-      </Fade>
+            
+            {isAdmin && (
+              <button
+                onClick={flipHidden}
+                className={`w-full bg-gray-600 hover:bg-gray-700 text-white px-4 rounded-lg font-medium transition-colors ${isFighter ? 'py-2' : 'py-3'}`}
+              >
+                {isHidden ? 'Unhide' : 'Hide'} Person
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
-      {/* Enhanced Dialog */}
-      <Dialog 
-        open={open} 
-        onClose={() => setOpen(false)} 
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white'
-          }
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            p: 2,
-            borderBottom: '1px solid rgba(255,255,255,0.2)'
-          }}
-        >
-          <Typography variant="h5" fontWeight="bold">
-            {props.currPerson.name} - Combat Statistics
-          </Typography>
-          <IconButton
-            onClick={() => setOpen(false)}
-            sx={{ color: 'white' }}
-          >
-            <Close />
-          </IconButton>
-        </Box>
-        <Box sx={{ p: 2 }}>
-          <EntityItem entity={props.currPerson} person={true} />
-        </Box>
-      </Dialog>
+      {/* Combat Stats Modal */}
+      {showCombatStats && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-2xl border border-slate-600 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className={`p-6 border-b border-slate-600 bg-gradient-to-r ${personTheme.gradient}`}>
+              <div className="flex items-center justify-between text-white">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm">
+                    ⚔️
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">{props.currPerson.name}</h2>
+                    <p className="text-white/80">Combat Statistics</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCombatStats(false)}
+                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EntityItem entity={props.currPerson} person={true} />
+            </div>
+          </div>
+        </div>
+      )}
     </>
-  )
+  );
 }

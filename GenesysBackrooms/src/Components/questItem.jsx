@@ -1,7 +1,6 @@
-import { Box, Button, Card, Chip, Typography, CardContent,CardHeader,Stack,Paper,Fade,LinearProgress} from "@mui/material";
+import React from 'react';
 import db from '../Components/firebase';
 import { doc, updateDoc } from "firebase/firestore";
-import {Assignment,CheckCircle,RadioButtonUnchecked,Visibility,VisibilityOff,Person,EmojiEvents,AutoAwesome,TurnedIn} from '@mui/icons-material';
 
 export default function QuestItem(props) {
   const rewards = props.currQuest.rewards 
@@ -20,301 +19,178 @@ export default function QuestItem(props) {
     })
   }
 
-  const isAdmin = localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN';
+  const isAdmin = localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
   const isCompleted = props.currQuest.completed === 'Yes';
   const isHidden = props.currQuest.hidden === 'Yes';
   const isAutoAcquired = props.currQuest.acquisition === 'None';
 
-  // Get background gradient based on quest status
-  const getCardGradient = () => {
-    if (isHidden && isAdmin) {
-      return 'linear-gradient(135deg, #666 0%, #999 100%)';
-    }
-    if (isCompleted) {
-      return 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)';
-    }
-    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  };
-
   // Get quest line color
-  const getQuestLineColor = (questLine) => {
-    const colors = {
-      'Main': 'error',
-      'Side': 'warning', 
-      'Daily': 'info',
-      'Weekly': 'secondary',
-      'Event': 'success'
+  const getQuestLineTheme = (questLine) => {
+    const themes = {
+      'Main': { 
+        gradient: 'from-red-600 to-red-700', 
+        icon: '⚔️', 
+        accent: 'red' 
+      },
+      'Side': { 
+        gradient: 'from-yellow-600 to-orange-600', 
+        icon: '🔍', 
+        accent: 'yellow' 
+      },
+      'Daily': { 
+        gradient: 'from-blue-600 to-cyan-600', 
+        icon: '📅', 
+        accent: 'blue' 
+      },
+      'Weekly': { 
+        gradient: 'from-purple-600 to-pink-600', 
+        icon: '📊', 
+        accent: 'purple' 
+      },
+      'Event': { 
+        gradient: 'from-green-600 to-emerald-600', 
+        icon: '🎉', 
+        accent: 'green' 
+      },
+      'Starter': { 
+        gradient: 'from-teal-600 to-blue-600', 
+        icon: '🌟', 
+        accent: 'teal' 
+      }
     };
-    return colors[questLine] || 'primary';
+    return themes[questLine] || { 
+      gradient: 'from-gray-600 to-gray-700', 
+      icon: '📜', 
+      accent: 'gray' 
+    };
   };
 
-  const InfoSection = ({ icon, title, content, chips = [] }) => (
-    <Paper 
-      elevation={1} 
-      sx={{ 
-        p: 2, 
-        mb: 2, 
-        borderRadius: 2,
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(10px)'
-      }}
-    >
-      <Box display="flex" alignItems="center" gap={1} mb={content || chips.length > 0 ? 1 : 0}>
-        {icon}
-        <Typography variant="subtitle1" fontWeight="bold" color="white">
-          {title}
-        </Typography>
-      </Box>
-      {content && (
-        <Typography 
-          variant="body2" 
-          color="rgba(255,255,255,0.9)"
-          sx={{ lineHeight: 1.5, mb: chips.length > 0 ? 1 : 0 }}
-        >
-          {content}
-        </Typography>
-      )}
-      {chips.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-          {chips.map((chip, index) => (
-            <Chip
-              key={index}
-              label={chip}
-              size="small"
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
-                }
-              }}
-            />
-          ))}
-        </Stack>
-      )}
-    </Paper>
-  );
+  const questTheme = getQuestLineTheme(props.currQuest.questLine);
 
   return (
-    <Fade in timeout={500}>
-      <Card 
-        elevation={8}
-        sx={{
-          width: { xs: '100%', md: '420px' },
-          height: '450px',
-          borderRadius: 4,
-          background: getCardGradient(),
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            transition: 'transform 0.3s ease',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.3)'
-          }
-        }}
-      >
-        {/* Header */}
-        <CardHeader
-          avatar={
-            <Box
-              sx={{
-                width: 50,
-                height: 50,
-                borderRadius: '50%',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid rgba(255,255,255,0.3)'
-              }}
-            >
-              {isCompleted ? (
-                <CheckCircle sx={{ color: 'white', fontSize: 28 }} />
-              ) : (
-                <Assignment sx={{ color: 'white', fontSize: 28 }} />
-              )}
-            </Box>
-          }
-          title={
-            <Typography variant="h5" fontWeight="bold" color="white" sx={{ mb: 0.5 }}>
-              {props.currQuest.name}
-            </Typography>
-          }
-          subheader={
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                label={props.currQuest.questLine}
-                size="small"
-                color={getQuestLineColor(props.currQuest.questLine)}
-                sx={{ fontWeight: 'bold' }}
-              />
-              <Chip
-                icon={isCompleted ? <CheckCircle /> : <RadioButtonUnchecked />}
-                label={isCompleted ? "Complete" : "In Progress"}
-                size="small"
-                sx={{
-                  bgcolor: isCompleted ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 152, 0, 0.3)',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }}
-              />
-              {isHidden && isAdmin && (
-                <Chip
-                  icon={<VisibilityOff />}
-                  label="Hidden"
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(244, 67, 54, 0.3)',
-                    color: 'white'
-                  }}
-                />
-              )}
-            </Stack>
-          }
-          sx={{ pb: 1 }}
-        />
+    <div className={`w-full md:h-96 lg:h-80 rounded-xl shadow-lg border overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl relative ${
+      isHidden && isAdmin 
+        ? 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600' 
+        : isCompleted
+          ? 'bg-gradient-to-br from-green-700 to-emerald-800 border-green-500/50'
+          : `bg-gradient-to-br ${questTheme.gradient} border-white/20`
+    }`}>
+      
+      {/* Header */}
+      <div className="p-4 text-white relative">
+        {/* Status Indicators */}
+        <div className="absolute top-3 right-3 flex space-x-1">
+          {isHidden && isAdmin && (
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">🚫</span>
+            </div>
+          )}
+          {isCompleted && (
+            <div className="w-5 h-5 bg-green-400 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">✓</span>
+            </div>
+          )}
+        </div>
 
-        {/* Content */}
-        <CardContent sx={{ 
-          height: 'calc(100% - 140px)', 
-          overflow: 'auto',
-          p: 2,
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '3px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.3)',
-            borderRadius: '3px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: 'rgba(255,255,255,0.5)',
-          },
-        }}>
-          
-          {/* Description */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              p: 2, 
-              mb: 2, 
-              borderRadius: 2,
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <Typography 
-              variant="body2" 
-              color="rgba(255,255,255,0.9)"
-              sx={{ lineHeight: 1.6, fontStyle: 'italic' }}
-            >
-              {props.currQuest.description}
-            </Typography>
-          </Paper>
+        {/* Quest Icon & Title */}
+        <div className="flex items-start space-x-3 mb-3">
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur-sm flex-shrink-0">
+            {questTheme.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-lg leading-tight mb-1 truncate">{props.currQuest.name}</h3>
+            <div className="flex items-center space-x-2">
+              <span className={`inline-flex items-center px-2 py-1 bg-${questTheme.accent}-500/30 rounded-full text-xs font-medium`}>
+                {props.currQuest.questLine}
+              </span>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                isCompleted ? 'bg-green-500/30 text-green-200' : 'bg-orange-500/30 text-orange-200'
+              }`}>
+                {isCompleted ? '✅ Complete' : '⏳ In Progress'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Acquisition Info */}
-          <InfoSection
-            icon={isAutoAcquired ? <AutoAwesome /> : <Person />}
-            title="Acquisition"
-            content={
-              isAutoAcquired 
-                ? "This quest is automatically acquired"
-                : `Acquired from ${props.currQuest.questGiver} in ${props.currQuest.acquisition}`
-            }
-          />
+      {/* Content */}
+      <div className="px-4 pb-4 flex-1 flex flex-col">
+        
+        {/* Description */}
+        <div className="bg-black/20 rounded-lg p-3 mb-3 flex-1">
+          <p className="text-gray-200 text-sm leading-relaxed line-clamp-3">
+            {props.currQuest.description || 'No description available'}
+          </p>
+        </div>
 
+        {/* Quick Info */}
+        <div className="space-y-2 mb-3">
           {/* Turn-in Location */}
-          <InfoSection
-            icon={<TurnedIn />}
-            title="Turn-in Location"
-            content={props.currQuest.turnInLocation}
-          />
+          {props.currQuest.turnInLocation && (
+            <div className="flex items-center text-gray-300 text-sm">
+              <span className="text-blue-400 mr-2">📍</span>
+              <span className="truncate">Turn in: {props.currQuest.turnInLocation}</span>
+            </div>
+          )}
+          
+          {/* Quest Giver */}
+          {!isAutoAcquired && props.currQuest.questGiver && (
+            <div className="flex items-center text-gray-300 text-sm">
+              <span className="text-purple-400 mr-2">👤</span>
+              <span className="truncate">From: {props.currQuest.questGiver}</span>
+            </div>
+          )}
 
           {/* Rewards */}
           {rewards.length > 0 && (
-            <InfoSection
-              icon={<EmojiEvents />}
-              title="Rewards"
-              chips={rewards}
-            />
+            <div className="space-y-1">
+              <div className="flex items-center text-yellow-400 text-sm font-medium">
+                <span className="mr-2">🎁</span>
+                <span>Rewards:</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {rewards.map((reward, idx) => (
+                  <span key={idx} className="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded text-xs border border-yellow-500/30 break-words">
+                    {reward}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
-        </CardContent>
+        </div>
 
         {/* Action Buttons */}
         {isAdmin && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              right: 12,
-              display: 'flex',
-              gap: 1,
-              justifyContent: 'center',
-              flexWrap: 'wrap'
-            }}
-          >
-            <Button
+          <div className="flex space-x-2">
+            <button
               onClick={flipComplete}
-              variant="contained"
-              size="small"
-              startIcon={isCompleted ? <RadioButtonUnchecked /> : <CheckCircle />}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                backdropFilter: 'blur(10px)',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
-                },
-                borderRadius: 3,
-                fontSize: '0.75rem'
-              }}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                isCompleted 
+                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}
             >
-              Mark {isCompleted ? 'Incomplete' : 'Complete'}
-            </Button>
+              {isCompleted ? '⏳ Undo' : '✅ Complete'}
+            </button>
             
-            <Button
+            <button
               onClick={flipHidden}
-              variant="contained"
-              size="small"
-              startIcon={isHidden ? <Visibility /> : <VisibilityOff />}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                backdropFilter: 'blur(10px)',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
-                },
-                borderRadius: 3,
-                fontSize: '0.75rem'
-              }}
+              className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-all duration-300"
             >
-              {isHidden ? 'Show' : 'Hide'} Quest
-            </Button>
-          </Box>
+              {isHidden ? '👁️' : '🚫'}
+            </button>
+          </div>
         )}
+      </div>
 
-        {/* Progress Indicator */}
-        <LinearProgress
-          variant="determinate"
-          value={isCompleted ? 100 : 50}
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            bgcolor: 'rgba(255,255,255,0.2)',
-            '& .MuiLinearProgress-bar': {
-              bgcolor: isCompleted ? '#4caf50' : '#ff9800'
-            }
-          }}
+      {/* Progress Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+        <div 
+          className={`h-full transition-all duration-1000 ${
+            isCompleted ? 'bg-green-400 w-full' : 'bg-yellow-400 w-1/2'
+          }`}
         />
-      </Card>
-    </Fade>
-  )
+      </div>
+    </div>
+  );
 }

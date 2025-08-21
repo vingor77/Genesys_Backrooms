@@ -1,42 +1,44 @@
-import { Box, Button, Card, Chip, Typography, CardContent,CardHeader,Stack,Paper,Fade,Avatar } from "@mui/material";
 import { doc, updateDoc } from "firebase/firestore";
 import db from '../Components/firebase';
-import { AttachMoney,Visibility,VisibilityOff,StarRate,Group,Category } from '@mui/icons-material';
 
 export default function MundaneItem(props) {
   const usedBy = props.currMundane.usedBy 
     ? props.currMundane.usedBy.split("/").filter(Boolean)
     : [];
-  
-  // Get rarity color and gradient (same system as weapons/armor)
-  const getRarityInfo = (rarity) => {
+
+  // Get rarity color and gradient
+  const getRarityColor = (rarity) => {
     const rarityMap = {
-      'Common': { 
-        color: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-        chipColor: 'default'
-      },
-      'Uncommon': { 
-        color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        chipColor: 'success'
-      },
-      'Rare': { 
-        color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-        chipColor: 'primary'
-      },
-      'Epic': { 
-        color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-        chipColor: 'secondary'
-      },
-      'Legendary': { 
-        color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        chipColor: 'warning'
-      },
-      'Artifact': { 
-        color: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-        chipColor: 'error'
-      }
+      0: 'from-gray-600 to-gray-700 text-gray-300 border-gray-500/50',
+      1: 'from-green-600 to-green-700 text-green-300 border-green-500/50',
+      2: 'from-emerald-600 to-emerald-700 text-emerald-300 border-emerald-500/50',
+      3: 'from-blue-600 to-blue-700 text-blue-300 border-blue-500/50',
+      4: 'from-indigo-600 to-indigo-700 text-indigo-300 border-indigo-500/50',
+      5: 'from-purple-600 to-purple-700 text-purple-300 border-purple-500/50',
+      6: 'from-pink-600 to-pink-700 text-pink-300 border-pink-500/50',
+      7: 'from-red-600 to-red-700 text-red-300 border-red-500/50',
+      8: 'from-orange-600 to-orange-700 text-orange-300 border-orange-500/50',
+      9: 'from-amber-600 to-amber-700 text-amber-300 border-amber-500/50',
+      10: 'from-yellow-600 to-yellow-700 text-yellow-300 border-yellow-500/50'
     };
-    return rarityMap[rarity] || rarityMap['Common'];
+    return rarityMap[rarity] || rarityMap[0];
+  };
+
+  const getRarityLabel = (rarity) => {
+    const labels = {
+      0: 'Common',
+      1: 'Uncommon',
+      2: 'Rare',
+      3: 'Epic',
+      4: 'Legendary',
+      5: 'Artifact',
+      6: 'Mythic',
+      7: 'Divine',
+      8: 'Cosmic',
+      9: 'Transcendent',
+      10: 'Absolute'
+    };
+    return labels[rarity] || 'Common';
   };
 
   // Get item category icon based on common item types
@@ -55,218 +57,107 @@ export default function MundaneItem(props) {
     return '📦'; // Default generic item
   };
 
-  const rarityInfo = getRarityInfo(props.currMundane.rarity);
-  const isAdmin = localStorage.getItem('loggedIn').toUpperCase() === 'ADMIN';
+  const isAdmin = localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
   const isHidden = props.currMundane.hidden === 'Yes';
   
   const flipHidden = () => {
     updateDoc(doc(db, 'MundaneObjects', props.currMundane.name), {
       hidden: props.currMundane.hidden === 'Yes' ? 'No' : 'Yes'
-    })
-  }
+    });
+  };
 
   return (
-    <Fade in timeout={500}>
-      <Card 
-        elevation={8}
-        sx={{
-          width: { xs: '100%', md: '420px' },
-          height: '350px',
-          borderRadius: 4,
-          background: rarityInfo.color,
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            transition: 'transform 0.3s ease',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.3)'
-          }
-        }}
-      >
-        {/* Header */}
-        <CardHeader
-          avatar={
-            <Avatar
-              sx={{
-                width: 50,
-                height: 50,
-                bgcolor: 'rgba(255,255,255,0.2)',
-                border: '2px solid rgba(255,255,255,0.3)',
-                fontSize: '1.5rem'
-              }}
-            >
+    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-black/30 hover:scale-105 hover:shadow-2xl group h-full flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-amber-600/30 to-orange-600/30 border-b border-white/10 p-4 relative">
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-3 mb-2">
+            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-xl border border-white/20">
               {getItemIcon(props.currMundane.name)}
-            </Avatar>
-          }
-          title={
-            <Typography variant="h5" fontWeight="bold" color="white">
+            </div>
+            <h3 className="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">
               {props.currMundane.name}
-            </Typography>
-          }
-          subheader={
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5} sx={{ mt: 1 }}>
-              <Chip
-                icon={<StarRate />}
-                label={props.currMundane.rarity}
-                size="small"
-                color={rarityInfo.chipColor}
-                sx={{ fontWeight: 'bold' }}
-              />
-              <Chip
-                icon={<AttachMoney />}
-                label={props.currMundane.price}
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white'
-                }}
-              />
-              <Chip
-                icon={<Category />}
-                label="Mundane Item"
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white'
-                }}
-              />
-              {isHidden && isAdmin && (
-                <Chip
-                  icon={<VisibilityOff />}
-                  label="Hidden"
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(244, 67, 54, 0.3)',
-                    color: 'white'
-                  }}
-                />
-              )}
-            </Stack>
-          }
-          sx={{ pb: 1 }}
-        />
+            </h3>
+          </div>
+          <div className="text-sm text-amber-300">
+            Mundane Item
+          </div>
+        </div>
+        
+        {/* Status Indicator */}
+        <div className="absolute top-4 right-4">
+          <div className={`w-3 h-3 rounded-full ${!isHidden ? 'bg-green-400' : 'bg-red-400'} shadow-lg ring-2 ring-white/30`}></div>
+        </div>
+      </div>
 
-        {/* Content */}
-        <CardContent sx={{ 
-          height: 'calc(100% - 120px)', 
-          overflow: 'auto',
-          p: 2,
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '3px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(255,255,255,0.3)',
-            borderRadius: '3px',
-          }
-        }}>
-          
-          {/* Description */}
-          <Paper 
-            elevation={1} 
-            sx={{ 
-              p: 2, 
-              mb: 2, 
-              borderRadius: 2,
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <Typography 
-              variant="body2" 
-              color="rgba(255,255,255,0.9)"
-              sx={{ lineHeight: 1.6, fontStyle: 'italic' }}
-            >
-              {props.currMundane.description}
-            </Typography>
-          </Paper>
-
-          {/* Used By Section */}
-          {usedBy.length > 0 && (
-            <Paper 
-              elevation={1} 
-              sx={{ 
-                p: 2, 
-                borderRadius: 2,
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <Group />
-                <Typography variant="h6" fontWeight="bold" color="white">
-                  Used By
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                {usedBy.map((user, index) => (
-                  <Chip
-                    key={index}
-                    label={user}
-                    size="small"
-                    sx={{
-                      bgcolor: 'rgba(255,255,255,0.2)',
-                      color: 'white',
-                      '&:hover': {
-                        bgcolor: 'rgba(255,255,255,0.3)'
-                      }
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Paper>
+      {/* Stats Chips */}
+      <div className="p-4 space-y-3">
+        <div className="flex flex-wrap gap-2 justify-center">
+          <div className={`bg-gradient-to-r ${getRarityColor(props.currMundane.rarity)} px-3 py-1 rounded-full text-xs font-bold border`}>
+            {getRarityLabel(props.currMundane.rarity)} ({props.currMundane.rarity})
+          </div>
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-green-300 px-3 py-1 rounded-full text-xs font-bold border border-green-500/50">
+            Price: {props.currMundane.price}
+          </div>
+          {isHidden && isAdmin && (
+            <div className="bg-gradient-to-r from-red-600 to-pink-600 text-red-300 px-3 py-1 rounded-full text-xs font-bold border border-red-500/50">
+              Hidden
+            </div>
           )}
-        </CardContent>
+        </div>
 
-        {/* Admin Button */}
-        {isAdmin && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              right: 12,
-              display: 'flex',
-              justifyContent: 'center'
-            }}
-          >
-            <Button
-              onClick={flipHidden}
-              variant="contained"
-              size="small"
-              startIcon={isHidden ? <Visibility /> : <VisibilityOff />}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                backdropFilter: 'blur(10px)',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
-                },
-                borderRadius: 3,
-                fontSize: '0.75rem'
-              }}
-            >
-              {isHidden ? 'Show' : 'Hide'} Object
-            </Button>
-          </Box>
+        {/* Used By Section */}
+        {usedBy.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-400 text-center">Used By:</div>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {usedBy.slice(0, 3).map((user, index) => (
+                <div key={index} className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded text-xs border border-blue-500/30">
+                  {user}
+                </div>
+              ))}
+              {usedBy.length > 3 && (
+                <div className="bg-gray-600/20 text-gray-300 px-2 py-1 rounded text-xs border border-gray-500/30">
+                  +{usedBy.length - 3} more
+                </div>
+              )}
+            </div>
+          </div>
         )}
+      </div>
 
-        {/* Decorative Bottom Accent */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            background: 'rgba(255,255,255,0.3)'
-          }}
-        />
-      </Card>
-    </Fade>
-  )
+      {/* Description */}
+      <div className="flex-1 p-4 pt-0">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 h-full overflow-y-auto">
+          <p className="text-gray-300 text-sm leading-relaxed italic">
+            {props.currMundane.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Admin Button */}
+      {isAdmin && (
+        <div className="border-t border-white/10 p-4">
+          <button
+            onClick={flipHidden}
+            className={`w-full flex items-center justify-center space-x-2 font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+              isHidden 
+                ? 'bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 text-green-300 border border-green-500/30'
+                : 'bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 text-red-300 border border-red-500/30'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              {isHidden ? (
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+              ) : (
+                <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"></path>
+              )}
+              {!isHidden && <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>}
+            </svg>
+            <span>{isHidden ? 'Show' : 'Hide'} Object</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
