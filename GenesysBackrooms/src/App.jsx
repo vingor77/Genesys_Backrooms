@@ -10,46 +10,40 @@ import Information from './Main_Pages/information'
 import Crafting from './Main_Pages/crafting'
 import Navbar from './Components/navbar'
 import PeopleOfInterest from './Main_Pages/peopleOfInterest'
-import MundaneObjects from './Main_Pages/mundaneObjects'
-import Armor from './Main_Pages/armor'
-import Weapons from './Main_Pages/weapons'
-import Phenomenons from './Main_Pages/phenomenons'
 import PlayerFunctions from './Main_Pages/playerFunctions'
 import Login from './Components/login'
 import NotLoggedIn from './Components/notLoggedIn'
 import SignUp from './Components/signUp'
 import SetBonuses from './Main_Pages/setBonuses'
 import WeatherApp from './Bethal/weatherApp'
+import SessionSelector from './Components/sessionSelector'
+import Phenomena from './Main_Pages/phenomena'
 
 function App() {
   return (
-    <>
+    <Router>
       <Navbar />
-      <Router>
-        <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/groups' element={<Groups />} />
-          <Route path='/outposts' element={<Outposts />} />
-          <Route path='/levels' element={<Levels />} />
-          <Route path='/objects' element={<Objects />} />
-          <Route path='/entities' element={<Entities />} />
-          <Route path='/quests' element={<Quests />} />
-          <Route path='/information' element={<Information />} />
-          <Route path='/crafting' element={<Crafting />} />
-          <Route path='/interest' element={<PeopleOfInterest />} />
-          <Route path='/mundane' element={<MundaneObjects />} />
-          <Route path='/armor' element={<Armor />} />
-          <Route path='/weapons' element={<Weapons />} />
-          <Route path='/phenomena' element={<Phenomenons />} />
-          <Route path='/functions' element={<PlayerFunctions />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/notLoggedIn' element={<NotLoggedIn />} />
-          <Route path='/signUp' element={<SignUp />} />
-          <Route path='/sets' element={<SetBonuses />} />
-          <Route path='/lethal' element={<WeatherApp />} />
-        </Routes>
-      </Router>
-    </>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/session-selector' element={<SessionSelector />} />
+        <Route path='/groups' element={<Groups />} />
+        <Route path='/outposts' element={<Outposts />} />
+        <Route path='/levels' element={<Levels />} />
+        <Route path='/objects' element={<Objects />} />
+        <Route path='/entities' element={<Entities />} />
+        <Route path='/quests' element={<Quests />} />
+        <Route path='/information' element={<Information />} />
+        <Route path='/crafting' element={<Crafting />} />
+        <Route path='/interest' element={<PeopleOfInterest />} />
+        <Route path='/phenomena' element={<Phenomena />} />
+        <Route path='/functions' element={<PlayerFunctions />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/notLoggedIn' element={<NotLoggedIn />} />
+        <Route path='/signUp' element={<SignUp />} />
+        <Route path='/sets' element={<SetBonuses />} />
+        <Route path='/lethal' element={<WeatherApp />} />
+      </Routes>
+    </Router>
   )
 }
 

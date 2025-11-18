@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from '../Components/firebase';
+import db, { auth } from '../Components/firebase';
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 
 // Toast notification component
 const Toast = ({ message, severity, isOpen, onClose }) => {
@@ -88,11 +89,48 @@ export default function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      showToast('🎉 Successfully signed in! Redirecting...', 'success');
-      setTimeout(() => {
-        window.location.assign("/");
-      }, 1000);
+      const user = auth.currentUser;
+      
+      // Get user data
+      const userDoc = await getDoc(doc(db, 'Users', user.uid));
+      const userData = userDoc.data();
+      localStorage.setItem('loggedIn', userData.userName);
+      
+      // Check for active session
+      if (userData.activeSession) {
+        // Load session role
+        const memberQuery = query(
+          collection(db, 'SessionMembers'),
+          where('userId', '==', user.uid),
+          where('sessionId', '==', userData.activeSession)
+        );
+        const memberSnapshot = await getDocs(memberQuery);
+        
+        if (!memberSnapshot.empty) {
+          const role = memberSnapshot.docs[0].data().role;
+          localStorage.setItem('activeSession', userData.activeSession);
+          localStorage.setItem('sessionRole', role);
+          
+          showToast('🎉 Successfully signed in! Redirecting to your session...', 'success');
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1000);
+        } else {
+          // Session exists but membership not found, go to session selector
+          showToast('🎉 Successfully signed in! Please select a session...', 'success');
+          setTimeout(() => {
+            window.location.href = "/session-selector";
+          }, 1000);
+        }
+      } else {
+        // No active session, redirect to session selector
+        showToast('🎉 Successfully signed in! Please select or create a session...', 'success');
+        setTimeout(() => {
+          window.location.href = "/session-selector";
+        }, 1000);
+      }
     } catch (error) {
+      console.error('Login error:', error);
       showToast(getErrorMessage(error.code || 'unknown'), 'error');
     } finally {
       setLoading(false);
@@ -123,7 +161,7 @@ export default function Login() {
               </div>
               
               <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-              <p className="text-blue-200">Sign in to your account to continue</p>
+              <p className="text-blue-200">Sign in to access your campaign sessions</p>
             </div>
           </div>
 

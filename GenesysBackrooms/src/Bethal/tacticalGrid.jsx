@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { 
-  GRID_SIZE, 
+  GRID_SIZE,
+  TERRAIN_CODES,
+  HEIGHT_MAPS,
+  getHeightAt,
+  getTerrainAt,
   getShipPosition,
-  FACILITY_POSITIONS, 
-  FIRE_EXIT_POSITIONS,
-  STATIC_TERRAIN_FEATURES,
-  generateDynamicHazards,
-  getAllTerrainFeatures,
-  RANGE_BANDS, 
-  getHeightAt, 
   getFacilityPosition,
   getFireExitPosition
 } from './moonData.jsx';
+import { updatePlayerHealth } from './playerManager.jsx';
+import { isEntityAtMaxRage } from './rageSystem.jsx';
 
-// Ultra-simple cell component - minimal styling, maximum performance
+// Simple cell component
 const SimpleCell = memo(({ 
   x, 
-  y, 
+  y,
   content,
   bgColor,
   textColor,
@@ -24,8 +23,7 @@ const SimpleCell = memo(({
   onClick,
   tooltip,
   isPlayerMovementMode,
-  isCurrentPlayerPosition,
-  movingPlayer
+  isCurrentPlayerPosition
 }) => {
   let cellClass = `
     w-8 h-8 border border-gray-600 flex items-center justify-center text-xs cursor-pointer
@@ -33,7 +31,6 @@ const SimpleCell = memo(({
     hover:scale-110 transition-transform duration-100
   `;
 
-  // Add movement mode styling
   if (isPlayerMovementMode) {
     if (isCurrentPlayerPosition) {
       cellClass += ' ring-4 ring-cyan-300 bg-cyan-600/50';
@@ -51,16 +48,7 @@ const SimpleCell = memo(({
       {content}
     </div>
   );
-}, (prev, next) => (
-  prev.x === next.x &&
-  prev.y === next.y &&
-  prev.content === next.content &&
-  prev.bgColor === next.bgColor &&
-  prev.textColor === next.textColor &&
-  prev.isSelected === next.isSelected &&
-  prev.isPlayerMovementMode === next.isPlayerMovementMode &&
-  prev.isCurrentPlayerPosition === next.isCurrentPlayerPosition
-));
+});
 
 const TacticalGrid = ({ 
   selectedMoon,
@@ -70,7 +58,6 @@ const TacticalGrid = ({
   selectedCell,
   setSelectedCell,
   floodedCells = new Set(),
-  floodLevel = 0,
   outdoorEntities = [],
   daytimeEntities = [],
   onEntityDefeat,
@@ -81,20 +68,21 @@ const TacticalGrid = ({
   onEntityPlayerCollision,
   onEntityEncounter,
   setExteriorEntityData,
-  onPlayerPositionChange // NEW: Add this prop
+  onPlayerPositionChange,
+  setPlayers,
+  rageSystem
 }) => {
   
-  // Simplified state - only track what we absolutely need
+  // Core state
   const [entityPositions, setEntityPositions] = useState(new Map());
-  const [terrainData, setTerrainData] = useState({});
   const [entityMovementTimers, setEntityMovementTimers] = useState(new Map());
-  const [dynamicHazards, setDynamicHazards] = useState({});
-
-  // NEW: Player movement state
+  const [scheduledLeviathan, setScheduledLeviathan] = useState(null);
+  
+  // Player movement state
   const [isPlayerMovementMode, setIsPlayerMovementMode] = useState(false);
   const [movingPlayer, setMovingPlayer] = useState(null);
 
-  // Basic position getters
+  // Position getters
   const shipPos = useMemo(() => 
     selectedMoon ? getShipPosition(selectedMoon) : { x: 6, y: 6 },
     [selectedMoon]
@@ -110,45 +98,21 @@ const TacticalGrid = ({
     [selectedMoon]
   );
 
-  // NEW: Player movement functions
+  // Player movement functions
   const startPlayerMovement = (player) => {
     setMovingPlayer(player);
     setIsPlayerMovementMode(true);
   };
 
   const handlePlayerMovementClick = (x, y) => {
-    console.log('🎯 Player movement click:', { x, y, movingPlayer, isPlayerMovementMode });
+    if (!isPlayerMovementMode || !movingPlayer) return;
 
-    if (!isPlayerMovementMode || !movingPlayer) {
-      console.log('❌ Not in movement mode or no moving player');
-      return;
-    }
+    const additionalData = { terrain: getTerrainType(x, y) };
 
-    // Validate position (no walls in exterior, but could check for other restrictions)
-    console.log('🗺️ Moving player to exterior position:', { x, y });
-
-    const additionalData = {
-      terrain: getSimpleTerrainType(x, y) // Get terrain type for the position
-    };
-
-    console.log('📍 Calling onPlayerPositionChange:', {
-      playerId: movingPlayer.id,
-      area: 'exterior',
-      x, y,
-      additionalData,
-      onPlayerPositionChange: typeof onPlayerPositionChange
-    });
-
-    // Call the position change handler
     if (onPlayerPositionChange) {
       onPlayerPositionChange(movingPlayer.id, 'exterior', x, y, additionalData);
-      console.log('✅ Position change called');
-    } else {
-      console.log('❌ onPlayerPositionChange not available');
     }
 
-    // FORCE IMMEDIATE RE-RENDER by updating a local state
-    // This ensures the grid shows the updated player position immediately
     const updatedMovingPlayer = {
       ...movingPlayer,
       position: {
@@ -159,14 +123,11 @@ const TacticalGrid = ({
     };
     setMovingPlayer(updatedMovingPlayer);
 
-    // Exit movement mode after a brief delay to show the updated position
     setTimeout(() => {
       setIsPlayerMovementMode(false);
       setMovingPlayer(null);
       setSelectedCell(null);
     }, 100);
-
-    console.log('🔄 Movement mode ended');
   };
 
   const cancelPlayerMovement = () => {
@@ -174,69 +135,70 @@ const TacticalGrid = ({
     setMovingPlayer(null);
   };
 
-  // FIXED: Enhanced weather effects based on WeatherMechanics component
-  const getSimpleTerrainType = useCallback((x, y) => {
+  const quickAdjustPlayerHealth = (playerId, type, amount) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const currentValue = player[type];
+    const maxValue = player[`max${type.charAt(0).toUpperCase() + type.slice(1)}`];
+    const absoluteMax = type === 'wounds' ? maxValue * 2 : maxValue;
+    const newValue = Math.max(0, Math.min(absoluteMax, currentValue + amount));
+
+    updatePlayerHealth(players, setPlayers, playerId, 
+      type === 'wounds' ? newValue : player.wounds,
+      type === 'strain' ? newValue : player.strain
+    );
+  };
+
+  // Get terrain type for a cell
+  const getTerrainType = useCallback((x, y) => {
+    if (!selectedMoon) return 'normal';
+
+    // Weather effects override terrain
     if (currentWeatherType === 'rainy') {
       const hasQuicksand = quicksandLocations.some(loc => loc.x === x && loc.y === y);
-      if (hasQuicksand) {
-        return 'quicksand';
-      }
+      if (hasQuicksand) return 'quicksand';
     }
 
     if (currentWeatherType === 'flooded') {
-      // FIXED: Check if this specific cell is underwater
       const cellKey = `${x},${y}`;
-      if (floodedCells.has(cellKey)) {
-        console.log(`💧 Cell (${x},${y}) is flooded`); // Debug
-        return 'flooded';
-      }
+      if (floodedCells.has(cellKey)) return 'flooded';
     }
 
     if (currentWeatherType === 'stormy') {
-      // Only show lightning strikes where they actually hit
       const recentLightning = lightningStrikes.find(strike => 
         strike.x === x && strike.y === y && (currentRound - strike.round) <= 2
       );
       if (recentLightning) return 'lightning_strike';
     }
 
-    // Dynamic hazards (FIXED)
-    if (dynamicHazards.landmines && dynamicHazards.landmines.some(loc => loc.x === x && loc.y === y)) {
-      return 'landmine';
+    // Get terrain from height map
+    const terrainCode = getTerrainAt(selectedMoon, x, y);
+    
+    switch (terrainCode) {
+      case 'W': return 'water';
+      case 'B': return 'bridge';
+      case 'T': return 'trees';
+      case 'R': return 'rocks';
+      case 'L': return 'lava_pit';
+      case 'G': return 'gas_vent';
+      case 'M': return 'metallic_growth';
+      case 'P': return 'radiation_puddle';
+      case 'A': return 'acid_pool';
+      case 'V': return 'steam_vent';
+      case 'X': return 'toxic_pool';
+      case 'Q': return 'quicksand_permanent';
+      case 'I': return 'ice_patch';
+      case 'C': return 'cliff';
+      case 'F': return 'forest';
+      case 'H': return 'facility';
+      case 'S': return 'ship';
+      case 'E': return 'fire_exit';
+      default: return 'normal';
     }
-    if (dynamicHazards.turrets && dynamicHazards.turrets.some(loc => loc.x === x && loc.y === y)) {
-      return 'turret';
-    }
-    if (dynamicHazards.quicksand && dynamicHazards.quicksand.some(loc => loc.x === x && loc.y === y)) {
-      return 'quicksand_permanent';
-    }
-    if (dynamicHazards.ice_patches && dynamicHazards.ice_patches.some(loc => loc.x === x && loc.y === y)) {
-      return 'ice_patch';
-    }
+  }, [selectedMoon, currentWeatherType, quicksandLocations, floodedCells, lightningStrikes, currentRound]);
 
-    // Static terrain
-    const features = terrainData[`${x},${y}`];
-    if (features) {
-      if (features.includes('bridge')) return 'bridge';
-      if (features.includes('river')) return 'river';
-      if (features.includes('forest')) return 'forest';
-      if (features.includes('cliff')) return 'cliff';
-      if (features.includes('pond')) return 'pond';
-      if (features.includes('void_zone')) return 'void_zone';
-      if (features.includes('reality_tear')) return 'reality_tear';
-      if (features.includes('toxic_pool')) return 'toxic_pool';
-      if (features.includes('lava_pit')) return 'lava_pit';
-    }
-
-    return 'normal';
-  }, [currentWeatherType, quicksandLocations, floodedCells, lightningStrikes, dynamicHazards, terrainData, currentRound]);
-
-  // Simple distance calculation
-  const getDistance = useCallback((x1, y1, x2, y2) => {
-    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-  }, []);
-
-  // Get current weather status and progression info
+  // Get weather status
   const getWeatherStatus = useCallback(() => {
     if (!currentWeatherType || currentWeatherType === 'clear') {
       return {
@@ -269,8 +231,6 @@ const TacticalGrid = ({
       case 'stormy':
         const phase = currentRound <= 30 ? 1 : currentRound <= 46 ? 2 : currentRound <= 62 ? 3 : 4;
         const lightningInterval = phase === 1 ? 16 : phase === 2 ? 12 : phase === 3 ? 8 : 6;
-
-        // Calculate next lightning round based on phase
         let nextLightningRound;
         if (phase === 1) {
           nextLightningRound = Math.ceil((currentRound + 1) / 16) * 16;
@@ -284,10 +244,8 @@ const TacticalGrid = ({
           nextLightningRound = Math.ceil((currentRound - 62) / 6) * 6 + 62;
           if (nextLightningRound <= currentRound) nextLightningRound += 6;
         } else {
-          // Phase transition coming
           nextLightningRound = phase === 1 ? 31 : phase === 2 ? 47 : 63;
         }
-
         const malfunctionChance = phase === 1 ? 15 : phase === 2 ? 20 : phase === 3 ? 25 : 30;
 
         return {
@@ -306,7 +264,6 @@ const TacticalGrid = ({
         };
 
       case 'foggy':
-        // Probability-based fog progression
         const baseFogLevel = Math.max(1, currentFogLevel || 2);
         return {
           type: 'foggy',
@@ -325,14 +282,12 @@ const TacticalGrid = ({
         };
 
       case 'flooded':
-        // FIXED: Adjust phase calculation for round 20 start
         const roundsSinceFloodStart = Math.max(0, currentRound - 20);
         const floodPhase = currentRound < 20 ? 0 : Math.floor(roundsSinceFloodStart / 20) + 1;
         const nextFloodRound = currentRound < 20 ? 20 : 20 + (floodPhase * 20);
         const totalFloodedCells = floodedCells.size;
         const floodCoverage = Math.round((totalFloodedCells / (GRID_SIZE * GRID_SIZE)) * 100);
             
-        // Calculate what should happen next round
         let nextEventDescription;
         if (currentRound < 20) {
           nextEventDescription = `Round 20: Initial flooding begins (25% chance per height-0 tile)`;
@@ -401,11 +356,11 @@ const TacticalGrid = ({
     }
   }, [currentWeatherType, currentRound, quicksandLocations.length, floodedCells.size, currentFogLevel]);
 
-  // Ultra-simple cell data generator
+  // Get cell display data
   const getCellData = useCallback((x, y) => {
     const cellKey = `${x},${y}`;
     
-    // Check for players first (highest priority)
+    // Check for players first
     const playersHere = players.filter(p => 
       p.position?.currentArea === 'exterior' &&
       p.position.exterior.x === x &&
@@ -432,151 +387,137 @@ const TacticalGrid = ({
       };
     }
 
-    // Check for special locations
-    if (x === shipPos.x && y === shipPos.y) {
-      return {
-        content: '🚀',
-        bgColor: 'bg-blue-500',
-        textColor: 'text-white',
-        tooltip: 'Ship Landing Zone'
-      };
-    }
-
-    if (x === facilityPos.x && y === facilityPos.y) {
-      return {
-        content: '🏭',
-        bgColor: 'bg-orange-500',
-        textColor: 'text-white',
-        tooltip: 'Company Facility'
-      };
-    }
-
-    if (x === fireExitPos.x && y === fireExitPos.y) {
-      return {
-        content: '🚪',
-        bgColor: 'bg-green-500',
-        textColor: 'text-white',
-        tooltip: 'Fire Exit'
-      };
-    }
-
-    // Terrain-based display
-    const terrainType = getSimpleTerrainType(x, y);
+    // Get terrain and height
+    const terrainType = getTerrainType(x, y);
     const height = selectedMoon ? getHeightAt(selectedMoon, x, y) : 0;
-    const distance = getDistance(x, y, shipPos.x, shipPos.y);
     
+    // Special locations and terrain
     switch (terrainType) {
-      case 'river':
+      case 'ship':
+        return {
+          content: '🚀',
+          bgColor: 'bg-blue-500',
+          textColor: 'text-white',
+          tooltip: 'Ship Landing Zone'
+        };
+      case 'facility':
+        return {
+          content: '🏭',
+          bgColor: 'bg-orange-500',
+          textColor: 'text-white',
+          tooltip: 'Company Facility'
+        };
+      case 'fire_exit':
+        return {
+          content: '🚪',
+          bgColor: 'bg-green-500',
+          textColor: 'text-white',
+          tooltip: 'Fire Exit'
+        };
+      case 'water':
         return {
           content: '🌊',
           bgColor: 'bg-blue-600',
           textColor: 'text-blue-100',
-          tooltip: `River - Distance: ${distance}`
+          tooltip: `Water (Height: ${height})`
         };
       case 'bridge':
         return {
           content: '🌉',
           bgColor: 'bg-yellow-600',
           textColor: 'text-yellow-100',
-          tooltip: `Bridge - Distance: ${distance}`
+          tooltip: `Bridge (Height: ${height})`
         };
-      case 'forest':
+      case 'trees':
         return {
           content: '🌲',
           bgColor: 'bg-green-600',
           textColor: 'text-green-100',
-          tooltip: `Forest - Distance: ${distance}`
+          tooltip: `Trees (Height: ${height})`
         };
-      case 'cliff':
+      case 'rocks':
         return {
-          content: '⛰️',
+          content: '🪨',
           bgColor: 'bg-gray-600',
           textColor: 'text-gray-100',
-          tooltip: `Cliff - Distance: ${distance}`
-        };
-      case 'quicksand':
-        return {
-          content: '🕳️',
-          bgColor: 'bg-yellow-700',
-          textColor: 'text-yellow-200',
-          tooltip: `Quicksand (Rain Weather) - Distance: ${distance} - ESCAPE: Athletics vs 3 Difficulty`
-        };
-      case 'flooded':
-        return {
-          content: '🌊',
-          bgColor: 'bg-blue-700',
-          textColor: 'text-blue-200',
-          tooltip: `Flooded Zone - Distance: ${distance}`
-        };
-      case 'landmine':
-        return {
-          content: '💣',
-          bgColor: 'bg-red-700',
-          textColor: 'text-red-200',
-          tooltip: `Landmine - Distance: ${distance}`
-        };
-      case 'turret':
-        return {
-          content: '🔫',
-          bgColor: 'bg-gray-700',
-          textColor: 'text-gray-200',
-          tooltip: `Turret - Distance: ${distance}`
-        };
-      case 'lightning_strike':
-        return {
-          content: '⚡',
-          bgColor: 'bg-yellow-500',
-          textColor: 'text-yellow-100',
-          tooltip: `Recent Lightning Strike - Distance: ${distance}`
-        };
-      case 'quicksand_permanent':
-        return {
-          content: '🕳️',
-          bgColor: 'bg-amber-700',
-          textColor: 'text-amber-200',
-          tooltip: `Permanent Quicksand - Distance: ${distance}`
-        };
-      case 'ice_patch':
-        return {
-          content: '❄️',
-          bgColor: 'bg-blue-400',
-          textColor: 'text-blue-100',
-          tooltip: `Ice Patch - Distance: ${distance}`
-        };
-      case 'pond':
-        return {
-          content: '💧',
-          bgColor: 'bg-blue-500',
-          textColor: 'text-blue-100',
-          tooltip: `Pond - Distance: ${distance}`
-        };
-      case 'void_zone':
-        return {
-          content: '⚫',
-          bgColor: 'bg-black',
-          textColor: 'text-white',
-          tooltip: `Void Zone (DEADLY) - Distance: ${distance}`
-        };
-      case 'reality_tear':
-        return {
-          content: '🌀',
-          bgColor: 'bg-purple-700',
-          textColor: 'text-purple-200',
-          tooltip: `Reality Tear - Distance: ${distance}`
-        };
-      case 'toxic_pool':
-        return {
-          content: '☢️',
-          bgColor: 'bg-green-800',
-          textColor: 'text-green-200',
-          tooltip: `Toxic Pool (DEADLY) - Distance: ${distance}`
+          tooltip: `Rocky Outcrop (Height: ${height})`
         };
       case 'lava_pit':
         return {
           content: '🔥',
           bgColor: 'bg-red-600',
           textColor: 'text-red-200',
-          tooltip: `Lava Pit (DEADLY) - Distance: ${distance}`
+          tooltip: `Lava Pit (DEADLY) (Height: ${height})`
+        };
+      case 'gas_vent':
+        return {
+          content: '☁️',
+          bgColor: 'bg-yellow-700',
+          textColor: 'text-yellow-200',
+          tooltip: `Poisonous Gas Vent (Height: ${height})`
+        };
+      case 'metallic_growth':
+        return {
+          content: '⚡',
+          bgColor: 'bg-purple-600',
+          textColor: 'text-purple-100',
+          tooltip: `Metallic Growth (Height: ${height})`
+        };
+      case 'radiation_puddle':
+        return {
+          content: '☢️',
+          bgColor: 'bg-green-700',
+          textColor: 'text-green-200',
+          tooltip: `Radiation Puddle (Height: ${height})`
+        };
+      case 'toxic_pool':
+        return {
+          content: '☢️',
+          bgColor: 'bg-green-800',
+          textColor: 'text-green-200',
+          tooltip: `Toxic Pool (DEADLY) (Height: ${height})`
+        };
+      case 'quicksand':
+        return {
+          content: '🕳️',
+          bgColor: 'bg-yellow-700',
+          textColor: 'text-yellow-200',
+          tooltip: `Quicksand (Rain Weather) (Height: ${height}) - ESCAPE: Athletics vs 3 Difficulty`
+        };
+      case 'flooded':
+        return {
+          content: '🌊',
+          bgColor: 'bg-blue-700',
+          textColor: 'text-blue-200',
+          tooltip: `Flooded Zone (Height: ${height})`
+        };
+      case 'lightning_strike':
+        return {
+          content: '⚡',
+          bgColor: 'bg-yellow-500',
+          textColor: 'text-yellow-100',
+          tooltip: `Recent Lightning Strike (Height: ${height})`
+        };
+      case 'ice_patch':
+        return {
+          content: '❄️',
+          bgColor: 'bg-blue-400',
+          textColor: 'text-blue-100',
+          tooltip: `Ice Patch (Height: ${height})`
+        };
+      case 'cliff':
+        return {
+          content: '⛰️',
+          bgColor: 'bg-gray-700',
+          textColor: 'text-gray-200',
+          tooltip: `Cliff (Height: ${height})`
+        };
+      case 'forest':
+        return {
+          content: '🌲',
+          bgColor: 'bg-green-700',
+          textColor: 'text-green-200',
+          tooltip: `Forest (Height: ${height})`
         };
       default:
         // Normal terrain - show height
@@ -584,18 +525,19 @@ const TacticalGrid = ({
                            height === 1 ? 'bg-gray-700' :
                            height === 2 ? 'bg-gray-600' :
                            height === 3 ? 'bg-gray-500' :
-                           height === 4 ? 'bg-gray-400' : 'bg-gray-300';
+                           height === 4 ? 'bg-gray-400' : 
+                           height >= 5 ? 'bg-gray-300' : 'bg-gray-800';
         
         return {
           content: height.toString(),
           bgColor: heightColor,
           textColor: height >= 3 ? 'text-gray-800' : 'text-gray-200',
-          tooltip: `Height: ${height} - Distance: ${distance}`
+          tooltip: `Height: ${height}`
         };
     }
-  }, [players, entityPositions, shipPos, facilityPos, fireExitPos, getSimpleTerrainType, selectedMoon, getDistance, floodLevel, getWeatherStatus]);
+  }, [players, entityPositions, getTerrainType, selectedMoon]);
 
-  // Generate grid data - much simpler
+  // Generate grid cells
   const gridCells = useMemo(() => {
     const cells = [];
     for (let y = 0; y < GRID_SIZE; y++) {
@@ -619,25 +561,21 @@ const TacticalGrid = ({
     return cells;
   }, [getCellData, selectedCell, movingPlayer]);
 
-  // MODIFIED: Cell click handler to support movement mode
+  // Cell click handler
   const handleCellClick = useCallback((x, y) => {
-    // If in player movement mode, handle movement
     if (isPlayerMovementMode) {
       handlePlayerMovementClick(x, y);
       return;
     }
 
-    // Normal cell selection logic
     const cellKey = `${x},${y}`;
     const entity = entityPositions.get(cellKey);
-    const distance = getDistance(x, y, shipPos.x, shipPos.y);
     const height = selectedMoon ? getHeightAt(selectedMoon, x, y) : 0;
-    const terrainType = getSimpleTerrainType(x, y);
+    const terrainType = getTerrainType(x, y);
     
     setSelectedCell({
       x,
       y,
-      distance,
       height,
       terrain: terrainType,
       entity: entity || null,
@@ -647,22 +585,61 @@ const TacticalGrid = ({
         p.position.exterior.y === y
       )
     });
-  }, [isPlayerMovementMode, handlePlayerMovementClick, entityPositions, getDistance, shipPos, selectedMoon, getSimpleTerrainType, setSelectedCell, players]);
+  }, [isPlayerMovementMode, handlePlayerMovementClick, entityPositions, selectedMoon, getTerrainType, setSelectedCell, players]);
 
-  // FIXED: Entity movement data and logic
+  // Update selected cell when players change
+  useEffect(() => {
+    if (selectedCell) {
+      const updatedPlayers = players.filter(p => 
+        p.position?.currentArea === 'exterior' &&
+        p.position.exterior.x === selectedCell.x &&
+        p.position.exterior.y === selectedCell.y
+      );
+      
+      if (JSON.stringify(updatedPlayers) !== JSON.stringify(selectedCell.players)) {
+        setSelectedCell(prev => ({
+          ...prev,
+          players: updatedPlayers
+        }));
+      }
+    }
+  }, [players, selectedCell, setSelectedCell]);
+
+  // Entity movement data
   const ENTITY_MOVEMENT_DATA = {
-    "Forest Keeper": { rounds: 4 }, "Eyeless Dog": { rounds: 2 }, "Baboon Hawk": { rounds: 3 },
-    "Earth Leviathan": { rounds: 6 }, "Kidnapper Fox": { rounds: 2 }, "Old Bird": { rounds: 3 },
-    "Security Mech": { rounds: 3 }, "Garden Sprite": { rounds: 1 }, "Security Drone": { rounds: 2 },
-    "Escaped Subject-X": { rounds: 2 }, "Corporate Sentinel": { rounds: 2 }, "Apocalypse Beast": { rounds: 5 },
-    "Void Hunter": { rounds: 1 }, "Reality Tear": { rounds: 99 }, "Manticoil": { rounds: 1 },
-    "Circuit Bee": { rounds: 1 }, "Tulip Snake": { rounds: 2 }, "Roaming Locusts": { rounds: 1 },
-    "Pollinator Bot": { rounds: 4 }, "Maintenance Bot": { rounds: 5 }, "Executive Assistant Bot": { rounds: 3 },
-    "Corporate Courier": { rounds: 2 }, "Nightmare Swarm": { rounds: 1 }, "Chaos Sprite": { rounds: 1 },
-    "Void Mite": { rounds: 1 }, "Dimensional Parasite": { rounds: 99 }
+    "Forest Keeper": { passive: 4, chasing: 2 }, 
+    "Eyeless Dog": { passive: 2, chasing: 1 }, 
+    "Baboon Hawk": { passive: 3, chasing: 1 },
+    "Earth Leviathan": { passive: 6, chasing: 3 }, 
+    "Old Bird": { passive: 3, chasing: 1 },
+    "Manticoil": { passive: 3, chasing: 3 },
+    "Circuit Bee": { passive: 999, chasing: 999 }, 
+    "Tulip Snake": { passive: 2, chasing: 2 }, 
+    "Roaming Locust": { passive: 3, chasing: 3 }
   };
 
-  // FIXED: Stable entity placement - only when entities actually change
+  const getClosestPlayer = (entityX, entityY) => {
+    const playersOnExterior = players.filter(player => 
+      player.position?.currentArea === 'exterior'
+    );
+
+    if (playersOnExterior.length === 0) return null;
+
+    let closestPlayer = null;
+    let closestDistance = Infinity;
+
+    playersOnExterior.forEach(player => {
+      const distance = Math.abs(player.position.exterior.x - entityX) + Math.abs(player.position.exterior.y - entityY);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPlayer = player;
+      }
+    });
+
+    return { player: closestPlayer, distance: closestDistance };
+  };
+
+  // Entity placement effect
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -672,7 +649,6 @@ const TacticalGrid = ({
     const newOutdoorIds = new Set(outdoorEntities.map(e => e.id));
     const newDaytimeIds = new Set(daytimeEntities.map(e => e.id));
 
-    // Only update if entity lists actually changed
     const outdoorChanged = currentOutdoorIds.size !== newOutdoorIds.size || 
                           [...currentOutdoorIds].some(id => !newOutdoorIds.has(id)) ||
                           [...newOutdoorIds].some(id => !currentOutdoorIds.has(id));
@@ -695,7 +671,7 @@ const TacticalGrid = ({
 
     // Add new outdoor entities
     const newOutdoorEntities = outdoorEntities.filter(entity => !currentOutdoorIds.has(entity.id));
-    newOutdoorEntities.forEach((entity, index) => {
+    newOutdoorEntities.forEach((entity) => {
       let x, y, attempts = 0;
       do {
         x = Math.floor(Math.random() * GRID_SIZE);
@@ -719,17 +695,16 @@ const TacticalGrid = ({
         y
       });
 
-      // Initialize movement timer
       setEntityMovementTimers(prev => new Map(prev.set(entity.id, {
         spawnRound: currentRound,
         lastMoveRound: currentRound,
-        nextMoveRound: currentRound + (ENTITY_MOVEMENT_DATA[entity.name]?.rounds || 3)
+        nextMoveRound: currentRound + (ENTITY_MOVEMENT_DATA[entity.name]?.passive || 3)
       })));
     });
 
     // Add new daytime entities
     const newDaytimeEntities = daytimeEntities.filter(entity => !currentDaytimeIds.has(entity.id));
-    newDaytimeEntities.forEach((entity, index) => {
+    newDaytimeEntities.forEach((entity) => {
       let x, y, attempts = 0;
       do {
         x = Math.floor(Math.random() * GRID_SIZE);
@@ -753,17 +728,15 @@ const TacticalGrid = ({
         y
       });
 
-      // Initialize movement timer
       setEntityMovementTimers(prev => new Map(prev.set(entity.id, {
         spawnRound: currentRound,
         lastMoveRound: currentRound,
-        nextMoveRound: currentRound + (ENTITY_MOVEMENT_DATA[entity.name]?.rounds || 3)
+        nextMoveRound: currentRound + (ENTITY_MOVEMENT_DATA[entity.name]?.passive || 3)
       })));
     });
 
     setEntityPositions(newEntityPositions);
 
-    // Update exterior entity data
     if (setExteriorEntityData) {
       const exteriorData = new Map();
       newEntityPositions.forEach((entity, cellKey) => {
@@ -771,86 +744,201 @@ const TacticalGrid = ({
       });
       setExteriorEntityData(exteriorData);
     }
-  }, [gameStarted, outdoorEntities, daytimeEntities, shipPos, facilityPos, fireExitPos, 
-      entityPositions, currentRound, setExteriorEntityData]);
+  }, [gameStarted, outdoorEntities, daytimeEntities, shipPos, facilityPos, fireExitPos, entityPositions, currentRound, setExteriorEntityData]);
 
-  // FIXED: Controlled entity movement based on timers
+  // Entity movement effect
   useEffect(() => {
     if (!gameStarted || currentRound <= 0) return;
 
     const newEntityPositions = new Map(entityPositions);
-    let entitiesProcessed = 0;
     let entitiesMoved = 0;
-    let entitiesFound = 0;
 
-    entityPositions.forEach((entity, currentCellKey) => {
-      const movementData = ENTITY_MOVEMENT_DATA[entity.name] || { rounds: 3 };
-      const timerData = entityMovementTimers.get(entity.id);
-      
-      if (!timerData) return;
+    // ===== HANDLE SCHEDULED EARTH LEVIATHAN TELEPORT =====
+    if (scheduledLeviathan && scheduledLeviathan.executeOnRound === currentRound) {
+      const leviathanEntity = [...entityPositions.values()].find(e => e.id === scheduledLeviathan.entityId);
 
-      const roundsSinceLastMove = currentRound - timerData.lastMoveRound;
-      
-      if (roundsSinceLastMove >= movementData.rounds) {
-        // Try to move entity
-        const directions = [[-1, 0], [0, -1], [0, 1], [1, 0]];
-        const validMoves = [];
-        
-        directions.forEach(([dx, dy]) => {
-          const newX = entity.x + dx;
-          const newY = entity.y + dy;
-          
-          if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
-            const newCellKey = `${newX},${newY}`;
-            const terrainType = getSimpleTerrainType(newX, newY);
-            const isImpassable = ['cliff', 'void_zone', 'reality_tear', 'toxic_pool', 'lava_pit'].includes(terrainType);
-            const isOccupied = (newX === shipPos.x && newY === shipPos.y) ||
-                             (newX === facilityPos.x && newY === facilityPos.y) ||
-                             (newX === fireExitPos.x && newY === fireExitPos.y) ||
-                             newEntityPositions.has(newCellKey);
-            
-            if (!isImpassable && !isOccupied) {
-              validMoves.push({ x: newX, y: newY, cellKey: newCellKey });
-            }
-          }
-        });
+      if (leviathanEntity) {
+        const eligiblePlayers = players.filter(p => 
+          p.position?.currentArea === 'exterior' &&
+          !(p.position.exterior.x === shipPos.x && p.position.exterior.y === shipPos.y)
+        );
 
-        if (validMoves.length > 0) {
-          // Move to random valid position
-          const selectedMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-          
-          // Remove from old position
+        if (eligiblePlayers.length > 0) {
+          const randomPlayer = eligiblePlayers[Math.floor(Math.random() * eligiblePlayers.length)];
+          const targetX = randomPlayer.position.exterior.x;
+          const targetY = randomPlayer.position.exterior.y;
+
+          // Remove from current position
+          const currentCellKey = `${leviathanEntity.x},${leviathanEntity.y}`;
           newEntityPositions.delete(currentCellKey);
-          
-          // Add to new position
+
+          // Teleport to player's location
           const updatedEntity = {
-            ...entity,
-            x: selectedMove.x,
-            y: selectedMove.y
+            ...leviathanEntity,
+            x: targetX,
+            y: targetY
           };
-          newEntityPositions.set(selectedMove.cellKey, updatedEntity);
-          
+          const newCellKey = `${targetX},${targetY}`;
+          newEntityPositions.set(newCellKey, updatedEntity);
           entitiesMoved++;
 
-          // Update movement timer
+          if (onEntityPlayerCollision) {
+            onEntityPlayerCollision(leviathanEntity.id, targetX, targetY, 'exterior');
+          }
+        }
+      }
+
+      // Clear the scheduled teleport
+      setScheduledLeviathan(null);
+    }
+
+    entityPositions.forEach((entity, currentCellKey) => {
+      const movementData = ENTITY_MOVEMENT_DATA[entity.name];
+      if (!movementData) return;
+
+      // Check if entity is on same tile as any player - NO MOVEMENT DURING COMBAT
+      const playersOnSameTile = players?.filter(player => 
+        player.position?.currentArea === 'exterior' &&
+        player.position.exterior.x === entity.x &&
+        player.position.exterior.y === entity.y
+      ) || [];
+
+      if (playersOnSameTile.length > 0) {
+        // Entity is in combat/same tile as player - cannot move
+        return;
+      }
+
+      // Check for rage-induced chasing
+      const isAtMaxRage = isEntityAtMaxRage(entity.id) || false;
+
+      const isRageEntity = [
+        "Earth Leviathan",
+        "Eyeless Dog", 
+        "Forest Keeper"
+      ].includes(entity.name);
+
+      // ===== EARTH LEVIATHAN SPECIAL BEHAVIOR =====
+      if (entity.name === "Earth Leviathan") {
+        if (!isAtMaxRage) {
+          // Earth Leviathan doesn't move until max rage
+          return;
+        } else {
+          // At max rage: schedule teleport for NEXT round
+          if (!scheduledLeviathan || scheduledLeviathan.entityId !== entity.id) {
+            setScheduledLeviathan({
+              entityId: entity.id,
+              executeOnRound: currentRound + 1
+            });
+          }
+          return;
+        }
+      }
+
+      // ===== EYELESS DOG & FOREST KEEPER BEHAVIOR =====
+      let isChasing = false;
+
+      if (entity.name === "Eyeless Dog" || entity.name === "Forest Keeper") {
+        // Only chase when at max rage
+        if (isAtMaxRage) {
+          isChasing = true;
+        }
+        // Otherwise just wander (isChasing = false)
+      } else {
+        // All other entities use 5-tile proximity for chasing
+        const playersNearby = arePlayersNearEntity(entity.x, entity.y, entity.name, false, false);
+        isChasing = playersNearby;
+      }
+
+      const movementRounds = isChasing ? movementData.chasing : movementData.passive;
+      if (movementRounds >= 999) return;
+
+      let timerData = entityMovementTimers.get(entity.id);
+      if (!timerData) {
+        const newTimerData = {
+          spawnRound: currentRound,
+          lastMoveRound: currentRound - movementRounds,
+          nextMoveRound: currentRound,
+          isChasing: isChasing
+        };
+        setEntityMovementTimers(prev => new Map(prev.set(entity.id, newTimerData)));
+        timerData = newTimerData;
+      }
+
+      if (isChasing && !timerData.isChasing) {
+        setEntityMovementTimers(prev => {
+          const newTimers = new Map(prev);
+          newTimers.set(entity.id, {
+            ...timerData,
+            nextMoveRound: currentRound + 1,
+            isChasing: true
+          });
+          return newTimers;
+        });
+        return;
+      }
+
+      if (timerData.isChasing !== isChasing) {
+        setEntityMovementTimers(prev => {
+          const newTimers = new Map(prev);
+          newTimers.set(entity.id, {
+            ...timerData,
+            isChasing: isChasing
+          });
+          return newTimers;
+        });
+      }
+
+      if (currentRound >= timerData.nextMoveRound) {
+        // ===== DOUBLE MOVEMENT FOR ALL ENTITIES =====
+        let currentPos = { x: entity.x, y: entity.y };
+        let movesSuccessful = 0;
+
+        for (let moveNum = 0; moveNum < 2; moveNum++) {
+          const moveResult = executeSingleMove(
+            entity,
+            currentPos.x,
+            currentPos.y,
+            isChasing,
+            newEntityPositions
+          );
+
+          if (moveResult.success) {
+            currentPos = { x: moveResult.newX, y: moveResult.newY };
+            movesSuccessful++;
+
+            // Check if entity hit a player - STOP movement
+            const playerAtNewPos = players?.some(p => 
+              p.position?.currentArea === 'exterior' &&
+              p.position.exterior.x === moveResult.newX &&
+              p.position.exterior.y === moveResult.newY
+            );
+
+            if (playerAtNewPos) {
+              if (onEntityPlayerCollision) {
+                onEntityPlayerCollision(entity.id, moveResult.newX, moveResult.newY, 'exterior');
+              }
+              break; // Stop moving if hit player
+            }
+          } else {
+            break; // Stop if movement fails
+          }
+        }
+
+        if (movesSuccessful > 0) {
+          entitiesMoved++;
           setEntityMovementTimers(prev => new Map(prev.set(entity.id, {
             ...timerData,
             lastMoveRound: currentRound,
-            nextMoveRound: currentRound + movementData.rounds
+            nextMoveRound: currentRound + movementRounds,
+            isChasing: isChasing
           })));
-
-          // Notify collision detection
-          if (onEntityPlayerCollision) {
-            onEntityPlayerCollision(entity.id, selectedMove.x, selectedMove.y, 'exterior');
-          }
         }
       }
     });
 
     if (entitiesMoved > 0) {
       setEntityPositions(newEntityPositions);
-      
-      // Update exterior entity data
+
       if (setExteriorEntityData) {
         const exteriorData = new Map();
         newEntityPositions.forEach((entity, cellKey) => {
@@ -859,58 +947,121 @@ const TacticalGrid = ({
         setExteriorEntityData(exteriorData);
       }
     }
-  }, [currentRound, gameStarted, entityPositions, entityMovementTimers, shipPos, facilityPos, fireExitPos,
-      getSimpleTerrainType, onEntityPlayerCollision, setExteriorEntityData]);
+  }, [currentRound, gameStarted, entityPositions, entityMovementTimers, shipPos, facilityPos, fireExitPos, selectedMoon, onEntityPlayerCollision, setExteriorEntityData, rageSystem, players, scheduledLeviathan]);
 
-  // Simple terrain setup
-  useEffect(() => {
-    if (!selectedMoon) return;
-
-    const newTerrainData = {};
-    const staticFeatures = STATIC_TERRAIN_FEATURES[selectedMoon] || {};
-    const newDynamicHazards = generateDynamicHazards(selectedMoon);
-
-    // Process static features
-    Object.entries(staticFeatures).forEach(([featureType, locations]) => {
-      if (!Array.isArray(locations)) return;
+  // NEW HELPER FUNCTION: Execute a single move for an entity
+  const executeSingleMove = (entity, currentX, currentY, isChasing, positionsMap) => {
+    const directions = [[-1, 0], [0, -1], [0, 1], [1, 0]];
+    const validMoves = [];
+  
+    directions.forEach(([dx, dy]) => {
+      const newX = currentX + dx;
+      const newY = currentY + dy;
+    
+      if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+        const newCellKey = `${newX},${newY}`;
+        const terrainCode = selectedMoon ? getTerrainAt(selectedMoon, newX, newY) : '~';
+        const isImpassable = ['L', 'G', 'X', 'C'].includes(terrainCode); // lava, gas, toxic, cliff
+        const isOccupied = (newX === shipPos.x && newY === shipPos.y) ||
+                         (newX === facilityPos.x && newY === facilityPos.y) ||
+                         (newX === fireExitPos.x && newY === fireExitPos.y) ||
+                         positionsMap.has(newCellKey);
       
-      locations.forEach(location => {
-        if (featureType === 'bridges' && location.tiles) {
-          location.tiles.forEach(tile => {
-            const key = `${tile.x},${tile.y}`;
-            if (!newTerrainData[key]) newTerrainData[key] = [];
-            newTerrainData[key].push('bridge');
-          });
-        } else if (location.x !== undefined && location.y !== undefined) {
-          const key = `${location.x},${location.y}`;
-          if (!newTerrainData[key]) newTerrainData[key] = [];
-          newTerrainData[key].push(featureType.slice(0, -1)); // Remove 's' from plural
+        if (!isImpassable && !isOccupied) {
+          validMoves.push({ x: newX, y: newY, cellKey: newCellKey });
         }
-      });
+      }
     });
+  
+    if (validMoves.length === 0) {
+      return { success: false, reason: 'No valid moves' };
+    }
+  
+    let selectedMove;
+  
+    if (isChasing) {
+      // Move towards closest player
+      const closestPlayerData = getClosestPlayer(currentX, currentY);
+      if (closestPlayerData && closestPlayerData.player) {
+        const targetX = closestPlayerData.player.position.exterior.x;
+        const targetY = closestPlayerData.player.position.exterior.y;
+      
+        let bestDistance = Infinity;
+        let bestMove = null;
+      
+        validMoves.forEach(move => {
+          const distance = Math.abs(move.x - targetX) + Math.abs(move.y - targetY);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestMove = move;
+          }
+        });
+      
+        selectedMove = bestMove || validMoves[0];
+      } else {
+        selectedMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+      }
+    } else {
+      // Random movement
+      selectedMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+    }
+  
+    if (selectedMove) {
+      const currentCellKey = `${currentX},${currentY}`;
+      positionsMap.delete(currentCellKey);
+      const updatedEntity = {
+        ...entity,
+        x: selectedMove.x,
+        y: selectedMove.y
+      };
+      positionsMap.set(selectedMove.cellKey, updatedEntity);
+    
+      return { 
+        success: true, 
+        newX: selectedMove.x, 
+        newY: selectedMove.y,
+        cellKey: selectedMove.cellKey
+      };
+    }
+  
+    return { success: false, reason: 'No move selected' };
+  };
 
-    // Set both terrain data and dynamic hazards
-    setTerrainData(newTerrainData);
-    setDynamicHazards(newDynamicHazards);
-  }, [selectedMoon]);
-
-  // Simple entity icon getter
+  // Entity icon getter
   const getEntityIcon = useCallback((entityName) => {
     const icons = {
       'Forest Keeper': '🌲', 'Eyeless Dog': '🐕', 'Baboon Hawk': '🦅',
       'Earth Leviathan': '🐛', 'Kidnapper Fox': '🦊', 'Old Bird': '🤖',
-      'Security Mech': '🤖', 'Garden Sprite': '✨', 'Security Drone': '🚁',
-      'Escaped Subject-X': '🧟', 'Corporate Sentinel': '🛡️', 'Apocalypse Beast': '🐲',
-      'Void Hunter': '👻', 'Reality Tear': '🌀', 'Manticoil': '🦋',
-      'Circuit Bee': '🐝', 'Tulip Snake': '🐍', 'Roaming Locusts': '🦗',
-      'Pollinator Bot': '🤖', 'Maintenance Bot': '🔧', 'Executive Assistant Bot': '💼',
-      'Corporate Courier': '📦', 'Nightmare Swarm': '🌫️', 'Chaos Sprite': '⚡',
-      'Void Mite': '🕷️', 'Dimensional Parasite': '👽'
+      'Manticoil': '🦋', 'Circuit Bee': '🐝', 'Tulip Snake': '🐍', 
+      'Roaming Locust': '🦗'
     };
     return icons[entityName] || '👹';
   }, []);
 
-  // Get basic stats with weather info
+  // Helper functions for entity movement
+  const arePlayersNearEntity = (entityX, entityY, entityName = null, rageEntity = false, isChasing = false) => {
+    const playersNearby = players.filter(player => {
+      if (player.position?.currentArea !== 'interior') return false;
+
+      // Jester always has map-wide detection regardless of chasing state
+      if (rageEntity && (entityName === "Jester" || entityName === "Jester (Jack-in-the-Box)")) {
+        return true;
+      }
+
+      // Other rage entities only get map-wide detection when actively chasing
+      if (rageEntity && isChasing) {
+        return true;
+      }
+
+      // Standard 5-tile range for all other cases
+      const distance = Math.abs(player.position.interior.x - entityX) + Math.abs(player.position.interior.y - entityY);
+      return distance <= 5;
+    });
+
+    return playersNearby.length > 0;
+  };
+
+  // Get stats with weather info
   const stats = useMemo(() => {
     const weatherStatus = getWeatherStatus();
     return {
@@ -1023,7 +1174,6 @@ const TacticalGrid = ({
                   onClick={() => handleCellClick(cell.x, cell.y)}
                   isPlayerMovementMode={isPlayerMovementMode}
                   isCurrentPlayerPosition={cell.isCurrentPlayerPosition}
-                  movingPlayer={movingPlayer}
                 />
               ))}
             </div>
@@ -1038,11 +1188,9 @@ const TacticalGrid = ({
             <div className="bg-slate-700 p-3 rounded border border-slate-500">
               <h4 className="font-bold text-white mb-2 text-sm">📍 ({selectedCell.x}, {selectedCell.y})</h4>
               
-              {/* Basic Cell Info */}
               <div className="text-xs text-slate-200 space-y-1 mb-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <div>Height: {selectedCell.height}/5</div>
-                  <div>Distance: {selectedCell.distance}</div>
+                  <div>Height: {selectedCell.height}/8</div>
                 </div>
                 <div className="text-slate-300 capitalize">{selectedCell.terrain.replace('_', ' ')}</div>
               </div>
@@ -1086,20 +1234,100 @@ const TacticalGrid = ({
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-semibold text-sm">👥 Players ({selectedCell.players.length})</span>
                   </div>
-                  <div className="space-y-1">
-                    {selectedCell.players.map(player => (
-                      <div key={player.id} className="flex items-center justify-between text-xs bg-cyan-700/50 p-1 rounded">
-                        <span>{player.name}</span>
-                        <span>W: {player.wounds}/{player.maxWounds}</span>
-                        <span>S: {player.strain}/{player.maxStrain}</span>
-                        <button
-                          onClick={() => startPlayerMovement(player)}
-                          className="bg-cyan-500 hover:bg-cyan-600 px-2 py-0.5 rounded text-xs"
-                        >
-                          📍 Move
-                        </button>
-                      </div>
-                    ))}
+                  <div className="space-y-2">
+                    {selectedCell.players.map(player => {
+                      const woundPercent = Math.round((player.wounds / player.maxWounds) * 100);
+                      const strainPercent = Math.round((player.strain / player.maxStrain) * 100);
+
+                      return (
+                        <div key={player.id} className="bg-cyan-700/50 p-2 rounded">
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <span className="font-medium">{player.name}</span>
+                            <button
+                              onClick={() => startPlayerMovement(player)}
+                              className="bg-cyan-500 hover:bg-cyan-600 px-2 py-0.5 rounded text-xs"
+                            >
+                              📍 Move
+                            </button>
+                          </div>
+
+                          {/* Wounds */}
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-cyan-200 text-xs">Wounds</span>
+                              <span className="text-cyan-200 text-xs">{player.wounds}/{player.maxWounds} ({woundPercent}%)</span>
+                            </div>
+
+                            <div className="flex items-center space-x-1 mb-1">
+                              <button
+                                onClick={() => quickAdjustPlayerHealth(player.id, 'wounds', -1)}
+                                className="bg-green-500 hover:bg-green-600 text-white px-1 py-0.5 rounded text-xs"
+                                disabled={player.wounds === 0}
+                              >
+                                -1
+                              </button>
+
+                              <div className="flex-1 bg-cyan-800 rounded-full h-2 overflow-hidden relative">
+                                <div 
+                                  className={`h-full transition-all duration-300 ${
+                                    player.wounds >= player.maxWounds * 2 ? 'bg-black animate-pulse' :
+                                    player.wounds >= player.maxWounds ? 'bg-red-600' :
+                                    player.wounds >= player.maxWounds * 0.5 ? 'bg-yellow-500' :
+                                    'bg-green-500'
+                                  }`}
+                                  style={{ width: `${Math.min(100, (player.wounds / player.maxWounds) * 100)}%` }}
+                                />
+                              </div>
+                                
+                              <button
+                                onClick={() => quickAdjustPlayerHealth(player.id, 'wounds', 1)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-1 py-0.5 rounded text-xs"
+                                disabled={player.wounds >= player.maxWounds * 2}
+                              >
+                                +1
+                              </button>
+                            </div>
+                          </div>
+                                
+                          {/* Strain */}
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-cyan-200 text-xs">Strain</span>
+                              <span className="text-cyan-200 text-xs">{player.strain}/{player.maxStrain} ({strainPercent}%)</span>
+                            </div>
+                                
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={() => quickAdjustPlayerHealth(player.id, 'strain', -1)}
+                                className="bg-green-500 hover:bg-green-600 text-white px-1 py-0.5 rounded text-xs"
+                                disabled={player.strain === 0}
+                              >
+                                -1
+                              </button>
+                                
+                              <div className="flex-1 bg-cyan-800 rounded-full h-2 overflow-hidden relative">
+                                <div 
+                                  className={`h-full transition-all duration-300 ${
+                                    player.strain >= player.maxStrain ? 'bg-red-600 animate-pulse' :
+                                    player.strain >= player.maxStrain * 0.5 ? 'bg-orange-500' :
+                                    'bg-blue-500'
+                                  }`}
+                                  style={{ width: `${Math.max(5, (player.strain / player.maxStrain) * 100)}%` }}
+                                />
+                              </div>
+                                
+                              <button
+                                onClick={() => quickAdjustPlayerHealth(player.id, 'strain', 1)}
+                                className="bg-orange-500 hover:bg-orange-600 text-white px-1 py-0.5 rounded text-xs"
+                                disabled={player.strain >= player.maxStrain}
+                              >
+                                +1
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1120,7 +1348,6 @@ const TacticalGrid = ({
                 Weather Effects
               </h4>
               
-              {/* Key Stats Row */}
               <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                 <div className="bg-slate-800 p-1 rounded text-center">
                   <div className="text-slate-400">Level</div>
@@ -1142,13 +1369,11 @@ const TacticalGrid = ({
                 </div>
               </div>
               
-              {/* Next Event */}
               <div className="bg-slate-800/50 p-2 rounded mb-2">
                 <div className="text-slate-300 text-xs mb-1">Next:</div>
                 <div className="text-white text-xs font-medium">{stats.weatherStatus.nextEvent}</div>
               </div>
               
-              {/* Effects List - Compact */}
               <div className="space-y-1">
                 {stats.weatherStatus.effects.slice(0, 3).map((effect, index) => (
                   <div key={index} className="text-white text-xs bg-slate-800/30 p-1 rounded">
@@ -1159,45 +1384,6 @@ const TacticalGrid = ({
                   <div className="text-slate-400 text-xs">+ {stats.weatherStatus.effects.length - 3} more effects</div>
                 )}
               </div>
-              
-              {/* Quick Dice Reference - Collapsed */}
-              <details className="mt-2">
-                <summary className="text-yellow-300 text-xs font-semibold cursor-pointer hover:text-yellow-200">
-                  🎲 Dice Reference
-                </summary>
-                <div className="mt-1 text-xs text-slate-200 bg-slate-800/50 p-2 rounded">
-                  {currentWeatherType === 'rainy' && (
-                    <>
-                      <div>Spot: Perception vs 2</div>
-                      <div>Escape: Athletics vs 3</div>
-                    </>
-                  )}
-                  {currentWeatherType === 'stormy' && (
-                    <>
-                      <div>Detect: Vigilance vs 1</div>
-                      <div>Damage: 12 wounds + Crit</div>
-                    </>
-                  )}
-                  {currentWeatherType === 'foggy' && (
-                    <>
-                      <div>Perception: +{stats.weatherStatus.level} Setback</div>
-                      <div>Navigate: Survival vs 1-3</div>
-                    </>
-                  )}
-                  {currentWeatherType === 'flooded' && (
-                    <>
-                      <div>Move: +{Math.min(5, Math.floor(currentRound / 20) + 1)} Setback</div>
-                      <div>Swim: Athletics vs 2-3</div>
-                    </>
-                  )}
-                  {currentWeatherType === 'eclipsed' && (
-                    <>
-                      <div>Fear: Discipline vs 2</div>
-                      <div>Strain: 1/round outside</div>
-                    </>
-                  )}
-                </div>
-              </details>
             </div>
           ) : (
             <div className="bg-green-700/20 p-3 rounded border border-green-500/30">
@@ -1228,7 +1414,7 @@ const TacticalGrid = ({
                 <span>👹</span><span className="text-slate-300">Entities</span>
               </div>
               <div className="flex items-center space-x-1">
-                <span>0-5</span><span className="text-slate-300">Height</span>
+                <span>0-8</span><span className="text-slate-300">Height</span>
               </div>
               <div className="flex items-center space-x-1">
                 <span>🌊</span><span className="text-slate-300">Hazards</span>

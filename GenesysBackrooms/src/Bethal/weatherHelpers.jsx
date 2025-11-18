@@ -7,66 +7,23 @@ import { moons } from './moonData.jsx';
 export const generateDailyWeatherForAllMoons = () => {
   const newDailyWeather = {};
 
-  const weatherCurveValue = Math.random();
-  let moonsWithWeather;
-  if (weatherCurveValue < 0.15) {
-    moonsWithWeather = 0; // All clear day
-  } else if (weatherCurveValue < 0.45) {
-    moonsWithWeather = Math.floor(Math.random() * 5) + 1;
-  } else {
-    moonsWithWeather = Math.floor(Math.random() * 8) + 4;
-  }
-
-  // Select random moons to get weather
-  const availableMoons = [...moons];
-  const selectedMoons = [];
-  for (let i = 0; i < Math.min(moonsWithWeather, availableMoons.length); i++) {
-    const randomIndex = Math.floor(Math.random() * availableMoons.length);
-    selectedMoons.push(availableMoons.splice(randomIndex, 1)[0]);
-  }
-
-  // Assign weather to selected moons, clear to others
+  // Each moon rolls its own weather based on its specific chances
   moons.forEach(moon => {
-    if (selectedMoons.includes(moon)) {
-      const possibleWeather = getMoonWeatherTypes(moon.name);
-      if (possibleWeather.length > 0) {
-        // Weight the weather types (eclipse is rarest, clear most common when weather occurs)
-        const weights = possibleWeather.map(weather => {
-          switch(weather) {
-            case 'clear': return 0; // Clear doesn't count as "weather"
-            case 'rainy': return 25;
-            case 'stormy': return 20; 
-            case 'foggy': return 25;
-            case 'flooded': return 20;
-            case 'eclipsed': return 10; // Rarest and most dangerous
-            default: return 15;
-          }
-        });
-
-        // Filter out clear weather and get weighted selection
-        const validWeather = possibleWeather.filter(w => w !== 'clear');
-        const validWeights = weights.slice(1, validWeather.length + 1);
-
-        if (validWeather.length > 0) {
-          const totalWeight = validWeights.reduce((sum, weight) => sum + weight, 0);
-          const randomWeight = Math.random() * totalWeight;
-          let currentWeight = 0;
-
-          for (let i = 0; i < validWeather.length; i++) {
-            currentWeight += validWeights[i];
-            if (randomWeight <= currentWeight) {
-              newDailyWeather[moon.name] = validWeather[i];
-              break;
-            }
-          }
-        } else {
-          newDailyWeather[moon.name] = 'clear';
+    if (moon.weatherTypes) {
+      // Generate random weather based on moon-specific percentages
+      const randomValue = Math.random() * 100;
+      let cumulativeChance = 0;
+      
+      for (const [weatherType, chance] of Object.entries(moon.weatherTypes)) {
+        cumulativeChance += chance;
+        if (randomValue <= cumulativeChance) {
+          newDailyWeather[moon.name] = weatherType.toLowerCase();
+          break;
         }
-      } else {
-        newDailyWeather[moon.name] = 'clear';
       }
     } else {
-      newDailyWeather[moon.name] = 'clear'; // No weather
+      // Fallback if no weather chances defined
+      newDailyWeather[moon.name] = 'clear';
     }
   });
 

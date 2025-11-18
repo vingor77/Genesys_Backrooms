@@ -1,6 +1,202 @@
 import React, { useState } from 'react';
 import { roundToTime } from './weatherHelpers.jsx';
 
+// Overtime Calculator Modal Component
+const OvertimeModal = ({ isOpen, onClose, currentQuota, daysUntilDeadline }) => {
+  const [desiredTotal, setDesiredTotal] = useState('');
+  const [amountSold, setAmountSold] = useState('');
+
+  if (!isOpen) return null;
+
+  const calculateRequiredSales = (desiredAmount) => {
+    if (!desiredAmount || isNaN(desiredAmount)) return 0;
+    return Math.ceil((5 * parseFloat(desiredAmount) + currentQuota + 75) / 6);
+  };
+
+  const calculateOvertimeBonus = (soldAmount) => {
+    if (!soldAmount || isNaN(soldAmount)) return 0;
+    return Math.round((parseFloat(soldAmount) - currentQuota) / 5 + 15 * (daysUntilDeadline - 1));
+  };
+
+  const calculateFinalTotal = (soldAmount) => {
+    if (!soldAmount || isNaN(soldAmount)) return 0;
+    return parseFloat(soldAmount) + calculateOvertimeBonus(soldAmount);
+  };
+
+  const requiredSales = calculateRequiredSales(desiredTotal);
+  const overtimeBonus = calculateOvertimeBonus(amountSold);
+  const finalTotal = calculateFinalTotal(amountSold);
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+      style={{ zIndex: 9999 }}
+      onClick={onClose}
+    >
+      <div 
+        className="bg-gradient-to-br from-gray-900 via-green-900 to-emerald-900 rounded-2xl border border-white/30 shadow-2xl w-full max-w-4xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/20 bg-black/30">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              OVERTIME CALCULATOR
+            </h1>
+            <p className="text-green-300 text-lg">Plan your quota strategy</p>
+          </div>
+          
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white hover:bg-white/10 rounded-full p-3 transition-all duration-200"
+            title="Close Calculator"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6 space-y-6">
+          {/* Current Status */}
+          <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <h3 className="text-white font-bold text-lg mb-3 flex items-center space-x-2">
+              <span className="text-blue-400">📊</span>
+              <span>Current Status</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-white/70">Current Quota:</span>
+                <span className="text-white font-bold">{currentQuota}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/70">Days Until Deadline:</span>
+                <span className="text-white font-bold">{daysUntilDeadline}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Section 1: Desired Amount Calculator */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-white font-bold text-xl mb-4 flex items-center space-x-2">
+                <span className="text-green-400">🎯</span>
+                <span>Planning Calculator</span>
+              </h3>
+              <p className="text-green-300 text-sm mb-4">
+                Enter your desired final total (after overtime bonus) to see how much you need to sell. Calculated at 0 days left.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-white/70 text-sm font-medium mb-2">
+                    Desired Final Total:
+                  </label>
+                  <input
+                    type="number"
+                    value={desiredTotal}
+                    onChange={(e) => setDesiredTotal(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter desired amount..."
+                  />
+                </div>
+
+                {desiredTotal && !isNaN(desiredTotal) && (
+                  <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-300 font-medium">Required Sales:</span>
+                      <span className="text-white font-bold text-xl">{requiredSales}</span>
+                    </div>
+                    <p className="text-green-200 text-xs mt-2">
+                      You need to sell {requiredSales} credits to reach your goal of {desiredTotal} total.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section 2: Amount Sold Calculator */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-white font-bold text-xl mb-4 flex items-center space-x-2">
+                <span className="text-blue-400">💰</span>
+                <span>Bonus Calculator</span>
+              </h3>
+              <p className="text-blue-300 text-sm mb-4">
+                Enter the amount you actually sold to calculate your overtime bonus.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-white/70 text-sm font-medium mb-2">
+                    Amount Actually Sold:
+                  </label>
+                  <input
+                    type="number"
+                    value={amountSold}
+                    onChange={(e) => setAmountSold(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter amount sold..."
+                  />
+                </div>
+
+                {amountSold && !isNaN(amountSold) && (
+                  <div className="space-y-3">
+                    <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-blue-300 font-medium">Overtime Bonus:</span>
+                        <span className="text-white font-bold text-xl">+{overtimeBonus}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-blue-300 font-medium">Final Total:</span>
+                        <span className="text-green-400 font-bold text-2xl">{finalTotal}</span>
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-500/20 border border-purple-400/30 rounded-lg">
+                      <p className="text-purple-200 text-xs">
+                        Sold: {amountSold} + Bonus: {overtimeBonus} = Total: {finalTotal}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Formula Information */}
+          <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <h4 className="text-white font-bold text-lg mb-3 flex items-center space-x-2">
+              <span className="text-purple-400">🧮</span>
+              <span>Formula Information</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-300">
+              <div>
+                <p className="font-medium text-green-400 mb-1">Required Sales Formula:</p>
+                <p className="font-mono">⌈(5 × Desired + Quota + 75) ÷ 6⌉</p>
+              </div>
+              <div>
+                <p className="font-medium text-blue-400 mb-1">Overtime Bonus Formula:</p>
+                <p className="font-mono">⌊(Sold - Quota) ÷ 5 + 15 × (Days - 1)⌋</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={onClose}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
+            >
+              <span>✓</span>
+              <span>Close Calculator</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Shop Modal Component (keeping the same as it was working well)
 const ShopModal = ({ isOpen, onClose, weapons, suits, baseStore }) => {
   const [selectedTab, setSelectedTab] = useState('weapons');
@@ -369,6 +565,7 @@ const MissionControl = ({
   baseStore = []
 }) => {
   const [showShop, setShowShop] = useState(false);
+  const [showOvertime, setShowOvertime] = useState(false);
 
   const getCurrentMoonWeather = () => {
     if (!selectedMoon) return '';
@@ -513,7 +710,7 @@ const MissionControl = ({
      )}
 
      {/* Secondary Controls */}
-     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+     <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
        <button
          onClick={onResetGame}
          disabled={!gameStarted}
@@ -539,6 +736,14 @@ const MissionControl = ({
          <span>💀</span>
          <span>Reset Campaign</span>
        </button>
+
+      <button
+        onClick={() => setShowOvertime(true)}
+        className="p-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+      >
+        <span>💰</span>
+        <span>Overtime Calculator</span>
+      </button>
      </div>
 
      {/* Status Messages */}
@@ -566,7 +771,7 @@ const MissionControl = ({
        </div>
      )}
 
-     {/* Shop Modal */}
+     {/* Modals */}
      {showShop && (
        <ShopModal 
          isOpen={showShop}
@@ -574,6 +779,15 @@ const MissionControl = ({
          weapons={weapons}
          suits={suits}
          baseStore={baseStore}
+       />
+     )}
+
+     {showOvertime && (
+       <OvertimeModal 
+         isOpen={showOvertime}
+         onClose={() => setShowOvertime(false)}
+         currentQuota={currentQuota}
+         daysUntilDeadline={daysUntilDeadline}
        />
      )}
    </div>

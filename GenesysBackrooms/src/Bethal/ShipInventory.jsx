@@ -32,6 +32,12 @@ const ShipInventory = ({daysUntilDeadline}) => {
     }
     return [];
   });
+  const [keepItems, setKeepItems] = useState(() => {
+    if(localStorage.getItem("keepItems")) {
+      return JSON.parse(localStorage.getItem("keepItems"));
+    }
+    return [];
+  });
   const [shipMoney, setShipMoney] = useState(() => {
     if(localStorage.getItem("shipMoney")) return parseInt(localStorage.getItem("shipMoney"));
     return 0;
@@ -41,11 +47,16 @@ const ShipInventory = ({daysUntilDeadline}) => {
   const [newItemValue, setNewItemValue] = useState(0);
   const [newItemConductive, setNewItemConductive] = useState(false);
   const [newItemTwoHanded, setNewItemTwoHanded] = useState(false);
+  const [addToKeepSection, setAddToKeepSection] = useState(false);
   const [moneyAdjustment, setMoneyAdjustment] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("shipInventory", JSON.stringify(shipItems));
   }, [shipItems]);
+
+  useEffect(() => {
+    localStorage.setItem("keepItems", JSON.stringify(keepItems));
+  }, [keepItems]);
 
   useEffect(() => {
     localStorage.setItem("shipMoney", shipMoney);
@@ -61,7 +72,7 @@ const ShipInventory = ({daysUntilDeadline}) => {
     return () => {
       window.removeEventListener('shipInventoryUpdated', handleInventoryUpdate);
     };
-  }, []);;
+  }, []);
 
   const addItem = () => {
     if (!newItemName.trim()) {
@@ -78,7 +89,11 @@ const ShipInventory = ({daysUntilDeadline}) => {
       twoHanded: newItemTwoHanded
     };
 
-    setShipItems(prev => [...prev, newItem]);
+    if (addToKeepSection) {
+      setKeepItems(prev => [...prev, newItem]);
+    } else {
+      setShipItems(prev => [...prev, newItem]);
+    }
     
     // Clear form
     setNewItemName('');
@@ -86,26 +101,44 @@ const ShipInventory = ({daysUntilDeadline}) => {
     setNewItemValue(0);
     setNewItemConductive(false);
     setNewItemTwoHanded(false);
+    setAddToKeepSection(false);
   };
 
   const removeItem = (itemId) => {
-    if(shipItems.length === 0) {
-      localStorage.removeItem("shipInventory");
-    }
     setShipItems(prev => prev.filter(item => item.id !== itemId));
   };
 
+  const removeKeepItem = (itemId) => {
+    setKeepItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const moveToKeep = (item) => {
+    removeItem(item.id);
+    setKeepItems(prev => [...prev, item]);
+  };
+
+  const moveToSell = (item) => {
+    removeKeepItem(item.id);
+    setShipItems(prev => [...prev, item]);
+  };
+
   const sellAllItems = () => {
+    const sellValue = daysUntilDeadline === 2 ? Math.round(calculateTotals().totalValue * 0.33) : 
+                     daysUntilDeadline === 1 ? Math.round(calculateTotals().totalValue * 0.53) : 
+                     daysUntilDeadline === 0 ? Math.round(calculateTotals().totalValue * 0.77) : 
+                     calculateTotals().totalValue;
+    
+    setShipMoney(prev => prev + sellValue);
     setShipItems([]);
-    localStorage.removeItem("shipInventory");
-  }
+  };
 
   const sellItem = (item) => {
-    if(daysUntilDeadline < 0) setShipMoney(prev => prev + item.value);
-    if(daysUntilDeadline === 2) setShipMoney(prev => Math.round(prev + (item.value * 0.33)));
-    if(daysUntilDeadline === 1) setShipMoney(prev => Math.round(prev + (item.value * 0.53)));
-    if(daysUntilDeadline === 0) setShipMoney(prev => Math.round(prev + (item.value * 0.77)));
-
+    const sellValue = daysUntilDeadline === 2 ? Math.round(item.value * 0.33) : 
+                     daysUntilDeadline === 1 ? Math.round(item.value * 0.53) : 
+                     daysUntilDeadline === 0 ? Math.round(item.value * 0.77) : 
+                     item.value;
+    
+    setShipMoney(prev => prev + sellValue);
     removeItem(item.id);
   };
 
@@ -119,7 +152,21 @@ const ShipInventory = ({daysUntilDeadline}) => {
     const totalWeight = shipItems.reduce((sum, item) => sum + item.weight, 0);
     const itemCount = shipItems.length;
 
-    return { totalValue, totalWeight, itemCount };
+    const keepTotalValue = keepItems.reduce((sum, item) => sum + item.value, 0);
+    const keepTotalWeight = keepItems.reduce((sum, item) => sum + item.weight, 0);
+    const keepItemCount = keepItems.length;
+
+    return { 
+      totalValue, 
+      totalWeight, 
+      itemCount, 
+      keepTotalValue, 
+      keepTotalWeight, 
+      keepItemCount,
+      grandTotalValue: totalValue + keepTotalValue,
+      grandTotalWeight: totalWeight + keepTotalWeight,
+      grandTotalCount: itemCount + keepItemCount
+    };
   };
 
   const totals = calculateTotals();
@@ -133,17 +180,10 @@ const ShipInventory = ({daysUntilDeadline}) => {
             <span className="text-white font-semibold">🚢 Ship Inventory</span>
           </div>
           <div className="flex items-center space-x-4 text-sm">
-            <span className="text-white">Items: <span className="font-bold">{totals.itemCount}</span></span>
-            <span className="text-white">Weight: <span className="font-bold">{totals.totalWeight.toFixed(1)} lbs</span></span>
-            <span className="text-green-400 font-bold">Actual Value: {totals.totalValue}¢</span>
-            <span className="text-green-400 font-bold">Adjusted Sell Value: {
-                daysUntilDeadline === 2 ? Math.round(totals.totalValue * 0.33) : 
-                daysUntilDeadline === 1 ? Math.round(totals.totalValue * 0.53) : 
-                daysUntilDeadline === 0 ? Math.round(totals.totalValue * 0.77) : 
-                totals.totalValue
-              }
-              ¢
-            </span>
+            <span className="text-white">Total Items: <span className="font-bold">{totals.grandTotalCount}</span></span>
+            <span className="text-white">Total Weight: <span className="font-bold">{totals.grandTotalWeight.toFixed(1)} lbs</span></span>
+            <span className="text-green-400 font-bold">For Sale: {totals.totalValue}¢ ({totals.itemCount} items)</span>
+            <span className="text-blue-400 font-bold">Keeping: {totals.keepTotalValue}¢ ({totals.keepItemCount} items)</span>
           </div>
         </div>
       </div>
@@ -189,7 +229,7 @@ const ShipInventory = ({daysUntilDeadline}) => {
             ➖ Remove
           </button>
           <button
-            onClick={() => {adjustMoney(totals.totalValue); sellAllItems()}}
+            onClick={sellAllItems}
             disabled={totals.itemCount === 0}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
               totals.itemCount === 0
@@ -210,7 +250,7 @@ const ShipInventory = ({daysUntilDeadline}) => {
       {/* Add Item Form */}
       <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3">
         <h4 className="font-semibold text-blue-300 mb-2 text-sm">➕ Add Item to Ship</h4>
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
           <input
             type="text"
             placeholder="Item name"
@@ -252,6 +292,15 @@ const ShipInventory = ({daysUntilDeadline}) => {
               <span className="text-orange-300">🤲 Two-Hand</span>
             </label>
           </div>
+          <label className="flex items-center space-x-2 text-sm">
+            <input
+              type="checkbox"
+              checked={addToKeepSection}
+              onChange={(e) => setAddToKeepSection(e.target.checked)}
+              className="w-3 h-3"
+            />
+            <span className="text-purple-300">🔒 Keep on Ship</span>
+          </label>
           <button
             onClick={addItem}
             className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
@@ -261,20 +310,28 @@ const ShipInventory = ({daysUntilDeadline}) => {
         </div>
       </div>
 
-      {/* Ship Items List */}
+      {/* Ship Items List - For Sale */}
       <div className="bg-slate-700 rounded-lg border border-slate-500">
         <div className="p-3 border-b border-slate-600">
-          <h4 className="font-semibold text-white text-sm">📦 Items on Ship</h4>
+          <h4 className="font-semibold text-white text-sm">💰 Items for Sale</h4>
+          <div className="text-xs text-slate-300 mt-1">
+            Sell Value: {
+              daysUntilDeadline === 2 ? Math.round(totals.totalValue * 0.33) : 
+              daysUntilDeadline === 1 ? Math.round(totals.totalValue * 0.53) : 
+              daysUntilDeadline === 0 ? Math.round(totals.totalValue * 0.77) : 
+              totals.totalValue
+            }¢ ({totals.itemCount} items)
+          </div>
         </div>
         
         {shipItems.length === 0 ? (
           <div className="p-6 text-center text-slate-400">
-            <div className="text-4xl mb-2">📦</div>
-            <p>No items on ship yet</p>
+            <div className="text-4xl mb-2">💰</div>
+            <p>No items marked for sale</p>
           </div>
         ) : (
           <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
-            {shipItems.map((item) => (
+            {shipItems.sort((a, b) => b.value - a.value).map((item) => (
               <div key={item.id} className="bg-slate-600 rounded p-2 flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 grid grid-cols-5 gap-1">
@@ -289,12 +346,73 @@ const ShipInventory = ({daysUntilDeadline}) => {
                   <button
                     onClick={() => sellItem(item)}
                     className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
-                    title={`Sell for ${item.value}¢`}
+                    title={`Sell for ${
+                      daysUntilDeadline === 2 ? Math.round(item.value * 0.33) : 
+                      daysUntilDeadline === 1 ? Math.round(item.value * 0.53) : 
+                      daysUntilDeadline === 0 ? Math.round(item.value * 0.77) : 
+                      item.value
+                    }¢`}
                   >
                     💰 Sell
                   </button>
                   <button
+                    onClick={() => moveToKeep(item)}
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                    title="Move to keep section"
+                  >
+                    🔒 Lock
+                  </button>
+                  <button
                     onClick={() => removeItem(item.id)}
+                    className="text-red-400 hover:text-red-300 text-sm"
+                    title="Remove item"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Keep Items List */}
+      <div className="bg-purple-500/20 border border-purple-400/30 rounded-lg">
+        <div className="p-3 border-b border-purple-600/30">
+          <h4 className="font-semibold text-purple-300 text-sm">🔒 Items to Keep on Ship</h4>
+          <div className="text-xs text-purple-200 mt-1">
+            Value: {totals.keepTotalValue}¢ ({totals.keepItemCount} items) • These won't be sold
+          </div>
+        </div>
+        
+        {keepItems.length === 0 ? (
+          <div className="p-6 text-center text-purple-300">
+            <div className="text-4xl mb-2">🔒</div>
+            <p>No items marked to keep</p>
+          </div>
+        ) : (
+          <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
+            {keepItems.sort((a, b) => b.value - a.value).map((item) => (
+              <div key={item.id} className="bg-purple-600/30 rounded p-2 flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 grid grid-cols-5 gap-1">
+                    <span className="font-medium text-white">{item.name}</span>
+                    <span className="text-purple-200 text-sm">{item.weight} lbs</span>
+                    <span className="text-purple-200 text-sm">{item.value}¢</span>
+                    <span className="text-blue-300 text-xs"> {item.conductive ? "Conductive" : ""}</span>
+                    <span className="text-orange-300 text-xs"> {item.twoHanded ? "Two Handed" : ""}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => moveToSell(item)}
+                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                    title="Move to sell section"
+                  >
+                    💰 Unlock
+                  </button>
+                  <button
+                    onClick={() => removeKeepItem(item.id)}
                     className="text-red-400 hover:text-red-300 text-sm"
                     title="Remove item"
                   >

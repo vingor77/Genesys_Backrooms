@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { INTERIOR_TYPES, moons } from './moonData.jsx';
-import { ROOM_TYPES, TRAP_TYPES, DOOR_TYPES } from './indoorData.jsx';
+import { 
+  INTERIOR_TYPES, 
+  moons,
+  calculateRoomCount  // Add this import
+} from './moonData.jsx';
+import { ROOM_TYPES, TRAP_TYPES } from './indoorData.jsx';
 import { generateScrapFromMoonData } from './scrapUtils.jsx';
 import { generateCompleteBuilding } from './floorManager.jsx';
 import { generateMazeRoomsAlongPaths } from './roomGenerator.jsx';
 import { distributeDoorsAcrossFloors } from './doorSystem.jsx';
 import { useDoorActions, FunctionalDoorPanel, getEnhancedDoorIndicator, getEnhancedDoorTooltip } from './functionalDoorComponent.jsx';
 import { INTERIOR_GRID_SIZE, CENTER_POINT, validateAndFixPaths } from './pathGenerator.jsx';
-import { applyDamageToPlayer } from './playerManager.jsx';
+import { applyDamageToPlayer, updatePlayerHealth } from './playerManager.jsx';
 import { 
   enhanceHallwayCell, 
-  getEnhancedHallwayTooltip, 
-  getHallwayFeatureIndicator,
-  integrateHallwayFeatures 
+  getEnhancedHallwayTooltip,
+  integrateHallwayFeatures,
 } from './hallwayFeatures.jsx';
 
 // ===== LIGHTING SYSTEM =====
@@ -218,7 +221,9 @@ const NewInteriorGrid = ({
   setCurrentFloor,
   onEntityPlayerCollision,
   onPlayerPositionChange,
-  setPlayers
+  setPlayers,
+  addAlert,
+  rageSystem
 }) => {
   // Building state
   const [selectedCell, setSelectedCell] = useState(null);
@@ -232,39 +237,653 @@ const NewInteriorGrid = ({
   const [collectedApparatus, setCollectedApparatus] = useState(new Set());
   const [isPlayerMovementMode, setIsPlayerMovementMode] = useState(false);
   const [movingPlayer, setMovingPlayer] = useState(null);
-  
+  const [entityTargets, setEntityTargets] = useState(new Map()); // Bracken/Ghost Girl targets
+  const [spiderWebTriggers, setSpiderWebTriggers] = useState(new Map()); // Spider web reactions
+  const [jesterChaseDuration, setJesterChaseDuration] = useState(new Map()); // Jester escalation
+  const [pendingEntityMoves, setPendingEntityMoves] = useState([]);
+
   // ===== NEW: Lighting state =====
   const [floorLighting, setFloorLighting] = useState({});
 
-  // Entity movement data (keep this the same)
+  // Entity movement data - rounds between moves
   const ENTITY_MOVEMENT_DATA = {
-    // Indoor entities
-    "Barber": { rounds: 2 },
-    "Bracken": { rounds: 2 },
-    "Bunker Spider": { rounds: 2 },
-    "Butler": { rounds: 2 },
-    "Coil-Head": { rounds: 2 },
-    "Ghost Girl": { rounds: 2 },
-    "Hoarding Bug": { rounds: 2 },
-    "Hygrodere": { rounds: 3 },
-    "Jester": { rounds: 2 },
-    "Maneater": { rounds: 2 },
-    "Masked": { rounds: 2 },
-    "Nutcracker": { rounds: 2 },
-    "Snare Flea": { rounds: 99 },
-    "Spore Lizard": { rounds: 2 },
-    "Thumper": { rounds: 2 },
-    "Masked Hornets": { rounds: 1 },
-    "Vine Lurker": { rounds: 3 },
-    "Pollen Drone": { rounds: 2 },
-    "Prototype Hunter": { rounds: 2 },
-    "Data Wraith": { rounds: 2 },
-    "Corporate Enforcer": { rounds: 2 },
-    "Executive Phantom": { rounds: 2 },
-    "Void Stalker": { rounds: 1 },
-    "Reality Wraith": { rounds: 1 },
-    "Chaos Spawn": { rounds: 1 },
-    "Dimensional Horror": { rounds: 1 }
+    "Barber (Clay Surgeon)": { passive: 2, chasing: 1 },
+    "Barber": { passive: 2, chasing: 1 },
+    "Thumper (Halves)": { passive: 2, chasing: 1 },
+    "Thumper": { passive: 2, chasing: 1 },
+    "Snare Flea (Centipede)": { passive: 999, chasing: 1 },
+    "Snare Flea": { passive: 999, chasing: 1 },
+    "Spore Lizard (Puffer)": { passive: 2, chasing: 1 },
+    "Spore Lizard": { passive: 2, chasing: 1 },
+    "Bracken (Flower Man)": { passive: 999, chasing: 999 },
+    "Bracken": { passive: 999, chasing: 999 },
+    "Bunker Spider (Theraphosa Spider)": { passive: 3, chasing: 2 },
+    "Bunker Spider": { passive: 3, chasing: 2 },
+    "Jester (Jack-in-the-Box)": { passive: 2, chasing: 2 },
+    "Jester": { passive: 2, chasing: 2 },
+    "Nutcracker (Guardian Automaton)": { passive: 2, chasing: 1 },
+    "Nutcracker": { passive: 2, chasing: 1 },
+    "Maneater (Periplaneta Clamorus)": { passive: 2, chasing: 1 },
+    "Maneater": { passive: 2, chasing: 1 },
+    "Masked (Mimic)": { passive: 3, chasing: 1 },
+    "Masked": { passive: 3, chasing: 1 },
+    "Butler (Mansion Keeper)": { passive: 3, chasing: 1 },
+    "Butler": { passive: 3, chasing: 1 },
+    "Hygrodere (Slime)": { passive: 3, chasing: 2 },
+    "Hygrodere": { passive: 3, chasing: 2 },
+    "Ghost Girl (Dress Girl)": { passive: 999, chasing: 999 },
+    "Ghost Girl": { passive: 999, chasing: 999 },
+    "Hoarding Bug (Loot Bug)": { passive: 3, chasing: 1 },
+    "Hoarding Bug": { passive: 3, chasing: 1 },
+    "Coil-Head (Spring Man)": { passive: 3, chasing: 1 },
+    "Coil-Head": { passive: 3, chasing: 1 },
+  };
+
+  // Helper: Get closest player to entity
+  const getClosestPlayerToEntity = (entityX, entityY, entityFloor) => {
+    const playersOnSameFloor = players.filter(player => 
+      player.position?.currentArea === 'interior' &&
+      player.position.interior.floor === entityFloor
+    );
+
+    if (playersOnSameFloor.length === 0) return null;
+
+    let closestPlayer = null;
+    let closestDistance = Infinity;
+
+    playersOnSameFloor.forEach(player => {
+      const distance = Math.abs(player.position.interior.x - entityX) + Math.abs(player.position.interior.y - entityY);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPlayer = player;
+      }
+    });
+
+    return { player: closestPlayer, distance: closestDistance };
+  };
+
+  // Helper: Check if players within range
+  const hasPlayersInRange = (entityX, entityY, entityFloor, range) => {
+    return players.some(player => {
+      if (player.position?.currentArea !== 'interior') return false;
+      if (player.position.interior.floor !== entityFloor) return false;
+
+      const distance = Math.abs(player.position.interior.x - entityX) + Math.abs(player.position.interior.y - entityY);
+      return distance <= range;
+    });
+  };
+
+  // Helper: Move entity one step towards target
+  const moveTowardsTarget = (entity, fromX, fromY, toX, toY, floorNum) => {
+    const connectedRooms = getConnectedRooms(fromX, fromY, floorNum);
+
+    console.log(`${entity.name} at (${fromX},${fromY}) trying to move to (${toX},${toY})`);
+    console.log(`Connected rooms:`, connectedRooms.length);
+
+    if (connectedRooms.length === 0) {
+      console.log(`${entity.name} TRAPPED - no connected rooms!`);
+      return { success: false };
+    }
+
+    // Calculate direction preference
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+
+    let bestRoom = null;
+    let bestDistance = Infinity;
+
+    connectedRooms.forEach(room => {
+      const distance = Math.abs(room.x - toX) + Math.abs(room.y - toY);
+
+      // Prefer moves in the correct direction
+      let priority = distance;
+      const roomDx = room.x - fromX;
+      const roomDy = room.y - fromY;
+
+      // Bonus for moving in right direction
+      if ((dx > 0 && roomDx > 0) || (dx < 0 && roomDx < 0)) priority -= 0.3;
+      if ((dy > 0 && roomDy > 0) || (dy < 0 && roomDy < 0)) priority -= 0.3;
+
+      if (priority < bestDistance) {
+        bestDistance = priority;
+        bestRoom = room;
+      }
+    });
+
+    if (!bestRoom) bestRoom = connectedRooms[0];
+
+    console.log(`${entity.name} moving from (${fromX},${fromY}) to (${bestRoom.x},${bestRoom.y})`);
+
+    moveEntityToRoom(entity, fromX, fromY, bestRoom.x, bestRoom.y, floorNum);
+
+    // Check if hit player
+    const hitPlayer = players.some(p => 
+      p.position?.currentArea === 'interior' &&
+      p.position.interior.x === bestRoom.x &&
+      p.position.interior.y === bestRoom.y &&
+      p.position.interior.floor === floorNum
+    );
+
+    return { success: true, x: bestRoom.x, y: bestRoom.y, hitPlayer };
+  };
+
+  // Helper: Move entity one step away from target
+  const moveAwayFromTarget = (entity, fromX, fromY, targetX, targetY, floorNum) => {
+    const connectedRooms = getConnectedRooms(fromX, fromY, floorNum);
+    if (connectedRooms.length === 0) return { success: false };
+
+    let bestRoom = null;
+    let bestDistance = -Infinity;
+
+    connectedRooms.forEach(room => {
+      const distance = Math.abs(room.x - targetX) + Math.abs(room.y - targetY);
+      if (distance > bestDistance) {
+        bestDistance = distance;
+        bestRoom = room;
+      }
+    });
+
+    if (!bestRoom) bestRoom = connectedRooms[0];
+
+    moveEntityToRoom(entity, fromX, fromY, bestRoom.x, bestRoom.y, floorNum);
+
+    const hitPlayer = players.some(p => 
+      p.position?.currentArea === 'interior' &&
+      p.position.interior.x === bestRoom.x &&
+      p.position.interior.y === bestRoom.y &&
+      p.position.interior.floor === floorNum
+    );
+
+    return { success: true, x: bestRoom.x, y: bestRoom.y, hitPlayer };
+  };
+
+  // Helper: Random move
+  const moveRandomly = (entity, fromX, fromY, floorNum) => {
+    const connectedRooms = getConnectedRooms(fromX, fromY, floorNum);
+
+    console.log(`${entity.name} random move from (${fromX},${fromY}) - ${connectedRooms.length} options`);
+
+    if (connectedRooms.length === 0) {
+      console.log(`${entity.name} TRAPPED - no connected rooms for random move!`);
+      return { success: false };
+    }
+
+    const room = connectedRooms[Math.floor(Math.random() * connectedRooms.length)];
+
+    console.log(`${entity.name} randomly moving to (${room.x},${room.y})`);
+
+    moveEntityToRoom(entity, fromX, fromY, room.x, room.y, floorNum);
+
+    const hitPlayer = players.some(p => 
+      p.position?.currentArea === 'interior' &&
+      p.position.interior.x === room.x &&
+      p.position.interior.y === room.y &&
+      p.position.interior.floor === floorNum
+    );
+
+    return { success: true, x: room.x, y: room.y, hitPlayer };
+  };
+
+  // Helper: Place spider web trap
+  const placeSpiderWeb = (x, y, floorNum, entityId, round) => {
+    setBuildingData(prev => {
+      if (!prev || !prev.floors) return prev;
+
+      const newFloors = { ...prev.floors };
+      const floorLayout = { ...newFloors[floorNum] };
+      const cellKey = `${x},${y}`;
+
+      if (floorLayout[cellKey]) {
+        const cell = floorLayout[cellKey];
+
+        const webTrap = {
+          id: `spiderweb_${entityId}_${round}_${Date.now()}`,
+          name: "Spider Web",
+          danger: "Low",
+          detection: "Easy",
+          roll: "Difficulty 2 Athletics/Coordination",
+          wounds: 0,
+          strain: 0,
+          placedBy: entityId,
+          placedAt: round,
+          webType: "spider_web"
+        };
+
+        const existingTraps = cell.traps || [];
+        floorLayout[cellKey] = {
+          ...cell,
+          traps: [...existingTraps, webTrap],
+          trap: existingTraps.length === 0 ? webTrap : cell.trap
+        };
+      }
+
+      newFloors[floorNum] = floorLayout;
+      return { ...prev, floors: newFloors };
+    });
+
+    addAlert('entity-effect', `🕸️ Bunker Spider placed web at (${x},${y})!`, round);
+  };
+
+  // Main entity movement processor
+  const processEntityMovement = (entity, currentX, currentY, floorNum, currentRound) => {
+    const movementData = ENTITY_MOVEMENT_DATA[entity.name];
+    if (!movementData) return false;
+
+    // Don't move if on same tile as player
+    const playersHere = players.filter(p => 
+      p.position?.currentArea === 'interior' &&
+      p.position.interior.x === currentX &&
+      p.position.interior.y === currentY &&
+      p.position.interior.floor === floorNum
+    );
+    if (playersHere.length > 0) return false;
+
+    const entityRage = rageSystem?.getEntityRage?.(entity.id) || 0;
+
+    // ===== BRACKEN & GHOST GIRL: STATIONARY, TARGET PLAYER =====
+    if (entity.name.includes("Bracken") || entity.name.includes("Ghost Girl")) {
+      if (!entityTargets.has(entity.id)) {
+        const playersInside = players.filter(p => p.position?.currentArea === 'interior');
+        if (playersInside.length > 0) {
+          const target = playersInside[Math.floor(Math.random() * playersInside.length)];
+          setEntityTargets(prev => new Map(prev.set(entity.id, target.id)));
+          addAlert('entity-effect', `${entity.name} targeted ${target.name}!`, currentRound);
+        }
+      }
+      return false; // Never move
+    }
+
+    // ===== COIL-HEAD: FROZEN AT MAX RAGE =====
+    if (entity.name.includes("Coil-Head") && entityRage >= 3) {
+      return false;
+    }
+
+    // ===== SNARE FLEA: ONLY CHASES WITHIN 1 TILE =====
+    if (entity.name.includes("Snare Flea")) {
+      if (!hasPlayersInRange(currentX, currentY, floorNum, 1)) return false;
+
+      const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+      if (!closest) return false;
+
+      const result = moveTowardsTarget(entity, currentX, currentY, 
+        closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+      return result.success;
+    }
+
+    // ===== BUNKER SPIDER: WEB PLACEMENT & TRIGGERED CHASING =====
+    if (entity.name.includes("Bunker Spider")) {
+      const webTrigger = spiderWebTriggers.get(entity.id);
+
+      // Check if reacting to web trigger
+      if (webTrigger) {
+        const inRange = hasPlayersInRange(currentX, currentY, floorNum, 5);
+
+        if (inRange) {
+          // Resume normal chasing
+          setSpiderWebTriggers(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(entity.id);
+            return newMap;
+          });
+
+          const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+          if (closest) {
+            let pos = { x: currentX, y: currentY };
+            for (let i = 0; i < 2; i++) {
+              const move = moveTowardsTarget(entity, pos.x, pos.y,
+                closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+              if (!move.success || move.hitPlayer) break;
+              pos = { x: move.x, y: move.y };
+            }
+            return true;
+          }
+        } else {
+          // Move towards triggered web
+          const move = moveTowardsTarget(entity, currentX, currentY, webTrigger.x, webTrigger.y, floorNum);
+          if (move.success && move.x === webTrigger.x && move.y === webTrigger.y) {
+            setSpiderWebTriggers(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(entity.id);
+              return newMap;
+            });
+          }
+          return move.success;
+        }
+      }
+
+      const inRange = hasPlayersInRange(currentX, currentY, floorNum, 5);
+
+      if (!inRange) {
+        // Passive: 50% web or move
+        if (Math.random() < 0.5) {
+          placeSpiderWeb(currentX, currentY, floorNum, entity.id, currentRound);
+          return false;
+        } else {
+          let pos = { x: currentX, y: currentY };
+          for (let i = 0; i < 2; i++) {
+            const move = moveRandomly(entity, pos.x, pos.y, floorNum);
+            if (!move.success || move.hitPlayer) break;
+            pos = { x: move.x, y: move.y };
+          }
+          return true;
+        }
+      } else {
+        // Chase player
+        const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+        if (!closest) return false;
+
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveTowardsTarget(entity, pos.x, pos.y,
+            closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      }
+    }
+
+    // ===== JESTER: ALWAYS TOWARDS CLOSEST PLAYER, ESCALATING =====
+    if (entity.name.includes("Jester")) {
+      const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+      if (!closest) return false;
+
+      let moveCount = 2;
+
+      if (entityRage >= 3) {
+        let duration = jesterChaseDuration.get(entity.id) || 0;
+        duration++;
+        moveCount = 2 + duration;
+        setJesterChaseDuration(prev => new Map(prev.set(entity.id, duration)));
+      } else {
+        setJesterChaseDuration(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(entity.id);
+          return newMap;
+        });
+      }
+
+      let pos = { x: currentX, y: currentY };
+      for (let i = 0; i < moveCount; i++) {
+        const move = moveTowardsTarget(entity, pos.x, pos.y,
+          closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+        if (!move.success || move.hitPlayer) break;
+        pos = { x: move.x, y: move.y };
+      }
+      return true;
+    }
+
+    // ===== MANEATER: SCRAP CONSUMPTION & RAGE CHASING =====
+    if (entity.name.includes("Maneater")) {
+      if (entityRage < 3) {
+        // Passive: consume scrap + wander
+        const cellKey = `${currentX},${currentY}`;
+        const cell = buildingData.floors[floorNum]?.[cellKey];
+
+        if (cell?.scraps && cell.scraps.length > 0 && Math.random() < 0.2) {
+          const uncollected = cell.scraps.filter(s => !collectedScrap.has(s.id));
+          if (uncollected.length > 0) {
+            const consumed = uncollected[0];
+
+            setBuildingData(prev => {
+              const newFloors = { ...prev.floors };
+              const newLayout = { ...newFloors[floorNum] };
+              const newCell = { ...newLayout[cellKey] };
+              newCell.scraps = newCell.scraps.filter(s => s.id !== consumed.id);
+              newLayout[cellKey] = newCell;
+              newFloors[floorNum] = newLayout;
+              return { ...prev, floors: newFloors };
+            });
+
+            addAlert('entity-effect', `🦶 Maneater consumed ${consumed.name}!`, currentRound);
+          }
+        }
+
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveRandomly(entity, pos.x, pos.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      } else {
+        // Rage 3+: chase within 5 tiles
+        if (!hasPlayersInRange(currentX, currentY, floorNum, 5)) return false;
+
+        const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+        if (!closest) return false;
+
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveTowardsTarget(entity, pos.x, pos.y,
+            closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      }
+    }
+
+    // ===== SPORE LIZARD: FLEE BEHAVIOR =====
+    if (entity.name.includes("Spore Lizard")) {
+      const inRange = hasPlayersInRange(currentX, currentY, floorNum, 5);
+
+      if (!inRange) {
+        // Random wander
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveRandomly(entity, pos.x, pos.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      } else {
+        // Flee
+        const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+        if (!closest) return false;
+
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveAwayFromTarget(entity, pos.x, pos.y,
+            closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      }
+    }
+
+    // ===== THUMPER: 3 MOVES WHILE CHASING =====
+    if (entity.name.includes("Thumper")) {
+      const inRange = hasPlayersInRange(currentX, currentY, floorNum, 5);
+
+      if (!inRange) {
+        // Random wander
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 2; i++) {
+          const move = moveRandomly(entity, pos.x, pos.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      } else {
+        // Chase with 3 moves
+        const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+        if (!closest) return false;
+
+        let pos = { x: currentX, y: currentY };
+        for (let i = 0; i < 3; i++) {
+          const move = moveTowardsTarget(entity, pos.x, pos.y,
+            closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+          if (!move.success || move.hitPlayer) break;
+          pos = { x: move.x, y: move.y };
+        }
+        return true;
+      }
+    }
+
+    // ===== STANDARD ENTITIES: 2 MOVES, CHASE WITHIN 5 TILES =====
+    // (Hygrodere, Masked, Barber, Nutcracker, Butler, Coil-Head)
+    const inRange = hasPlayersInRange(currentX, currentY, floorNum, 5);
+
+    if (!inRange) {
+      // Random wander
+      let pos = { x: currentX, y: currentY };
+      for (let i = 0; i < 2; i++) {
+        const move = moveRandomly(entity, pos.x, pos.y, floorNum);
+        if (!move.success || move.hitPlayer) break;
+        pos = { x: move.x, y: move.y };
+      }
+      return true;
+    } else {
+      // Chase player
+      const closest = getClosestPlayerToEntity(currentX, currentY, floorNum);
+      if (!closest) return false;
+
+      let pos = { x: currentX, y: currentY };
+      for (let i = 0; i < 2; i++) {
+        const move = moveTowardsTarget(entity, pos.x, pos.y,
+          closest.player.position.interior.x, closest.player.position.interior.y, floorNum);
+        if (!move.success || move.hitPlayer) break;
+        pos = { x: move.x, y: move.y };
+      }
+      return true;
+    }
+  };
+
+  // Entity death drops
+  const processEntityDeathEffects = (entity, position, currentRound) => {
+    const { x, y, floor } = position;
+
+    if (entity.name.includes("Nutcracker")) {
+      setBuildingData(prev => {
+        const newFloors = { ...prev.floors };
+        const newLayout = { ...newFloors[floor] };
+        const cellKey = `${x},${y}`;
+        const newCell = { ...newLayout[cellKey] };
+
+        if (!newCell.scraps) newCell.scraps = [];
+        newCell.scraps.push({
+          id: `nutcracker_shotgun_${Date.now()}`,
+          name: "Double-barrel Shotgun",
+          weight: 16,
+          value: 80,
+          conductive: false,
+          twoHanded: false
+        });
+        newCell.scraps.push({
+          id: `nutcracker_shells_${Date.now()}`,
+          name: "2 Shotgun Shells",
+          weight: 0,
+          value: 40,
+          conductive: false,
+          twoHanded: false
+        });
+
+        newLayout[cellKey] = newCell;
+        newFloors[floor] = newLayout;
+        return { ...prev, floors: newFloors };
+      });
+
+      addAlert('entity-death-effect', 
+        `💀 Nutcracker dropped Double-barrel Shotgun and Shells at (${x},${y})!`, 
+        currentRound
+      );
+    }
+
+    if (entity.name.includes("Butler")) {
+      setBuildingData(prev => {
+        const newFloors = { ...prev.floors };
+        const newLayout = { ...newFloors[floor] };
+        const cellKey = `${x},${y}`;
+        const newCell = { ...newLayout[cellKey] };
+
+        if (!newCell.scraps) newCell.scraps = [];
+        newCell.scraps.push({
+          id: `butler_knife_${Date.now()}`,
+          name: "Kitchen Knife",
+          weight: 1,
+          value: 30,
+          conductive: true,
+          twoHanded: false
+        });
+
+        newLayout[cellKey] = newCell;
+        newFloors[floor] = newLayout;
+        return { ...prev, floors: newFloors };
+      });
+
+      addAlert('entity-death-effect', 
+        `💀 Butler dropped Kitchen Knife at (${x},${y})!`, 
+        currentRound
+      );
+    }
+  };
+
+  // Updated trap trigger handler to notify spiders
+  const handleTrapTrigger = (trap) => {
+    if (triggeredTraps.has(trap.id)) return;
+    if (!trap) return;
+
+    const playersInRoom = players?.filter(player => 
+      player.position?.currentArea === 'interior' &&
+      player.position.interior.x === selectedCell.x &&
+      player.position.interior.y === selectedCell.y &&
+      player.position.interior.floor === currentFloor
+    ) || [];
+
+    if (playersInRoom.length > 0) {
+      if (playersInRoom.length === 1) {
+        const player = playersInRoom[0];
+        applyDamageToPlayer(players, setPlayers, player.id, trap.wounds || 0, trap.strain || 0);
+      } else {
+        const playerNames = playersInRoom.map(p => p.name);
+        const choice = prompt(`Multiple players in room: ${playerNames.join(', ')}\n\nWho triggered ${trap.name}?\n\nEnter player name or cancel to abort:`);
+
+        if (!choice) return;
+
+        const selectedPlayer = playersInRoom.find(p => p.name.toLowerCase() === choice.toLowerCase().trim());
+
+        if (!selectedPlayer) {
+          alert(`Player "${choice}" not found in room!`);
+          return;
+        }
+
+        applyDamageToPlayer(players, setPlayers, selectedPlayer.id, trap.wounds || 0, trap.strain || 0);
+      }
+    }
+
+    const newTriggered = new Set(triggeredTraps);
+    newTriggered.add(trap.id);
+    setTriggeredTraps(newTriggered);
+
+    // If spider web triggered, alert the spider
+    if (trap.webType === "spider_web" && trap.placedBy) {
+      setSpiderWebTriggers(prev => new Map(prev.set(trap.placedBy, {
+        x: selectedCell.x,
+        y: selectedCell.y,
+        floor: currentFloor,
+        round: currentRound
+      })));
+
+      addAlert('entity-effect', 
+        `🕷️ Bunker Spider alerted to web at (${selectedCell.x},${selectedCell.y})!`, 
+        currentRound
+      );
+    }
+
+    if (onTrapTriggered) {
+      onTrapTriggered(trap);
+    }
+  };
+
+  // Helper to get entity target name (for Bracken/Ghost Girl)
+  const getEntityTargetName = (entityId) => {
+    const targetPlayerId = entityTargets.get(entityId);
+    if (!targetPlayerId) return "No target";
+
+    const targetPlayer = players.find(p => p.id === targetPlayerId);
+    return targetPlayer ? targetPlayer.name : "Target left facility";
   };
 
   const startPlayerMovement = (player) => {
@@ -316,13 +935,29 @@ const NewInteriorGrid = ({
     setMovingPlayer(null);
   };
 
+  // Quick health adjustment function
+  const quickAdjustPlayerHealth = (playerId, type, amount) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const currentValue = player[type];
+    const maxValue = player[`max${type.charAt(0).toUpperCase() + type.slice(1)}`];
+    const absoluteMax = type === 'wounds' ? maxValue * 2 : maxValue;
+    const newValue = Math.max(0, Math.min(absoluteMax, currentValue + amount));
+
+    // Use the imported function from playerManager.jsx
+    updatePlayerHealth(players, setPlayers, playerId, 
+      type === 'wounds' ? newValue : player.wounds,
+      type === 'strain' ? newValue : player.strain
+    );
+  };
+
   // FIXED: Function to get connected rooms - simplified door logic
   const getConnectedRooms = (currentX, currentY, currentFloor) => {
     const connectedRooms = [];
     const currentFloorLayout = buildingData?.floors[currentFloor];
     if (!currentFloorLayout) return connectedRooms; 
 
-    // Check all 4 directions
     const directions = [[-1, 0], [0, -1], [0, 1], [1, 0]];  
 
     directions.forEach(([dx, dy]) => {
@@ -331,7 +966,6 @@ const NewInteriorGrid = ({
       const cellKey = `${newX},${newY}`;
       const targetCell = currentFloorLayout[cellKey]; 
 
-      // Check if target cell exists and is a room (not wall)
       if (targetCell && targetCell.type === 'room' && targetCell.room) {
         const excludedRoomTypes = [
           ROOM_TYPES.ENTRANCE,
@@ -341,138 +975,127 @@ const NewInteriorGrid = ({
           ROOM_TYPES.STAIRCASE_BOTH
         ];  
 
-        // FIXED: Check if room is valid - entities can move to cells with other entities
-        if (!excludedRoomTypes.includes(targetCell.room)) {
-          connectedRooms.push({
-            x: newX,
-            y: newY,
-            cellKey,
-            cell: targetCell,
-            distance: Math.max(Math.abs(dx), Math.abs(dy)),
-            entityCount: Array.isArray(targetCell.entities) ? targetCell.entities.length : 
-                        (targetCell.entity ? 1 : 0)
-          });
+        // Skip excluded room types
+        if (excludedRoomTypes.includes(targetCell.room)) return;
+
+        // Check if there's a door blocking the way
+        if (targetCell.door) {
+          // Only allow passage if door is open (passable)
+          // OR if it's a standard closed door (entities can open these)
+          const canPass = targetCell.door.passable || 
+                         (targetCell.door.name === "Closed Door");
+
+          if (!canPass) {
+            // Door is locked or secure - cannot pass
+            return;
+          }
+
+          // If door is closed but openable, entity opens it automatically
+          if (!targetCell.door.passable && targetCell.door.name === "Closed Door") {
+            // Auto-open the door for the entity
+            setBuildingData(prev => {
+              const newFloors = { ...prev.floors };
+              const newLayout = { ...newFloors[currentFloor] };
+              const newCell = { ...newLayout[cellKey] };
+
+              newCell.door = {
+                ...newCell.door,
+                passable: true,
+                name: "Open Door"
+              };
+
+              newLayout[cellKey] = newCell;
+              newFloors[currentFloor] = newLayout;
+              return { ...prev, floors: newFloors };
+            });
+          }
         }
+
+        connectedRooms.push({
+          x: newX,
+          y: newY,
+          cellKey,
+          cell: targetCell,
+          distance: Math.max(Math.abs(dx), Math.abs(dy)),
+          entityCount: Array.isArray(targetCell.entities) ? targetCell.entities.length : 
+                      (targetCell.entity ? 1 : 0)
+        });
       }
     });
 
     return connectedRooms;
   };
 
-  // FIXED: Corrected door opening function
-  const attemptDoorOpen = (doorCell, cellKey, floorNum) => {
-    if (!doorCell.door) {
-      return true; // No door means can pass through
-    }
-
-    if (doorCell.door.passable) {
-      return true; // Already open
-    }
-
-    // FIXED: Check door type properly using the door type object
-    const door = doorCell.door;
-
-    // Helper function to check door types by comparing properties (from doorSystem.jsx)
-    const isDoorType = (doorToCheck, targetType) => {
-      return doorToCheck.name === targetType.name && 
-             doorToCheck.passable === targetType.passable;
-    };
-
-    // FIXED: Only allow entities to open standard doors that are closed
-    // Entities CANNOT open locked or secure doors
-    if (isDoorType(door, DOOR_TYPES.CLOSED)) {
-      // Standard closed door - entities can open this
-      setBuildingData(prev => ({
-        ...prev,
-        floors: {
-          ...prev.floors,
-          [floorNum]: {
-            ...prev.floors[floorNum],
-            [cellKey]: {
-              ...prev.floors[floorNum][cellKey],
-              door: {
-                ...DOOR_TYPES.OPEN, // Use the complete OPEN door type
-                side: door.side,
-                connectsTo: door.connectsTo,
-                id: door.id
-              }
-            }
-          }
-        }
-      }));
-      return true;
-    } 
-    else if (isDoorType(door, DOOR_TYPES.SECURE_CLOSED)) {
-      // Secure doors - entities CANNOT open these
-      return false;
-    }
-    else if (isDoorType(door, DOOR_TYPES.LOCKED)) {
-      // Locked doors - entities CANNOT open these  
-      return false;
-    }
-
-    // Door is already open or unknown type
-    return door.passable || false;
+  // Modified moveEntityToRoom - just records the move
+  const moveEntityToRoom = (entity, fromX, fromY, toX, toY, floorNum) => {
+    setPendingEntityMoves(prev => [...prev, {
+      entity,
+      fromX,
+      fromY,
+      toX,
+      toY,
+      floorNum
+    }]);
   };
 
-  // Function to move entity to new room (keep this the same)
-  const moveEntityToRoom = (entity, fromX, fromY, toX, toY, floorNum) => {
+  // Apply all pending moves at once
+  useEffect(() => {
+    if (pendingEntityMoves.length === 0) return;
+
     setBuildingData(prev => {
       if (!prev || !prev.floors) return prev;
 
       const newFloors = { ...prev.floors };
-      const floorLayout = { ...newFloors[floorNum] };
 
-      // Remove entity from current position
-      const fromKey = `${fromX},${fromY}`;
-      if (floorLayout[fromKey]) {
-        const fromCell = floorLayout[fromKey];
+      // Apply all moves
+      pendingEntityMoves.forEach(({ entity, fromX, fromY, toX, toY, floorNum }) => {
+        const floorLayout = { ...newFloors[floorNum] };
 
-        if (Array.isArray(fromCell.entities)) {
-          // Remove from entities array
-          floorLayout[fromKey] = {
-            ...fromCell,
-            entities: fromCell.entities.filter(e => e.id !== entity.id),
-            entity: fromCell.entities.filter(e => e.id !== entity.id)[0] || null // Keep first entity for backward compatibility
+        // Remove from old position
+        const fromKey = `${fromX},${fromY}`;
+        if (floorLayout[fromKey]) {
+          const fromCell = floorLayout[fromKey];
+          if (Array.isArray(fromCell.entities)) {
+            floorLayout[fromKey] = {
+              ...fromCell,
+              entities: fromCell.entities.filter(e => e.id !== entity.id),
+              entity: fromCell.entities.filter(e => e.id !== entity.id)[0] || null
+            };
+          } else if (fromCell.entity && fromCell.entity.id === entity.id) {
+            floorLayout[fromKey] = {
+              ...fromCell,
+              entity: null,
+              entities: []
+            };
+          }
+        }
+
+        // Add to new position
+        const toKey = `${toX},${toY}`;
+        if (floorLayout[toKey]) {
+          const toCell = floorLayout[toKey];
+          const updatedEntity = {
+            ...entity,
+            location: {
+              roomName: toCell.room.name,
+              floor: floorNum,
+              displayName: `${toCell.room.name} (Floor ${floorNum})`
+            }
           };
-        } else if (fromCell.entity && fromCell.entity.id === entity.id) {
-          // Legacy single entity removal
-          floorLayout[fromKey] = {
-            ...fromCell,
-            entity: null,
-            entities: []
+
+          const existingEntities = Array.isArray(toCell.entities) ? toCell.entities : 
+                                  (toCell.entity ? [toCell.entity] : []);
+          const newEntities = [...existingEntities, updatedEntity];
+
+          floorLayout[toKey] = {
+            ...toCell,
+            entities: newEntities,
+            entity: newEntities[0]
           };
         }
-      }
 
-      // Add entity to new position
-      const toKey = `${toX},${toY}`;
-      if (floorLayout[toKey]) {
-        const toCell = floorLayout[toKey];
-        const updatedEntity = {
-          ...entity,
-          location: {
-            roomName: toCell.room.name,
-            floor: floorNum,
-            displayName: `${toCell.room.name} (Floor ${floorNum})`
-          }
-        };
-
-        // Initialize entities array if it doesn't exist
-        const existingEntities = Array.isArray(toCell.entities) ? toCell.entities : 
-                                (toCell.entity ? [toCell.entity] : []);
-
-        // Add the new entity to the array
-        const newEntities = [...existingEntities, updatedEntity];
-
-        floorLayout[toKey] = {
-          ...toCell,
-          entities: newEntities,
-          entity: newEntities[0] // Keep first entity for backward compatibility with existing UI
-        };
-      }
-
-      newFloors[floorNum] = floorLayout;
+        newFloors[floorNum] = floorLayout;
+      });
 
       return {
         ...prev,
@@ -480,53 +1103,46 @@ const NewInteriorGrid = ({
       };
     });
 
-    if (typeof onEntityPlayerCollision === 'function') {
-      onEntityPlayerCollision(entity.id, toX, toY, 'interior');
-    }
-  };
-
-  // FIXED: Simplified movement processing
-  const processEntityMovement = (entity, currentX, currentY, floorNum) => {
-
-    // Get connected rooms (now includes hallways)
-    const connectedRooms = getConnectedRooms(currentX, currentY, floorNum);
-
-    if (connectedRooms.length === 0) {
-      return false;
-    }
-
-    // Process each potential destination
-    const accessibleRooms = [];
-
-    for (const room of connectedRooms) {
-      let canAccess = true;
-
-      // Check if target room has a door that needs opening
-      if (room.cell.door) {
-        canAccess = attemptDoorOpen(room.cell, room.cellKey, floorNum);
+    // Trigger collisions after moves are applied
+    pendingEntityMoves.forEach(({ entity, toX, toY }) => {
+      if (typeof onEntityPlayerCollision === 'function') {
+        onEntityPlayerCollision(entity.id, toX, toY, 'interior');
       }
+    });
 
-      // Also check current room for doors (in case we need to exit through a door)
-      const currentCell = buildingData.floors[floorNum][`${currentX},${currentY}`];
-      if (canAccess && currentCell?.door && !currentCell.door.passable) {
-        canAccess = attemptDoorOpen(currentCell, `${currentX},${currentY}`, floorNum);
-      }
+    // Clear pending moves
+    setPendingEntityMoves([]);
+  }, [pendingEntityMoves]);
 
-      if (canAccess) {
-        accessibleRooms.push(room);
-      }
+  const handleEntityDefeatWithEffects = (entityId, currentRound) => {
+    // Find the entity before removing it
+    let defeatedEntity = null;
+    let entityPosition = null;
+
+    // Search for entity in building data
+    if (buildingData?.floors) {
+      Object.entries(buildingData.floors).forEach(([floorNum, layout]) => {
+        Object.entries(layout).forEach(([cellKey, cell]) => {
+          const entitiesInCell = Array.isArray(cell.entities) ? cell.entities : 
+                                (cell.entity ? [cell.entity] : []);
+
+          const foundEntity = entitiesInCell.find(e => e.id === entityId && !e.defeated);
+          if (foundEntity) {
+            defeatedEntity = foundEntity;
+            const [x, y] = cellKey.split(',').map(Number);
+            entityPosition = { x, y, floor: parseInt(floorNum) };
+          }
+        });
+      });
     }
 
-    if (accessibleRooms.length === 0) {
-      return false;
+    // Process death effects before removal
+    if (defeatedEntity && entityPosition) {
+      processEntityDeathEffects(defeatedEntity, entityPosition, currentRound);
     }
 
-    // Randomly select a room to move to
-    const selectedRoom = accessibleRooms[Math.floor(Math.random() * accessibleRooms.length)];
-    // Move entity to selected room
-    moveEntityToRoom(entity, currentX, currentY, selectedRoom.x, selectedRoom.y, floorNum);
-
-    return true;
+    // Call original defeat handler
+    handleEntityDefeat(entityId);
   };
 
   // FIXED: Initialize entity movement timers when entities are placed
@@ -538,7 +1154,7 @@ const NewInteriorGrid = ({
     })));
   };
 
-  // FIXED: Process entity movement based on rounds (call this from your nextRound function)
+  // UPDATED: Process entity movement based on new movement rules
   const processRoundBasedEntityMovement = (currentRound) => {
     if (!gameStarted || !buildingData?.floors) {
       return;
@@ -546,94 +1162,114 @@ const NewInteriorGrid = ({
 
     let entitiesProcessed = 0;
     let entitiesMoved = 0;
-    let entitiesFound = 0;
 
-    // Process movement for all entities on all floors
+    // CRITICAL FIX: Collect all entities with their current positions FIRST
+    const entitiesToMove = [];
+
     Object.entries(buildingData.floors).forEach(([floorNum, layout]) => {
       Object.entries(layout).forEach(([cellKey, cell]) => {
-        // FIXED: Check both single entity and entities array
-        const entitiesToProcess = [];
+        const entitiesInCell = Array.isArray(cell.entities) 
+          ? cell.entities.filter(e => !e.defeated && e.type === 'indoor')
+          : (cell.entity && !cell.entity.defeated && cell.entity.type === 'indoor' ? [cell.entity] : []);
 
-        if (Array.isArray(cell.entities)) {
-          entitiesToProcess.push(...cell.entities.filter(e => !e.defeated && e.type === 'indoor'));
-        } else if (cell.entity && !cell.entity.defeated && cell.entity.type === 'indoor') {
-          entitiesToProcess.push(cell.entity);
-        }
-
-        entitiesToProcess.forEach(entity => {
-          entitiesFound++;
-          entitiesProcessed++;
+        entitiesInCell.forEach(entity => {
           const [x, y] = cellKey.split(',').map(Number);
-
-          // Get movement data for this entity
-          const movementData = ENTITY_MOVEMENT_DATA[entity.name];
-          if (!movementData) {
-            // Use default if no data found
-            const defaultMovementData = { rounds: 2 };
-
-            let timerData = entityMovementTimers.get(entity.id);
-            if (!timerData) {
-              setEntityMovementTimers(prev => new Map(prev.set(entity.id, {
-                spawnRound: currentRound,
-                lastMoveRound: currentRound,
-                nextMoveRound: currentRound + defaultMovementData.rounds
-              })));
-              timerData = { spawnRound: currentRound, lastMoveRound: currentRound, nextMoveRound: currentRound + defaultMovementData.rounds };
-            }
-
-            const roundsSinceLastMove = currentRound - timerData.lastMoveRound;
-            if (roundsSinceLastMove >= defaultMovementData.rounds) {
-              const moved = processEntityMovement(entity, x, y, parseInt(floorNum));
-              if (moved) entitiesMoved++;
-            }
-            return;
-          }
-
-          // Get or initialize timer for this entity
-          let timerData = entityMovementTimers.get(entity.id);
-          if (!timerData) {
-            setEntityMovementTimers(prev => new Map(prev.set(entity.id, {
-              spawnRound: currentRound,
-              lastMoveRound: currentRound,
-              nextMoveRound: currentRound + movementData.rounds
-            })));
-            timerData = { spawnRound: currentRound, lastMoveRound: currentRound, nextMoveRound: currentRound + movementData.rounds };
-          }
-
-          // Check if it's time to move
-          const roundsSinceLastMove = currentRound - timerData.lastMoveRound;
-
-          if (roundsSinceLastMove >= movementData.rounds) {
-            const moved = processEntityMovement(entity, x, y, parseInt(floorNum));
-
-            if (moved) {
-              entitiesMoved++;
-              // Update timer after successful movement
-              setEntityMovementTimers(prev => {
-                const newTimers = new Map(prev);
-                newTimers.set(entity.id, {
-                  ...timerData,
-                  lastMoveRound: currentRound,
-                  nextMoveRound: currentRound + movementData.rounds
-                });
-                return newTimers;
-              });
-            } else {
-              // If movement failed, try again next round
-              setEntityMovementTimers(prev => {
-                const newTimers = new Map(prev);
-                newTimers.set(entity.id, {
-                  ...timerData,
-                  lastMoveRound: currentRound - movementData.rounds + 1,
-                  nextMoveRound: currentRound + 1
-                });
-                return newTimers;
-              });
-            }
-          }
+          entitiesToMove.push({
+            entity,
+            x,
+            y,
+            floorNum: parseInt(floorNum)
+          });
         });
       });
     });
+
+    console.log(`Found ${entitiesToMove.length} entities to process`);
+
+    // Process each entity's movement
+    entitiesToMove.forEach(({ entity, x, y, floorNum }) => {
+      entitiesProcessed++;
+
+      const movementData = ENTITY_MOVEMENT_DATA[entity.name];
+      if (!movementData) {
+        console.warn(`No movement data for ${entity.name}`);
+        return;
+      }
+
+      let timerData = entityMovementTimers.get(entity.id);
+      if (!timerData) {
+        // NEW ENTITY - Initialize and move immediately
+        const newTimerData = {
+          spawnRound: currentRound,
+          lastMoveRound: currentRound,
+          nextMoveRound: currentRound
+        };
+
+        setEntityMovementTimers(prev => new Map(prev.set(entity.id, newTimerData)));
+
+        const moved = processEntityMovement(entity, x, y, floorNum, currentRound);
+        if (moved) {
+          entitiesMoved++;
+          setEntityMovementTimers(prev => {
+            const newTimers = new Map(prev);
+            newTimers.set(entity.id, {
+              spawnRound: currentRound,
+              lastMoveRound: currentRound,
+              nextMoveRound: currentRound + movementData.passive
+            });
+            return newTimers;
+          });
+        }
+        return;
+      }
+
+      // Check if it's time to move
+      if (currentRound >= timerData.nextMoveRound) {
+        const moved = processEntityMovement(entity, x, y, floorNum, currentRound);
+
+        if (moved) {
+          entitiesMoved++;
+        }
+
+        // Determine next move timing
+        const inRange = hasPlayersInRange(x, y, floorNum, 5);
+        const entityRage = rageSystem?.getEntityRage?.(entity.id) || 0;
+
+        let isChasing = false;
+
+        if (entity.name.includes("Snare Flea")) {
+          isChasing = hasPlayersInRange(x, y, floorNum, 1);
+        } else if (entity.name.includes("Jester")) {
+          isChasing = true;
+        } else if (entity.name.includes("Hoarding Bug")) {
+          isChasing = entityRage >= 3 || inRange;
+        } else if (entity.name.includes("Maneater")) {
+          isChasing = entityRage >= 3 && inRange;
+        } else if (entity.name.includes("Spore Lizard")) {
+          isChasing = inRange;
+        } else if (entity.name.includes("Bunker Spider")) {
+          isChasing = inRange;
+        } else if (entity.name.includes("Bracken") || entity.name.includes("Ghost Girl")) {
+          isChasing = false;
+        } else {
+          isChasing = inRange;
+        }
+
+        const movementRounds = isChasing ? movementData.chasing : movementData.passive;
+
+        setEntityMovementTimers(prev => {
+          const newTimers = new Map(prev);
+          newTimers.set(entity.id, {
+            ...timerData,
+            lastMoveRound: currentRound,
+            nextMoveRound: currentRound + movementRounds
+          });
+          return newTimers;
+        });
+      }
+    });
+
+    console.log(`Movement processed: ${entitiesProcessed} entities, ${entitiesMoved} moved`);
   };
 
   // FIXED: Update entity placement to initialize timers
@@ -701,7 +1337,7 @@ const NewInteriorGrid = ({
     if (currentRound > 0 && gameStarted && buildingData?.floors) {
       processRoundBasedEntityMovement(currentRound);
     }
-  }, [currentRound, gameStarted]); // This triggers when currentRound changes
+  }, [currentRound]); // This triggers when currentRound changes
 
   // UPDATED: Entity defeat handler - much simpler now
   const handleEntityDefeat = (entityId) => {
@@ -757,12 +1393,14 @@ const NewInteriorGrid = ({
   // ===== MODIFIED: Generate new interior layout WITH LIGHTING =====
   const generateNewInteriorLayout = () => {
     if (!currentMoon) return;
+    
     // Determine interior type
     const interiorType = determineInteriorType();
     setCurrentInteriorType(interiorType);
     
-    // Calculate target rooms
-    const targetRooms = Math.floor(Math.random() * (currentMoon.max - currentMoon.min + 1)) + currentMoon.min;
+    // Calculate target rooms using the new system
+    const roomCount = calculateRoomCount(currentMoon.mapSizeMultiplier, interiorType);
+    const targetRooms = Math.floor(Math.random() * (roomCount.max - roomCount.min + 1)) + roomCount.min;
     
     // Generate complete building
     const building = generateCompleteBuilding(targetRooms, selectedMoon, interiorType);
@@ -772,26 +1410,26 @@ const NewInteriorGrid = ({
       const pathNetwork = findPathNetworkInLayout(layout);
       validateAndFixPaths(layout, pathNetwork);
     });
-    
+
     // Add room generation to each floor
     Object.entries(building.floors).forEach(([floorNum, layout]) => {
       const pathNetwork = findPathNetworkInLayout(layout);
       const floorRoomTarget = Math.ceil(targetRooms / Object.keys(building.floors).length);
       generateMazeRoomsAlongPaths(layout, pathNetwork, interiorType, floorRoomTarget);
     });
-    
+
     // Distribute scrap, doors, and traps
     distributeScrapAcrossFloors(building.floors);
     distributeDoorsAcrossFloors(building.floors);
     distributeTrapsAcrossFloors(building.floors);
-    
-    // ===== NEW: Generate lighting for all floors =====
+
+    // Generate lighting for all floors
     const lightingData = {};
     Object.entries(building.floors).forEach(([floorNum, layout]) => {
       lightingData[floorNum] = generateFloorLighting(layout);
     });
     setFloorLighting(lightingData);
-    
+
     // Set building data and reset game state
     setBuildingData(building);
     setCurrentFloor(building.buildingInfo.entranceFloor); // Start on entrance floor
@@ -833,24 +1471,30 @@ const NewInteriorGrid = ({
 
   // Distribute scrap across floors with STRICT ENFORCEMENT + EXCLUSION ZONES
   const distributeScrapAcrossFloors = (floors) => {
-    const scrapRange = currentMoon?.scrapRange || { min: 8, max: 12 };
-    const targetScrapCount = Math.floor(Math.random() * (scrapRange.max - scrapRange.min + 1)) + scrapRange.min;
-
+    // Calculate scrap count based on room count and moon multiplier
+    const roomCount = calculateRoomCount(currentMoon?.mapSizeMultiplier || 1.0, currentInteriorType);
+    const avgRooms = (roomCount.min + roomCount.max) / 2;
+    
+    // Scale scrap based on facility size (0.8-1.2x room count)
+    const scrapMin = Math.floor(avgRooms * 0.8);
+    const scrapMax = Math.floor(avgRooms * 1.2);
+    const targetScrapCount = Math.floor(Math.random() * (scrapMax - scrapMin + 1)) + scrapMin;
+    
     // Collect all eligible rooms from all floors (EXCLUDING entrance and staircases)
     const allEligibleRooms = [];
-
+    
     Object.entries(floors).forEach(([floorNum, layout]) => {
       Object.entries(layout).forEach(([cellKey, cell]) => {
         if (cell.type === 'room' && cell.room && cell.room.scrapChance > 0) {
           // Exclude infrastructure rooms AND entrance/staircases
           const excludedRoomTypes = [
-            ROOM_TYPES.ENTRANCE, // ✅ NO SCRAP IN ENTRANCE
+            ROOM_TYPES.ENTRANCE,
             ROOM_TYPES.FIRE_EXIT,
-            ROOM_TYPES.STAIRCASE_UP, // ✅ NO SCRAP IN STAIRCASES
-            ROOM_TYPES.STAIRCASE_DOWN, // ✅ NO SCRAP IN STAIRCASES
-            ROOM_TYPES.STAIRCASE_BOTH // ✅ NO SCRAP IN STAIRCASES
+            ROOM_TYPES.STAIRCASE_UP,
+            ROOM_TYPES.STAIRCASE_DOWN,
+            ROOM_TYPES.STAIRCASE_BOTH
           ];
-
+        
           if (!excludedRoomTypes.includes(cell.room)) {
             allEligibleRooms.push({
               floorNum: parseInt(floorNum),
@@ -863,32 +1507,32 @@ const NewInteriorGrid = ({
         }
       });
     });
-
+  
     // Calculate hallway scrap allocation (25-40% of total)
     const hallwayPercentage = Math.floor(Math.random() * (40 - 25 + 1)) + 25;
     const hallScrapCount = Math.ceil(targetScrapCount * (hallwayPercentage / 100));
-
+  
     // Separate hallways from other rooms
-    const hallwayTypes = ['Long Corridor', 'Hallway']; // Add other hallway types if needed
+    const hallwayTypes = ['Long Corridor', 'Hallway'];
     const hallwayRooms = allEligibleRooms.filter(room => hallwayTypes.includes(room.roomType));
     const nonHallwayRooms = allEligibleRooms.filter(room => !hallwayTypes.includes(room.roomType));
-
+  
     let scrapPlaced = 0;
     let scrapGeneratedCount = 0;
     let placedHallScrapCount = 0;
-
+  
     // PHASE 1: Place scrap in hallways first (up to hallScrapCount)
     const availableHallways = [...hallwayRooms];
     while (placedHallScrapCount < hallScrapCount && availableHallways.length > 0 && scrapPlaced < targetScrapCount) {
       // Use weighted selection for hallways
       const totalWeight = availableHallways.reduce((sum, room) => sum + room.scrapChance, 0);
-
+    
       if (totalWeight === 0) break;
-
+    
       let randomWeight = Math.random() * totalWeight;
       let selectedRoom = null;
       let selectedIndex = -1;
-
+    
       for (let i = 0; i < availableHallways.length; i++) {
         randomWeight -= availableHallways[i].scrapChance;
         if (randomWeight <= 0) {
@@ -897,38 +1541,34 @@ const NewInteriorGrid = ({
           break;
         }
       }
-
+    
       if (selectedRoom) {
         const scrap = generateScrapFromMoonData(selectedRoom.cell.room, currentMoon);
         if (scrap) {
-          selectedRoom.cell.scrap = scrap;
+          if (!selectedRoom.cell.scraps) selectedRoom.cell.scraps = [];
+          selectedRoom.cell.scraps.push(scrap);
           scrapPlaced++;
           scrapGeneratedCount++;
           placedHallScrapCount++;
-        } else {
-          console.warn(`❌ Failed to generate scrap for hallway ${selectedRoom.roomType}`);
         }
         availableHallways.splice(selectedIndex, 1);
       }
     }
-
+  
     // PHASE 2: Place remaining scrap in non-hallway rooms
     const availableNonHallways = [...nonHallwayRooms];
     let attempts = 0;
     const maxAttempts = (targetScrapCount - scrapPlaced) * 3;
-
+  
     while (scrapPlaced < targetScrapCount && availableNonHallways.length > 0 && attempts < maxAttempts) {
       const totalWeight = availableNonHallways.reduce((sum, room) => sum + room.scrapChance, 0);
-
-      if (totalWeight === 0) {
-        console.warn('No non-hallway rooms with scrap chance available');
-        break;
-      }
-
+    
+      if (totalWeight === 0) break;
+    
       let randomWeight = Math.random() * totalWeight;
       let selectedRoom = null;
       let selectedIndex = -1;
-
+    
       for (let i = 0; i < availableNonHallways.length; i++) {
         randomWeight -= availableNonHallways[i].scrapChance;
         if (randomWeight <= 0) {
@@ -937,47 +1577,40 @@ const NewInteriorGrid = ({
           break;
         }
       }
-
+    
       if (selectedRoom) {
         const scrap = generateScrapFromMoonData(selectedRoom.cell.room, currentMoon);
         if (scrap) {
-          selectedRoom.cell.scrap = scrap;
+          if (!selectedRoom.cell.scraps) selectedRoom.cell.scraps = [];
+          selectedRoom.cell.scraps.push(scrap);
           scrapPlaced++;
           scrapGeneratedCount++;
-        } else {
-          console.warn(`❌ Failed to generate scrap for ${selectedRoom.roomType}`);
         }
         availableNonHallways.splice(selectedIndex, 1);
-      } else {
-        break;
       }
-
+    
       attempts++;
     }
-
-    // PHASE 3: Emergency placement if still short (try any remaining rooms including unused hallways)
+  
+    // PHASE 3: Emergency placement if still short
     if (scrapPlaced < targetScrapCount) {
       const remainingRooms = [...availableHallways, ...availableNonHallways];
-
+    
       while (scrapPlaced < targetScrapCount && remainingRooms.length > 0) {
         const randomRoom = remainingRooms[Math.floor(Math.random() * remainingRooms.length)];
         const scrap = generateScrapFromMoonData(randomRoom.cell.room, currentMoon);
-
+      
         if (scrap) {
           randomRoom.cell.scrap = scrap;
           scrapPlaced++;
           scrapGeneratedCount++;
-        } else {
-          console.warn(`❌ Emergency scrap generation failed for ${randomRoom.roomType}`);
         }
-
+      
         const roomIndex = remainingRooms.indexOf(randomRoom);
         remainingRooms.splice(roomIndex, 1);
       }
     }
-
-    const scrapResult = scrapPlaced >= targetScrapCount ? '✅ SCRAP TARGET ACHIEVED' : `❌ SCRAP SHORTFALL: ${scrapPlaced}/${targetScrapCount}`;
-
+  
     // Store scrap stats for UI display
     if (buildingData) {
       setBuildingData(prev => ({
@@ -1019,7 +1652,7 @@ const NewInteriorGrid = ({
               const trapTypes = Object.values(TRAP_TYPES);
               const selectedTrap = trapTypes[Math.floor(Math.random() * trapTypes.length)];
               
-              cell.trap = {
+              const newTrap = {
                 id: `trap_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: selectedTrap.name,
                 danger: selectedTrap.danger,
@@ -1028,6 +1661,9 @@ const NewInteriorGrid = ({
                 wounds: selectedTrap.wounds,
                 strain: selectedTrap.strain
               };
+
+              cell.traps = [newTrap];
+              cell.trap = newTrap;
               
               trapsPlaced++;
             }
@@ -1235,52 +1871,6 @@ const NewInteriorGrid = ({
     }
   };
 
-  const handleTrapTrigger = (trap) => {
-    if (triggeredTraps.has(trap.id)) return;
-    if (!trap) return;
-
-    // Check if any players are in the same room
-    const playersInRoom = players?.filter(player => 
-      player.position?.currentArea === 'interior' &&
-      player.position.interior.x === selectedCell.x &&
-      player.position.interior.y === selectedCell.y &&
-      player.position.interior.floor === currentFloor
-    ) || [];
-
-    if (playersInRoom.length > 0) {
-      if (playersInRoom.length === 1) {
-        // Only one player - apply damage to them
-        const player = playersInRoom[0];
-
-        applyDamageToPlayer(players, setPlayers, player.id, trap.wounds || 0, trap.strain || 0);
-      } else {
-        // Multiple players - let user choose who gets hit
-        const playerNames = playersInRoom.map(p => p.name);
-        const choice = prompt(`Multiple players in room: ${playerNames.join(', ')}\n\nWho triggered ${trap.name}?\n\nEnter player name or cancel to abort:`);
-
-        if (!choice) return; // User cancelled
-
-        const selectedPlayer = playersInRoom.find(p => p.name.toLowerCase() === choice.toLowerCase().trim());
-
-        if (!selectedPlayer) {
-          alert(`Player "${choice}" not found in room!`);
-          return;
-        }
-
-        applyDamageToPlayer(players, setPlayers, selectedPlayer.id, trap.wounds || 0, trap.strain || 0);
-      }
-    }
-
-    // Mark trap as triggered
-    const newTriggered = new Set(triggeredTraps);
-    newTriggered.add(trap.id);
-    setTriggeredTraps(newTriggered);
-
-    if (onTrapTriggered) {
-      onTrapTriggered(trap);
-    }
-  };
-
   // Door interaction handler
   const { handleDoorAction } = useDoorActions(
     setBuildingData, 
@@ -1352,8 +1942,8 @@ const NewInteriorGrid = ({
 
     if (!cell) return null;
 
-    // ✅ NEW: Enhance hallway cells with features
-    cell = enhanceHallwayCell(cell, x, y, currentFloor, currentInteriorType);
+    // ✅ NEW: Enhance hallway cells with story-aligned features
+    cell = enhanceHallwayCell(cell, x, y, currentFloor, currentInteriorType, selectedMoon);
 
     // Get all entities at this position
     const entitiesAtPosition = Array.isArray(cell.entities) ? cell.entities.filter(e => !e.defeated) :
@@ -1522,8 +2112,24 @@ const NewInteriorGrid = ({
         {showStatusIndicators && playersAtPosition.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="flex flex-col items-center space-y-0.5">
-              {cell.scrap && !collectedScrap.has(cell.scrap.id) && (
-                <div className="w-2 h-2 bg-yellow-500 rounded-full border border-yellow-700 shadow-lg"></div>
+              {/* Hazard indicators */}
+              {cell.hazards && cell.hazards.length > 0 && cell.hazards.map(hazard => (
+                <div key={hazard.id} className="w-2 h-2 bg-purple-500 rounded-full border border-purple-700 shadow-lg animate-pulse">
+                  {hazard.type === 'spider_web' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gray-800 rounded-full border border-gray-600 flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">🕸️</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {cell.scraps && cell.scraps.filter(s => !collectedScrap.has(s.id)).length > 0 && (
+                <div className="w-2 h-2 bg-yellow-500 rounded-full border border-yellow-700 shadow-lg">
+                  {cell.scraps.filter(s => !collectedScrap.has(s.id)).length > 1 && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-yellow-600 flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">{cell.scraps.filter(s => !collectedScrap.has(s.id)).length}</span>
+                    </div>
+                  )}
+                </div>
               )}
               {cell.apparatus && !collectedApparatus.has(cell.apparatus.id) && (
                 <div className="w-2 h-2 bg-violet-600 rounded-full border border-violet-800 shadow-lg animate-pulse">
@@ -1551,8 +2157,15 @@ const NewInteriorGrid = ({
                   )}
                 </div>
               )}
-              {cell.trap && !triggeredTraps.has(cell.trap.id) && (
-                <div className="w-2 h-2 bg-purple-600 rounded-full border border-purple-800 shadow-lg"></div>
+              {((cell.traps && cell.traps.some(trap => !triggeredTraps.has(trap.id))) || 
+                (cell.trap && !triggeredTraps.has(cell.trap.id))) && (
+                <div className="w-2 h-2 bg-purple-600 rounded-full border border-purple-800 shadow-lg">
+                  {cell.traps && cell.traps.filter(trap => !triggeredTraps.has(trap.id)).length > 1 && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-400 rounded-full border border-purple-600 flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">{cell.traps.filter(trap => !triggeredTraps.has(trap.id)).length}</span>
+                    </div>
+                  )}
+                </div>
               )}
               {cell.door && (
                 <div className={`w-2 h-2 rounded-full border shadow-lg ${getEnhancedDoorIndicator(cell.door)}`}></div>
@@ -1616,8 +2229,12 @@ const NewInteriorGrid = ({
       }
     }
 
-    if (cell.scrap && !collectedScrap.has(cell.scrap.id)) {
-      tooltip += ` | 💰 ${cell.scrap.name} (${cell.scrap.value} credits)`;
+    if (cell.scraps && cell.scraps.length > 0) {
+      const uncollectedScraps = cell.scraps.filter(s => !collectedScrap.has(s.id));
+      if (uncollectedScraps.length > 0) {
+        const scrapNames = uncollectedScraps.map(s => `${s.name} (${s.value}¢)`).join(', ');
+        tooltip += ` | 💰 ${uncollectedScraps.length} scrap: ${scrapNames}`;
+      }
     }
 
     // ✅ NEW: Add apparatus information to tooltip
@@ -1672,8 +2289,25 @@ const NewInteriorGrid = ({
       }
     }
 
-    if (cell.trap && !triggeredTraps.has(cell.trap.id)) {
-      tooltip += ` | 🪤 ${cell.trap.name}`;
+    const activeTraps = cell.traps ? cell.traps.filter(trap => !triggeredTraps.has(trap.id)) : 
+                   (cell.trap && !triggeredTraps.has(cell.trap.id) ? [cell.trap] : []);
+
+    if (activeTraps.length > 0) {
+      if (activeTraps.length === 1) {
+        tooltip += ` | 🪤 ${activeTraps[0].name}`;
+      } else {
+        tooltip += ` | 🪤 ${activeTraps.length} traps: ${activeTraps.map(t => t.name).join(', ')}`;
+      }
+    }
+
+    // Add hazard information to tooltip
+    if (cell.hazards && cell.hazards.length > 0) {
+      cell.hazards.forEach(hazard => {
+        tooltip += ` | 🚨 ${hazard.name}: ${hazard.effect}`;
+        if (hazard.duration > 0) {
+          tooltip += ` (${hazard.duration} rounds left)`;
+        }
+      });
     }
 
     if (cell.door) {
@@ -1712,7 +2346,10 @@ const NewInteriorGrid = ({
     let totalScrap = 0;
     let totalTraps = 0;
     let totalDoors = 0;
-    let hallwayFeatures = 0; // ✅ NEW
+    let hallwayFeatures = 0;
+    let mostExpensiveScrap = 0;
+    let leastExpensiveScrap = Infinity;
+    let totalScrapValue = 0; // NEW: Track total value
     
     Object.values(buildingData.floors).forEach(layout => {
       Object.values(layout).forEach(cell => {
@@ -1722,21 +2359,37 @@ const NewInteriorGrid = ({
               ROOM_TYPES.STAIRCASE_DOWN, ROOM_TYPES.STAIRCASE_BOTH].includes(cell.room)) {
           totalRooms++;
         }
-        if (cell.scrap) totalScrap++;
+        // Count scraps and track most/least expensive (ONLY UNCOLLECTED)
+        if (cell.scraps && cell.scraps.length > 0) {
+          // Filter out collected scraps
+          const uncollectedScraps = cell.scraps.filter(scrap => !collectedScrap.has(scrap.id));
+          totalScrap += uncollectedScraps.length;
+
+          uncollectedScraps.forEach(scrap => {
+            totalScrapValue += scrap.value; // NEW: Add to total value
+
+            if (scrap.value > mostExpensiveScrap) {
+              mostExpensiveScrap = scrap.value;
+            }
+            if (scrap.value < leastExpensiveScrap) {
+              leastExpensiveScrap = scrap.value;
+            }
+          });
+        }
         if (cell.trap) totalTraps++;
         if (cell.door) totalDoors++;
-        if (cell.hallwayFeature) hallwayFeatures++; // ✅ NEW
+        if (cell.hallwayFeature) hallwayFeatures++;
       });
     });
-    
+
     // Get placed entities count from grid (not entity manager arrays)
     const placedEntities = entityManager ? entityManager.getPlacedEntities(buildingData.floors) : [];
     const totalEntities = placedEntities.length;
-    
-    // ===== NEW: Add lighting stats =====
+
+    // Lighting stats
     let avgLighting = 0;
     let totalRoomsWithLight = 0;
-    
+
     if (floorLighting[currentFloor]) {
       const currentFloorLayout = buildingData.floors[currentFloor];
       Object.entries(currentFloorLayout).forEach(([cellKey, cell]) => {
@@ -1750,12 +2403,12 @@ const NewInteriorGrid = ({
           }
         }
       });
-      
+
       if (totalRoomsWithLight > 0) {
         avgLighting = Math.round(avgLighting / totalRoomsWithLight * 10) / 10;
       }
     }
-    
+
     return {
       floors: buildingData.buildingInfo.totalFloors,
       currentFloor,
@@ -1764,11 +2417,14 @@ const NewInteriorGrid = ({
       traps: `${triggeredTraps.size}/${totalTraps}`,
       doors: totalDoors,
       entities: totalEntities,
-      hallwayFeatures, // ✅ NEW
+      hallwayFeatures,
       entranceFloor: buildingData.buildingInfo.entranceFloor,
       fireExits: buildingData.buildingInfo.fireExits.length,
       avgLighting: avgLighting.toFixed(1),
-      lightDesc: getLightDescription(Math.round(avgLighting))
+      lightDesc: getLightDescription(Math.round(avgLighting)),
+      mostExpensiveScrap: mostExpensiveScrap > 0 ? mostExpensiveScrap : null,
+      leastExpensiveScrap: leastExpensiveScrap !== Infinity ? leastExpensiveScrap : null,
+      totalScrapValue: totalScrapValue // NEW: Add to return object
     };
   };
 
@@ -1977,28 +2633,108 @@ const NewInteriorGrid = ({
                   player.position.interior.y === selectedCell.y &&
                   player.position.interior.floor === currentFloor
                 ) || [];
-
+              
                 if (playersAtPosition.length === 0) return null;
-
+              
                 return (
                   <div className="bg-cyan-600/80 p-2 rounded text-white mb-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-sm">👥 Players ({playersAtPosition.length})</span>
                     </div>
-                    <div className="space-y-1">
-                      {playersAtPosition.map(player => (
-                        <div key={player.id} className="flex items-center justify-between text-xs bg-cyan-700/50 p-1 rounded">
-                          <span>{player.name}</span>
-                          <span>W: {player.wounds}/{player.maxWounds}</span>
-                          <span>S: {player.strain}/{player.maxStrain}</span>
-                          <button
-                            onClick={() => startPlayerMovement(player)}
-                            className="bg-cyan-500 hover:bg-cyan-600 px-2 py-0.5 rounded text-xs"
-                          >
-                            📍 Move
-                          </button>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      {playersAtPosition.map(player => {
+                        const woundPercent = Math.round((player.wounds / player.maxWounds) * 100);
+                        const strainPercent = Math.round((player.strain / player.maxStrain) * 100);
+                        
+                        return (
+                          <div key={player.id} className="bg-cyan-700/50 p-2 rounded">
+                            <div className="flex items-center justify-between text-xs mb-2">
+                              <span className="font-medium">{player.name}</span>
+                              <button
+                                onClick={() => startPlayerMovement(player)}
+                                className="bg-cyan-500 hover:bg-cyan-600 px-2 py-0.5 rounded text-xs"
+                              >
+                                📍 Move
+                              </button>
+                            </div>
+                            
+                            {/* Wounds */}
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-cyan-200 text-xs">Wounds</span>
+                                <span className="text-cyan-200 text-xs">{player.wounds}/{player.maxWounds} ({woundPercent}%)</span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-1 mb-1">
+                                <button
+                                  onClick={() => quickAdjustPlayerHealth(player.id, 'wounds', -1)}
+                                  className="bg-green-500 hover:bg-green-600 text-white px-1 py-0.5 rounded text-xs"
+                                  disabled={player.wounds === 0}
+                                >
+                                  -1
+                                </button>
+                                
+                                <div className="flex-1 bg-cyan-800 rounded-full h-2 overflow-hidden relative">
+                                  <div 
+                                    className={`h-full transition-all duration-300 ${
+                                      player.wounds >= player.maxWounds * 2 ? 'bg-black animate-pulse' :
+                                      player.wounds >= player.maxWounds ? 'bg-red-600' :
+                                      player.wounds >= player.maxWounds * 0.5 ? 'bg-yellow-500' :
+                                      'bg-green-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, (player.wounds / player.maxWounds) * 100)}%` }}
+                                  />
+                                </div>
+                                  
+                                <button
+                                  onClick={() => quickAdjustPlayerHealth(player.id, 'wounds', 1)}
+                                  className="bg-red-500 hover:bg-red-600 text-white px-1 py-0.5 rounded text-xs"
+                                  disabled={player.wounds >= player.maxWounds * 2}
+                                >
+                                  +1
+                                </button>
+                              </div>
+                            </div>
+                                  
+                            {/* Strain */}
+                            <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-cyan-200 text-xs">Strain</span>
+                                <span className="text-cyan-200 text-xs">{player.strain}/{player.maxStrain} ({strainPercent}%)</span>
+                              </div>
+                                  
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={() => quickAdjustPlayerHealth(player.id, 'strain', -1)}
+                                  className="bg-green-500 hover:bg-green-600 text-white px-1 py-0.5 rounded text-xs"
+                                  disabled={player.strain === 0}
+                                >
+                                  -1
+                                </button>
+                                  
+                                <div className="flex-1 bg-cyan-800 rounded-full h-2 overflow-hidden relative">
+                                  <div 
+                                    className={`h-full transition-all duration-300 ${
+                                      player.strain >= player.maxStrain ? 'bg-red-600 animate-pulse' :
+                                      player.strain >= player.maxStrain * 0.5 ? 'bg-orange-500' :
+                                      'bg-blue-500'
+                                    }`}
+                                    style={{ width: `${Math.max(5, (player.strain / player.maxStrain) * 100)}%` }}
+                                  />
+                                </div>
+                                  
+                                <button
+                                  onClick={() => quickAdjustPlayerHealth(player.id, 'strain', 1)}
+                                  className="bg-orange-500 hover:bg-orange-600 text-white px-1 py-0.5 rounded text-xs"
+                                  disabled={player.strain >= player.maxStrain}
+                                >
+                                  +1
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -2060,20 +2796,25 @@ const NewInteriorGrid = ({
               )}
 
               {/* Scrap */}
-              {selectedCell.scrap && !collectedScrap.has(selectedCell.scrap.id) && (
+              {selectedCell.scraps && selectedCell.scraps.filter(s => !collectedScrap.has(s.id)).length > 0 && (
                 <div className="bg-yellow-600/80 p-2 rounded text-white mb-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">💰 {selectedCell.scrap.name}</span>
-                    <span className='text-xs bg-yellow-700 px-1 rounded'>Weight: {selectedCell.scrap.weight}</span>
-                    <span className="text-xs bg-yellow-700 px-1 rounded">Value: {selectedCell.scrap.value}</span>
+                    <span className="font-semibold text-sm">💰 Scrap ({selectedCell.scraps.filter(s => !collectedScrap.has(s.id)).length})</span>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleScrapCollection(selectedCell.scrap)}
-                      className="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded text-xs flex-1"
-                    >
-                      Collect
-                    </button>
+                  <div className="space-y-1">
+                    {selectedCell.scraps.filter(s => !collectedScrap.has(s.id)).map((scrap, index) => (
+                      <div key={scrap.id || index} className="flex items-center justify-between text-xs bg-yellow-700/50 p-1 rounded">
+                        <span>{scrap.name}</span>
+                        <span>{scrap.weight}lbs</span>
+                        <span>{scrap.value}¢</span>
+                        <button
+                          onClick={() => handleScrapCollection(scrap)}
+                          className="bg-yellow-500 hover:bg-yellow-600 px-2 py-0.5 rounded text-xs"
+                        >
+                          Collect
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -2109,11 +2850,16 @@ const NewInteriorGrid = ({
                                 ⚔️ Fight
                               </button>
                               <button
-                                onClick={() => handleEntityDefeat(entity.id)}
+                                onClick={() => handleEntityDefeatWithEffects(entity.id)}
                                 className="bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded text-xs flex-1"
                               >
                                 💀 Kill
                               </button>
+                              {(entity.name.includes("Bracken") || entity.name.includes("Ghost Girl")) && (
+                                <div className="text-xs text-white bg-purple-600/50 p-1 rounded mt-1">
+                                  🎯 Target: {getEntityTargetName(entity.id)}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -2136,7 +2882,7 @@ const NewInteriorGrid = ({
                           </button>
                           <button
                             onClick={() => {
-                              entitiesAtPosition.forEach(entity => handleEntityDefeat(entity.id));
+                              entitiesAtPosition.forEach(entity => handleEntityDefeatWithEffects(entity.id));
                             }}
                             className="bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs flex-1"
                           >
@@ -2150,29 +2896,38 @@ const NewInteriorGrid = ({
               })()}
 
               {/* Trap */}
-              {selectedCell.trap && !triggeredTraps.has(selectedCell.trap.id) && (
-                <div className="bg-orange-600/80 p-2 rounded text-white mb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">{selectedCell.trap.name}</span>
-                    <span className="text-xs bg-orange-700 px-1 rounded">Detection: {selectedCell.trap.detection}</span>
-                  </div>
-                  {selectedCell.trap.roll !== "None" ? <span className="text-xs bg-orange-700 px-1 rounded">Roll: {selectedCell.trap.roll}</span> : ""}
-                  {selectedCell.trap.name === "Pitfall" ? <div className="flex items-center justify-between mb-1"><span>Instant {selectedCell.trap.wounds}</span></div> :
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs bg-orange-700 px-1 rounded">Wounds: {selectedCell.trap.wounds}</span>
-                      <span className="text-xs bg-orange-700 px-1 rounded">Strain: {selectedCell.trap.strain}</span>
+              {selectedCell.traps && selectedCell.traps.filter(trap => !triggeredTraps.has(trap.id)).length > 0 ? (
+                <div className="space-y-2">
+                  {selectedCell.traps.filter(trap => !triggeredTraps.has(trap.id)).map((trap, index) => (
+                    <div key={trap.id} className="bg-orange-600/80 p-2 rounded text-white">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold text-sm">{trap.name}</span>
+                        <span className="text-xs bg-orange-700 px-1 rounded">Detection: {trap.detection}</span>
+                      </div>
+                      {trap.roll !== "None" && <span className="text-xs bg-orange-700 px-1 rounded">Roll: {trap.roll}</span>}
+                      {trap.name === "Pitfall" ? <div className="flex items-center justify-between mb-1"><span>Instant {trap.wounds}</span></div> :
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs bg-orange-700 px-1 rounded">Wounds: {trap.wounds}</span>
+                          <span className="text-xs bg-orange-700 px-1 rounded">Strain: {trap.strain}</span>
+                        </div>
+                      }
+                      {trap.name !== 'Pitfall' && trap.name !== 'Turret' && (
+                        <button
+                          onClick={() => handleTrapTrigger(trap)}
+                          className="bg-orange-500 hover:bg-orange-600 px-2 py-1 rounded text-xs w-full mt-1"
+                        >
+                          Trigger
+                        </button>
+                      )}
                     </div>
-                  }
-                  {selectedCell.trap.name === 'Pitfall' || selectedCell.trap.name === 'Turret' ? "" :
-                    <button
-                      onClick={() => handleTrapTrigger(selectedCell.trap)}
-                      className="bg-orange-500 hover:bg-orange-600 px-2 py-1 rounded text-xs w-full"
-                    >
-                      Trigger
-                    </button>
-                  }
+                  ))}
                 </div>
-              )}
+              ) : selectedCell.trap && !triggeredTraps.has(selectedCell.trap.id) ? (
+                // Fallback for backward compatibility with single trap
+                <div className="bg-orange-600/80 p-2 rounded text-white mb-2">
+                  {/* existing single trap display code */}
+                </div>
+              ) : null}
 
               {/* Door Panel */}
               {selectedCell && selectedCell.door && (
@@ -2205,6 +2960,22 @@ const NewInteriorGrid = ({
                 <div className="text-slate-400">Traps</div>
                 <div className="text-white font-bold">{stats.traps}</div>
               </div>
+              <div className="bg-slate-800 p-1 rounded text-center">
+                <div className="text-slate-400">Total Value</div>
+                <div className="text-yellow-400 font-bold">{stats.totalScrapValue}¢</div>
+              </div>
+              {stats.mostExpensiveScrap !== null && (
+                <div className="bg-slate-800 p-1 rounded text-center">
+                  <div className="text-slate-400">Max Value</div>
+                  <div className="text-yellow-400 font-bold">{stats.mostExpensiveScrap}¢</div>
+                </div>
+              )}
+              {stats.leastExpensiveScrap !== null && (
+                <div className="bg-slate-800 p-1 rounded text-center">
+                  <div className="text-slate-400">Min Value</div>
+                  <div className="text-gray-400 font-bold">{stats.leastExpensiveScrap}¢</div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,252 +1,168 @@
-import React, { useState } from 'react';
-import { doc, updateDoc } from "firebase/firestore";
-import db from '../Components/firebase';
+import React from 'react';
 
-export default function Craft(props) {
-  const materials = props.currCraft.dynamicMaterial ? props.currCraft.dynamicMaterial.split('/') : [];
-  const difficulties = props.currCraft.difficultyModifier ? props.currCraft.difficultyModifier.split('/') : [];
-  const attempts = props.currCraft.attemptsModifier ? props.currCraft.attemptsModifier.split('/') : [];
-  const effects = props.currCraft.dynamicEffect ? props.currCraft.dynamicEffect.split('/') : [];
-  const [flipped, setFlipped] = useState(false);
+export default function Craft({ currCraft, onShowMaterials, onToggleVisibility, userIsDM }) {
+  const materials = currCraft.dynamicMaterial ? currCraft.dynamicMaterial.split('/') : [];
+  const components = currCraft.components.split('/');
+  const hasDynamicMaterials = materials.length > 0 && currCraft.dynamicMaterial !== 'None';
 
-  const getDifficultyStyle = (baseDifficulty) => {
-    if (baseDifficulty === 'Dynamic') return { bg: '#6366f1', glow: '#818cf8', name: 'DYNAMIC' };
-    const diff = parseInt(baseDifficulty);
-    if (diff <= 2) return { bg: '#059669', glow: '#10b981', name: 'SIMPLE' };
-    if (diff <= 4) return { bg: '#0369a1', glow: '#0ea5e9', name: 'MODERATE' };
-    return { bg: '#dc2626', glow: '#ef4444', name: 'MASTER' };
+  const getDifficultyColor = (diff) => {
+    const difficulty = parseInt(diff);
+    if (difficulty <= 2) return 'from-green-600 to-emerald-700 text-green-300 border-green-500/50';
+    if (difficulty === 3) return 'from-blue-600 to-cyan-700 text-blue-300 border-blue-500/50';
+    if (difficulty === 4) return 'from-orange-600 to-amber-700 text-orange-300 border-orange-500/50';
+    return 'from-red-600 to-rose-700 text-red-300 border-red-500/50';
   };
 
-  const diffStyle = getDifficultyStyle(props.currCraft.baseDifficulty);
-  const isAdmin = localStorage.getItem('loggedIn')?.toUpperCase() === 'ADMIN';
-  const isHidden = props.currCraft.hidden === 'Yes';
-  const hasDynamicMaterials = materials.length > 0 && props.currCraft.dynamicMaterial !== 'None';
-
-  const flipHidden = () => {
-    updateDoc(doc(db, 'Crafts', props.currCraft.name), {
-      hidden: props.currCraft.hidden === 'Yes' ? 'No' : 'Yes'
-    });
+  const getDifficultyLabel = (diff) => {
+    const difficulty = parseInt(diff);
+    if (difficulty <= 2) return 'Simple';
+    if (difficulty === 3) return 'Average';
+    if (difficulty === 4) return 'Hard';
+    return 'Daunting';
   };
 
-  const components = props.currCraft.components.split('/');
-  const skills = props.currCraft.skills.split('/');
+  const getSkillColor = (skill) => {
+    switch(skill) {
+      case 'Metalworking':
+        return 'from-gray-600/30 to-slate-600/30';
+      case 'Leatherworking':
+        return 'from-amber-600/30 to-yellow-600/30';
+      case 'Crafting':
+        return 'from-purple-600/30 to-indigo-600/30';
+      default:
+        return 'from-gray-600/30 to-gray-700/30';
+    }
+  };
+
+  const getSkillIcon = (skill) => {
+    switch(skill) {
+      case 'Metalworking':
+        return '⚒️';
+      case 'Leatherworking':
+        return '🧵';
+      case 'Crafting':
+        return '🔨';
+      default:
+        return '🛠️';
+    }
+  };
 
   return (
-    <>
-      {/* Card Container with 3D flip effect */}
-      <div className="relative w-72 h-80 perspective-1000">
-        <div 
-          className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d cursor-pointer ${flipped ? 'rotate-y-180' : ''}`}
-          onClick={() => setFlipped(!flipped)}
-        >
-          
-          {/* Front Side */}
-          <div className="absolute inset-0 w-full h-full backface-hidden">
-            <div 
-              className="w-full h-full rounded-3xl p-1 shadow-2xl"
-              style={{
-                background: `linear-gradient(145deg, ${diffStyle.bg}, ${diffStyle.glow})`,
-                boxShadow: `0 20px 40px ${diffStyle.bg}40, 0 0 60px ${diffStyle.glow}20`
-              }}
-            >
-              <div className="w-full h-full bg-slate-900 rounded-3xl overflow-hidden relative">
-                
-                {/* Difficulty Badge */}
-                <div className="absolute top-4 right-4 z-10">
-                  <div 
-                    className="px-3 py-1 rounded-full text-xs font-black tracking-wider"
-                    style={{ backgroundColor: diffStyle.bg, color: 'white' }}
-                  >
-                    {diffStyle.name}
-                  </div>
-                </div>
-
-                {/* Hidden Badge */}
-                {isHidden && isAdmin && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">🚫</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Main Content */}
-                <div className="p-6 h-full flex flex-col">
-                  
-                  {/* Title Section */}
-                  <div className="text-center mb-6">
-                    <div 
-                      className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-3xl shadow-lg"
-                      style={{ backgroundColor: `${diffStyle.bg}30` }}
-                    >
-                      🔨
-                    </div>
-                    <h2 className="text-xl font-bold text-white leading-tight">{props.currCraft.name}</h2>
-                  </div>
-
-                  {/* Stats Circle */}
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="relative">
-                      <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
-                        {/* Background circle */}
-                        <circle
-                          cx="60"
-                          cy="60"
-                          r="45"
-                          fill="none"
-                          stroke="#374151"
-                          strokeWidth="6"
-                        />
-                        {/* Progress circle */}
-                        <circle
-                          cx="60"
-                          cy="60"
-                          r="45"
-                          fill="none"
-                          stroke={diffStyle.bg}
-                          strokeWidth="6"
-                          strokeLinecap="round"
-                          strokeDasharray={`${(props.currCraft.baseDifficulty === 'Dynamic' ? 5 : parseInt(props.currCraft.baseDifficulty)) * 56.55 / 5} 282.74`}
-                          className="transition-all duration-1000"
-                          style={{ filter: `drop-shadow(0 0 8px ${diffStyle.glow})` }}
-                        />
-                      </svg>
-                      
-                      {/* Center content */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <div className="text-2xl font-black text-white mb-1">
-                          {props.currCraft.baseDifficulty}
-                        </div>
-                        <div className="text-xs text-gray-400 uppercase tracking-wider">
-                          Difficulty
-                        </div>
-                        <div className="text-sm text-gray-300 mt-1">
-                          {props.currCraft.baseAttempts} attempts
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Info */}
-                  <div className="text-center">
-                    <div className="text-gray-400 text-sm mb-2">
-                      {components.length} components • {skills.length} skills
-                    </div>
-                    {hasDynamicMaterials && (
-                      <div className="inline-flex items-center px-3 py-1 bg-purple-600/30 rounded-full text-purple-300 text-xs">
-                        ✨ {materials.length} material variants
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-4">
-                      Click to flip card
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-black/30 hover:scale-105 hover:shadow-2xl group h-full flex flex-col">
+      {/* Header */}
+      <div className={`bg-gradient-to-r ${getSkillColor(currCraft.skill)} border-b border-white/10 p-4 relative`}>
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <span className="text-2xl">{getSkillIcon(currCraft.skill)}</span>
+            <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
+              {currCraft.skill}
+            </span>
+          </div>
+          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-amber-300 transition-colors">
+            {currCraft.name}
+          </h3>
+          <div className="text-sm text-amber-300">
+            {currCraft.craftTime}
+          </div>
+        </div>
+        
+        {/* Status Indicator for DM */}
+        {userIsDM && currCraft.hiddenInCurrentSession && (
+          <div className="absolute top-4 right-4">
+            <div className="bg-red-500/90 text-white text-xs font-bold px-2 py-1 rounded-full border border-red-400">
+              🚫 HIDDEN
             </div>
           </div>
+        )}
+      </div>
 
-          {/* Back Side */}
-          <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180">
-            <div 
-              className="w-full h-full rounded-3xl p-1 shadow-2xl"
-              style={{
-                background: `linear-gradient(145deg, ${diffStyle.glow}, ${diffStyle.bg})`,
-                boxShadow: `0 20px 40px ${diffStyle.bg}40, 0 0 60px ${diffStyle.glow}20`
-              }}
-            >
-              <div className="w-full h-full bg-slate-900 rounded-3xl overflow-auto p-6">
-                
-                {/* Back Header */}
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-bold text-white">{props.currCraft.name}</h3>
-                  <div className="text-gray-400 text-sm">Recipe Details</div>
-                </div>
-
-                {/* Components List */}
-                <div className="mb-6">
-                  <h4 className="text-white font-semibold mb-3 flex items-center">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                    Components
-                  </h4>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {components.slice(0, 4).map((comp, idx) => (
-                      <div key={idx} className="text-sm text-gray-300 flex items-start">
-                        <span className="text-orange-500 mr-2 font-bold">{idx + 1}.</span>
-                        <span className="flex-1">{comp}</span>
-                      </div>
-                    ))}
-                    {components.length > 4 && (
-                      <div className="text-xs text-gray-500">+{components.length - 4} more...</div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div className="mb-6">
-                  <h4 className="text-white font-semibold mb-3 flex items-center">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                    Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-1">
-                    {skills.map((skill, idx) => (
-                      <span key={idx} className="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-2">
-                  {hasDynamicMaterials && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        props.onShowMaterials(props.currCraft);
-                      }}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors"
-                    >
-                      View Material Effects
-                    </button>
-                  )}
-                  
-                  {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        flipHidden();
-                      }}
-                      className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-xl text-sm transition-colors"
-                    >
-                      {isHidden ? 'Unhide' : 'Hide'} Craft
-                    </button>
-                  )}
-                </div>
-
-                <div className="text-xs text-gray-500 text-center mt-4">
-                  Click to flip back
-                </div>
-              </div>
-            </div>
+      {/* Stats Chips */}
+      <div className="p-4 space-y-3">
+        <div className="flex flex-wrap gap-2 justify-center">
+          <div className={`bg-gradient-to-r ${getDifficultyColor(currCraft.baseDifficulty)} px-3 py-1 rounded-full text-xs font-bold border`}>
+            {getDifficultyLabel(currCraft.baseDifficulty)} ({currCraft.baseDifficulty}◆)
           </div>
+          <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/50">
+            Attempts: {currCraft.baseAttempts}
+          </div>
+          <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-cyan-300 px-3 py-1 rounded-full text-xs font-bold border border-cyan-500/50">
+            Components: {components.length}
+          </div>
+          {hasDynamicMaterials && (
+            <div className="bg-gradient-to-r from-purple-600 to-violet-600 text-purple-300 px-3 py-1 rounded-full text-xs font-bold border border-purple-500/50">
+              ✨ {materials.length} Enhancements
+            </div>
+          )}
         </div>
       </div>
 
-      <style jsx>{`
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-        .transform-style-preserve-3d {
-          transform-style: preserve-3d;
-        }
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-          transform: rotateY(180deg);
-        }
-      `}</style>
-    </>
+      {/* Components List */}
+      <div className="flex-1 p-4 pt-0">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 h-full overflow-y-auto">
+          <div className="text-xs font-medium text-amber-400 mb-2">Required Components:</div>
+          <div className="space-y-2">
+            {components.map((comp, idx) => (
+              <div key={idx} className="text-sm text-gray-300 flex items-start">
+                <span className="text-amber-500 mr-2 font-bold min-w-[20px]">{idx + 1}.</span>
+                <span className="flex-1">{comp}</span>
+              </div>
+            ))}
+          </div>
+
+          {hasDynamicMaterials && (
+            <div className="border-t border-white/10 pt-3 mt-3">
+              <div className="text-xs font-medium text-purple-400 mb-2">Available Enhancements:</div>
+              <div className="space-y-1">
+                {materials.map((mat, idx) => (
+                  <div key={idx} className="text-xs text-purple-300 flex items-center">
+                    <span className="text-purple-500 mr-2">✨</span>
+                    <span>{mat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="border-t border-white/10 p-4 space-y-2">
+        <div className="flex flex-col gap-2">
+          {hasDynamicMaterials && (
+            <button
+              onClick={() => onShowMaterials(currCraft)}
+              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600/20 to-violet-600/20 hover:from-purple-600/30 hover:to-violet-600/30 text-purple-300 font-medium px-4 py-2 rounded-lg border border-purple-500/30 transition-all duration-300 hover:scale-105"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>
+              </svg>
+              <span>View Enhancement Effects</span>
+            </button>
+          )}
+          
+          {userIsDM && (
+            <button
+              onClick={() => onToggleVisibility(currCraft)}
+              className={`flex items-center justify-center space-x-2 font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                currCraft.hiddenInCurrentSession
+                  ? 'bg-gradient-to-r from-emerald-600/20 to-green-600/20 hover:from-emerald-600/30 hover:to-green-600/30 text-emerald-300 border border-emerald-500/30'
+                  : 'bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 text-red-300 border border-red-500/30'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                {currCraft.hiddenInCurrentSession ? (
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                ) : (
+                  <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd"></path>
+                )}
+                {currCraft.hiddenInCurrentSession && <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>}
+              </svg>
+              <span>{currCraft.hiddenInCurrentSession ? '👁️ Reveal to Players' : '🚫 Hide from Players'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

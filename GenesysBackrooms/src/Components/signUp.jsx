@@ -93,8 +93,8 @@ export default function SignUp() {
 
       // Check if username is taken
       const querySnapshot = await getDocs(query(collection(db, 'Users')));
-      querySnapshot.forEach((doc) => {
-        if(doc.data().userName.toUpperCase() === name.toUpperCase()) {
+      querySnapshot.forEach((docSnap) => {
+        if(docSnap.data().userName.toUpperCase() === name.toUpperCase()) {
           userTaken = true;
         }
       });
@@ -110,21 +110,22 @@ export default function SignUp() {
       const user = auth.currentUser;
       
       if (user) {
-        // Save user data to Firestore
+        // Save user data to Firestore with activeSession field
         await setDoc(doc(db, 'Users', user.uid), {
           email: user.email,
-          userName: name
+          userName: name,
+          activeSession: null  // NEW: Initialize with no active session
         });
         
         localStorage.setItem('loggedIn', name);
-        showToast('🎉 Account created successfully! Welcome aboard!', 'success');
+        showToast('🎉 Account created successfully! Redirecting to session selector...', 'success');
         
         setTimeout(() => {
-          window.location.assign('/');
+          window.location.href = '/session-selector';  // Use window.location.href instead of assign
         }, 1500);
       }
     } catch (error) {
-      console.log(error);
+      console.error('Signup error:', error);
       showToast(getErrorMessage(error.code || 'unknown'), 'error');
     } finally {
       setLoading(false);
@@ -154,8 +155,8 @@ export default function SignUp() {
                 </svg>
               </div>
               
-              <h1 className="text-3xl font-bold text-white mb-2">Join Us Today</h1>
-              <p className="text-green-200">Create your account to get started</p>
+              <h1 className="text-3xl font-bold text-white mb-2">Join the Adventure</h1>
+              <p className="text-green-200">Create your account to start exploring campaigns</p>
             </div>
           </div>
 

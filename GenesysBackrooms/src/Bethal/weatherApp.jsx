@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   GRID_SIZE,
   getShipPosition,
-  FACILITY_POSITIONS,
+  getFacilityPosition,
   HEIGHT_MAPS,
   moons
 } from './moonData.jsx';
@@ -25,9 +25,9 @@ import { getEntityByName } from './entityData.jsx';
 import { weapons, suits, baseStore } from './shop.jsx';
 import ShipSystems from './shipSystems.jsx';
 import ShipInventory from './ShipInventory.jsx';
+import { RageManagementPanel, useRageSystem } from './rageSystem.jsx';
 
 const WeatherApp = () => {
-  // Core State Management
   const [selectedMoon, setSelectedMoon] = useState('');
   const [currentWeatherType, setCurrentWeatherType] = useState('');
   const [gameStarted, setGameStarted] = useState(false);
@@ -39,8 +39,6 @@ const WeatherApp = () => {
   });
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
   const [selectedCell, setSelectedCell] = useState(null);
-  
-  // Weather Effects State
   const [quicksandLocations, setQuicksandLocations] = useState([]);
   const [eclipseEntities, setEclipseEntities] = useState([]);
   const [eclipseStress, setEclipseStress] = useState(0);
@@ -49,16 +47,11 @@ const WeatherApp = () => {
   const [lightningStrikes, setLightningStrikes] = useState([]);
   const [floodedCells, setFloodedCells] = useState(new Set());
   const [floodLevel, setFloodLevel] = useState(0);
-  
-  // Daily Weather System States
   const [dailyWeather, setDailyWeather] = useState({});
   const [currentDay, setCurrentDay] = (localStorage.getItem("currentDay") && localStorage.getItem("currentDay") !== "") ? useState(parseInt(localStorage.getItem("currentDay"))) : useState(1);
-  
-  // Quota System State
   const [currentQuota, setCurrentQuota] = (localStorage.getItem("currentQuota") && localStorage.getItem("currentQuota") !== "") ? useState(parseInt(localStorage.getItem("currentQuota"))) : useState(130);
   const [daysUntilDeadline, setDaysUntilDeadline] = (localStorage.getItem("deadline") && localStorage.getItem("deadline") !== "") ? useState(parseInt(localStorage.getItem("deadline"))) : useState(3);
   const [quotasFulfilled, setQuotasFulfilled] = (localStorage.getItem("quotasFulfilled") && localStorage.getItem("quotasFulfilled") !== "") ? useState(parseInt(localStorage.getItem("quotasFulfilled"))) : useState(0);
-
   const entities = useEntityManager();
   const indoorEntities = entities.getEntitiesByType('indoor');
   const outdoorEntities = entities.getEntitiesByType('outdoor');
@@ -70,10 +63,9 @@ const WeatherApp = () => {
   const [entityHealthStates, setEntityHealthStates] = useState(new Map());
   const [exteriorEntityData, setExteriorEntityData] = useState(new Map());
   const [lastSpawnFloor, setLastSpawnFloor] = useState(null); 
-
-  // NEW: Individual grid accordion states
   const [showWeatherForecast, setShowWeatherForecast] = useState(true);
   const [activeMainTab, setActiveMainTab] = useState('players');
+  const rageSystem = useRageSystem();
 
   // Helper Functions
   const getCurrentMoonWeather = () => {
@@ -590,7 +582,7 @@ const WeatherApp = () => {
 
           const initialQuicksand = [];
           const shipPos = { x: xLoc, y: yLoc };
-          const facilityPos = selectedMoon ? FACILITY_POSITIONS[selectedMoon] : { x: 0, y: 0 };
+          const facilityPos = selectedMoon ? getFacilityPosition(selectedMoon) : { x: 0, y: 0 };
 
           for (let i = 0; i < 3; i++) {
             let attempts = 0;
@@ -624,7 +616,7 @@ const WeatherApp = () => {
 
         } else if (round > 0 && round % 12 === 0) {
           const shipPos = selectedMoon ? getShipPosition(selectedMoon) : { x: 6, y: 6 };
-          const facilityPos = selectedMoon ? FACILITY_POSITIONS[selectedMoon] : { x: 0, y: 0 };
+          const facilityPos = selectedMoon ? getFacilityPosition(selectedMoon) : { x: 0, y: 0 };
 
           let attempts = 0;
           let placed = false;
@@ -710,7 +702,7 @@ const WeatherApp = () => {
             if (selectedMoon && HEIGHT_MAPS[selectedMoon]) {
               const heightMap = HEIGHT_MAPS[selectedMoon];
               const shipPos = selectedMoon ? getShipPosition(selectedMoon) : { x: 6, y: 6 };
-              const facilityPos = selectedMoon ? FACILITY_POSITIONS[selectedMoon] : { x: 0, y: 0 };
+              const facilityPos = selectedMoon ? getFacilityPosition(selectedMoon) : { x: 0, y: 0 };
 
               let newFloodedCells = new Set();
               let newCellsThisPhase = 0;
@@ -1402,6 +1394,29 @@ const WeatherApp = () => {
           </div>
         </div>
 
+        {/* Rage Management */}
+        <div className="lg:col-span-1">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden h-full">
+            <div className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-purple-600/20 to-pink-600/20">
+              <h2 className="text-white font-semibold text-base lg:text-lg flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">😡</span>
+                <span>Rage Control</span>
+              </h2>
+            </div>
+            <div className="p-3 lg:p-4 h-full overflow-y-auto">
+              <RageManagementPanel 
+                entities={[...indoorEntities, ...outdoorEntities, ...daytimeEntities]}
+                onRageUpdate={(entityId, rage) => {
+                  const entityRage = rageSystem.getEntityRage(entityId);
+                  if (entityRage && rage >= entityRage.maxRage) {
+                    addAlert('rage-max', `🔥 ${entityRage.configName} has reached maximum rage!`, currentRound);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Tactical Grid Accordion */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
           <div 
@@ -1456,6 +1471,8 @@ const WeatherApp = () => {
                   setExteriorEntityData={setExteriorEntityData}
                   onPlayerPositionChange={handlePlayerPositionChange}
                   onTrapTriggered
+                  setPlayers={setPlayers}
+                  rageSystem={rageSystem}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center text-center text-white/70">
@@ -1515,6 +1532,8 @@ const WeatherApp = () => {
                 onEntityPlayerCollision={checkEntityPlayerCollisions}
                 onPlayerPositionChange={handlePlayerPositionChange}
                 setPlayers={setPlayers}
+                addAlert={addAlert}
+                rageSystem={rageSystem}
               />
             </div>
           </div>

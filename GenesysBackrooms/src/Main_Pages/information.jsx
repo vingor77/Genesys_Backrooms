@@ -18,7 +18,8 @@ const RulesPage = () => {
     character: false,
     custom: false,
     equipment: false,
-    lethal: false
+    lethal: false,
+    crafting: false
   });
 
   // Toggle section expansion
@@ -380,6 +381,328 @@ const RulesPage = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Crafting System */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-xl overflow-hidden">
+          <div 
+            className="p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-amber-600/20 to-yellow-600/20 cursor-pointer hover:bg-gradient-to-r hover:from-amber-600/30 hover:to-yellow-600/30 transition-all duration-300"
+            onClick={() => toggleSection('crafting')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg lg:text-xl">🔨</span>
+                <span className="text-white font-semibold text-base lg:text-lg">Crafting System</span>
+                <span className="text-xs bg-amber-500/30 text-amber-300 px-2 py-1 rounded ml-2">
+                  Item Creation
+                </span>
+              </div>
+              
+              <div className={`transform transition-transform duration-300 ${expandedSections.crafting ? 'rotate-180' : 'rotate-0'}`}>
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`transition-all duration-500 ease-in-out overflow-auto ${
+            expandedSections.crafting 
+              ? 'max-h-[800px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="p-3 lg:p-4 space-y-4">
+              <div className="text-white space-y-3">
+                
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                  <div className="font-semibold text-amber-300 mb-2">🔨 Dynamic Crafting System</div>
+                  <div className="text-white/90 text-sm">
+                    Create items using base components and optional enhancements. Each enhancement increases difficulty but improves the final product.
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Recipe Structure</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Base Components (Required)</div>
+                      <div className="text-white/80 text-sm">Must have ALL of these materials to attempt the craft</div>
+                    </div>
+
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-2">Enhancement Slots (Optional)</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Choose 0-3 enhancements to add to your item</div>
+                        <div>• Each enhancement requires its component to be available</div>
+                        <div>• Each enhancement <strong>increases difficulty</strong></div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">Attempts</div>
+                      <div className="text-white/80 text-sm">How many items you create on success</div>
+                    </div>
+
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-2">Crafting Skill</div>
+                      <div className="text-white/80 text-sm">Metalworking, Leatherworking, or Crafting</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Enhancement System</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">Difficulty Increase</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>Each enhancement you add <strong>upgrades the difficulty once</strong> (◆ purple → ◇ red)</div>
+                        <div>If all dice are already red, <strong>add one ◆</strong> instead</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-300 mb-2">Material Consumption</div>
+                      <div className="text-white/80 text-sm">
+                        <strong>CRITICAL RULE:</strong> All materials are consumed when you attempt to craft, regardless of success or failure.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Difficulty Progression</h4>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/20">
+                          <th className="text-left text-amber-200 pb-2 pr-4">Enhancements</th>
+                          <th className="text-left text-amber-200 pb-2">Difficulty Example</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-white/80">
+                        <tr className="border-b border-white/10">
+                          <td className="py-2 pr-4">0 (Basic item)</td>
+                          <td className="py-2">◆◆◆ (3 purple)</td>
+                        </tr>
+                        <tr className="border-b border-white/10">
+                          <td className="py-2 pr-4">+1 Enhancement</td>
+                          <td className="py-2">◆◆◇ (2 purple, 1 red)</td>
+                        </tr>
+                        <tr className="border-b border-white/10">
+                          <td className="py-2 pr-4">+2 Enhancements</td>
+                          <td className="py-2">◆◇◇ (1 purple, 2 red)</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 pr-4">+3 Enhancements</td>
+                          <td className="py-2">◇◇◇ (3 red)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-3 bg-blue-600/10 border border-blue-500/30 rounded-lg p-3">
+                    <div className="text-white/80 text-sm">
+                      <strong>Note:</strong> Most recipes max at 3 enhancement slots. Adding a 4th would result in ◇◇◇ + ◆
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Roll Results</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-2">✓ Success</div>
+                      <div className="text-white/80 text-sm">You create the item successfully! Produce <strong>Attempts</strong> number of items with all enhancements included.</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-2">✗ Failure</div>
+                      <div className="text-white/80 text-sm">Materials are consumed but no items produced. You can try again if you have more materials.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Advantage ⚔ Spending</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1 flex items-center justify-between">
+                        <span>Bonus Quality</span>
+                        <span className="bg-green-500/30 text-green-300 px-2 py-0.5 rounded text-xs">⚔</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Minor cosmetic or narrative bonus (comfortable armor, aesthetic appeal, longer shelf life)</div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1 flex items-center justify-between">
+                        <span>Free Enhancement</span>
+                        <span className="bg-green-500/30 text-green-300 px-2 py-0.5 rounded text-xs">⚔⚔⚔⚔</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Add one enhancement without increasing difficulty, consuming all materials. Once per craft.</div>
+                    </div>
+
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-green-200 mb-1 flex items-center justify-between">
+                        <span>Extra Attempt</span>
+                        <span className="bg-green-500/30 text-green-300 px-2 py-0.5 rounded text-xs">⚔⚔⚔⚔</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Produce one additional copy beyond base Attempts</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Triumph ⚕ Spending</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1 flex items-center justify-between">
+                        <span>Master's Touch</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">⚕</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Add one enhancement without consuming required materials. Once per craft.</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1 flex items-center justify-between">
+                        <span>Superior Quality</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">⚕</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Item gains +1 to relevant quality, OR reduce Encumbrance by 1, OR gains "Superior" tag (sells for 150% value)</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1 flex items-center justify-between">
+                        <span>Bonus Attempts</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">⚕</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Produce +50% more items (round up)</div>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-yellow-200 mb-1 flex items-center justify-between">
+                        <span>Legendary Creation</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">⚕⚕+</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Create a unique version with special properties and a memorable name</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Threat ◈ Consequences</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Minor Setback</span>
+                        <span className="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">◈</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Minor cosmetic or narrative setback (item is ugly, takes longer, workspace is messy)</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Reduced Yield</span>
+                        <span className="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">◈◈</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Produce one fewer item (minimum 1) - spillage, mistakes in portioning</div>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Wasted Materials</span>
+                        <span className="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">◈◈◈◈</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Consume an extra base component. If you don't have extras available, the craft fails entirely</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Despair ☠ Consequences</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Enhancement Failure</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">☠</span>
+                      </div>
+                      <div className="text-white/80 text-sm">One enhancement fails to apply (GM's choice or player's choice). Materials for that enhancement are still consumed, but the item doesn't gain the benefit</div>
+                    </div>
+
+                    <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Inferior Quality</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">☠</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Item gains a negative quality: -1 to relevant stat, OR +1 Encumbrance, OR gains "Inferior" tag (sells for 50% value, may break down faster)</div>
+                    </div>
+
+                    <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3">
+                      <div className="font-semibold text-red-200 mb-1 flex items-center justify-between">
+                        <span>Injury</span>
+                        <span className="bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded text-xs">☠</span>
+                      </div>
+                      <div className="text-white/80 text-sm">Crafter suffers wounds equal to their characteristic (Metalworking: Brawn, Leatherworking: Agility, Crafting: Intellect), minimum 3. May also suffer a Critical Injury</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Optional Rules</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-orange-200 mb-2">Rush Job (Voluntary)</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Halve the crafting time</div>
+                        <div>• Upgrade difficulty twice (or add ◆◆ if no upgrades possible)</div>
+                        <div>• High risk but useful in emergencies</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-2">Take Your Time (Voluntary)</div>
+                      <div className="text-white/80 text-sm space-y-1">
+                        <div>• Double the crafting time</div>
+                        <div>• Downgrade difficulty once OR add ⬢</div>
+                        <div>• Represents careful, methodical work</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-amber-300 font-semibold mb-4">Attempts Guidelines</h4>
+                  
+                  <div className="space-y-2">
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-purple-200 mb-1">Single Custom Items (Attempts: 1)</div>
+                      <div className="text-white/80 text-sm">Armor, shields, melee weapons - items that need to be fitted or personalized</div>
+                    </div>
+
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-indigo-200 mb-1">Small Batches (Attempts: 2-3)</div>
+                      <div className="text-white/80 text-sm">Potions, bombs, throwing weapons - small consumable items</div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="font-semibold text-blue-200 mb-1">Large Batches (Attempts: 5-10)</div>
+                      <div className="text-white/80 text-sm">Arrows, basic supplies, torches - mass-produced simple items</div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -3833,6 +4156,7 @@ const RulesPage = () => {
                         <div>• While holding a two-handed item, you may not perform any actions except for downgrading to a maneuver</div>
                         <div>• Picking up an item is an incidental or a maneuver if over 30 weight. While holding a two-handed item, you may not pick up any item</div>
                         <div>• Putting an item down is an incidental</div>
+                        <div>• All suits have head cameras attached automatically.</div>
                       </div>
                     </div>
 
@@ -3917,6 +4241,20 @@ const RulesPage = () => {
                           </div>
                         </div>
 
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Monitor System - Scan Site</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 1 Perception/Computers check to scan the site to determine how many floors. Additionally, room count, scrap count, entity count, and trap count can be made at an increase of 1 difficulty per addition.
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1">Monitor System - Scan World</div>
+                          <div className="text-white/80 text-sm">
+                            Make a Difficulty 2 Perception/Computers check to scan for the entrances to the facility. On a triumph or 3 advantages, gain the ability to see the map. 3 Uses per day.
+                          </div>
+                        </div>
+
                         <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                           <div className="font-semibold text-green-200 mb-1">Navigation System - Predict Weather Event</div>
                           <div className="text-white/80 text-sm">
@@ -3996,6 +4334,11 @@ const RulesPage = () => {
                         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                           <div className="font-semibold text-blue-200 mb-1 text-sm">Monitor System - Observe Feeds</div>
                           <div className="text-white/80 text-xs">Passively watch crew activities through monitor displays</div>
+                        </div>
+
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                          <div className="font-semibold text-blue-200 mb-1 text-sm">Monitor System - Assist Player</div>
+                          <div className="text-white/80 text-xs">Roll Computers for the current observed player on a failed sight-based check with 2 setback dice extra.</div>
                         </div>
 
                         <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">

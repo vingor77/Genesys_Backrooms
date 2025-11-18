@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import db, { auth } from '../Components/firebase';
 import { doc, getDoc } from "firebase/firestore";
 import Login from "../Components/login";
+import { hasActiveSession, isDM, getActiveSession } from '../Components/sessionUtils';
 
 export default function Home() {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionInfo, setSessionInfo] = useState(null);
   
   const fetchUserData = async () => {
     auth.onAuthStateChanged(async(user) => {
@@ -16,6 +18,21 @@ export default function Home() {
           if(docSnap.exists()) {
             setUserDetails(docSnap.data());
             localStorage.setItem('loggedIn', docSnap.data().userName);
+            
+            // Check for active session
+            if (!hasActiveSession()) {
+              window.location.assign('/session-selector');
+              return;
+            }
+            
+            // Load session info if exists
+            if (docSnap.data().activeSession) {
+              const sessionRef = doc(db, 'Sessions', docSnap.data().activeSession);
+              const sessionSnap = await getDoc(sessionRef);
+              if (sessionSnap.exists()) {
+                setSessionInfo(sessionSnap.data());
+              }
+            }
           } else {
             console.log('User document not found.');
           }
@@ -34,7 +51,7 @@ export default function Home() {
   }, []);
 
   // Check if user is logged in via localStorage as backup
-  const isLoggedIn = userDetails || localStorage.getItem('loggedIn') !== 'false' && localStorage.getItem('loggedIn') !== '';
+  const isLoggedIn = userDetails || (localStorage.getItem('loggedIn') !== 'false' && localStorage.getItem('loggedIn') !== '');
 
   if (loading) {
     return (
@@ -58,15 +75,16 @@ export default function Home() {
     { name: 'Crafting', icon: '🔨', href: '/crafting', description: 'Create and upgrade items', color: 'from-amber-600 to-orange-600' },
     { name: 'Quests', icon: '📜', href: '/quests', description: 'Track your ongoing adventures', color: 'from-blue-600 to-cyan-600' },
     { name: 'Phenomena', icon: '✨', href: '/phenomena', description: 'Discover anomalous events', color: 'from-purple-600 to-pink-600' },
-    { name: 'Weapons', icon: '⚔️', href: '/weapons', description: 'Find combat equipment', color: 'from-red-600 to-pink-600' },
-    { name: 'Armor', icon: '🛡️', href: '/armor', description: 'Browse protective equipment', color: 'from-green-600 to-emerald-600' },
-    { name: 'Objects', icon: '📦', href: '/objects', description: 'Explore useful items', color: 'from-indigo-600 to-purple-600' }
+    { name: 'Objects', icon: '📦', href: '/objects', description: 'Explore all items and equipment', color: 'from-indigo-600 to-purple-600' },
+    { name: 'Interest', icon: '👥', href: '/interest', description: 'People of significance', color: 'from-green-600 to-emerald-600' },
+    { name: 'Sets', icon: '⚡', href: '/sets', description: 'Equipment set bonuses', color: 'from-red-600 to-pink-600' }
   ];
 
-  const recentSections = [
-    { title: 'Campaign Rules', icon: '📋', href: '/information', description: 'Essential gameplay mechanics and guidelines' },
-    { title: 'Player Functions', icon: '⚙️', href: '/functions', description: 'Useful tools and calculators for players' },
-    { title: 'Interest', icon: '👥', href: '/interest', description: 'Characters and NPCs of significance' }
+  const dmOnlyLinks = [
+    { name: 'Entities', icon: '👹', href: '/entities', description: 'Manage hostile creatures', color: 'from-red-600 to-orange-600' },
+    { name: 'Groups', icon: '🏛️', href: '/groups', description: 'Faction management', color: 'from-blue-600 to-indigo-600' },
+    { name: 'Levels', icon: '🗺️', href: '/levels', description: 'Level information', color: 'from-green-600 to-teal-600' },
+    { name: 'Outposts', icon: '🏕️', href: '/outposts', description: 'Safe haven locations', color: 'from-purple-600 to-indigo-600' }
   ];
 
   return (
@@ -96,6 +114,29 @@ export default function Home() {
                   <p className="text-xl text-gray-300">Ready to explore the Backrooms?</p>
                 </div>
               </div>
+              
+              {/* Session Info */}
+              {hasActiveSession() && (
+                <div className="mt-6 inline-flex items-center space-x-3 bg-purple-600/20 px-6 py-3 rounded-xl border border-purple-500/30">
+                  <span className={`w-3 h-3 rounded-full ${isDM() ? 'bg-amber-400' : 'bg-blue-400'} animate-pulse`}></span>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-purple-300 font-medium">
+                        {isDM() ? '👑 Dungeon Master Mode' : '🎮 Player Mode'}
+                      </span>
+                    </div>
+                    {sessionInfo && (
+                      <p className="text-purple-400 text-sm">Campaign: {sessionInfo.name}</p>
+                    )}
+                  </div>
+                  <a 
+                    href="/session-selector"
+                    className="ml-4 text-purple-300 hover:text-purple-200 text-sm underline"
+                  >
+                    Switch Session
+                  </a>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
                 <div className="lg:col-span-2">
@@ -155,6 +196,43 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {/* DM-Only Section */}
+        {hasActiveSession() && isDM() && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <span className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center mr-3">
+                  👑
+                </span>
+                Dungeon Master Tools
+              </h2>
+              <span className="bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full text-sm border border-amber-500/30">
+                DM Only
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {dmOnlyLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.href}
+                  className="group bg-gradient-to-br from-amber-900/20 to-orange-900/20 backdrop-blur-lg rounded-xl border border-amber-500/20 p-6 hover:from-amber-900/30 hover:to-orange-900/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                >
+                  <div className={`w-12 h-12 bg-gradient-to-br ${link.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <span className="text-2xl">{link.icon}</span>
+                  </div>
+                  <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-amber-300 transition-colors">
+                    {link.name}
+                  </h3>
+                  <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">
+                    {link.description}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Footer Info */}
         <div className="bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 p-6">

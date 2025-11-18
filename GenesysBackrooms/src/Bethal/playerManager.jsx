@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { addItemToShipInventory } from './ShipInventory.jsx';
 
 export const updatePlayerInventory = (players, setPlayers, playerId, itemIndex, field, value) => {
@@ -131,6 +131,7 @@ const PlayerManager = ({
   const [showPositioning, setShowPositioning] = useState(false);
   const [positioningPlayer, setPositioningPlayer] = useState(null);
   const [positionMode, setPositionMode] = useState('interior');
+  const dropInProgressRef = useRef(new Set());
 
   const statusOptions = [
     { value: 'healthy', label: 'Healthy', color: 'bg-green-500', textColor: 'text-green-800' },
@@ -424,6 +425,9 @@ const PlayerManager = ({
       return;
     }
   
+    // Create truly unique ID using crypto random values
+    const dropId = `dropped_${Date.now()}_${Math.random().toString(36).substr(2, 16)}_${Math.random().toString(36).substr(2, 16)}`;
+  
     // Add item to building data as scrap at player's current position
     if (buildingData && buildingData.floors) {
       const floor = player.position.interior.floor;
@@ -432,9 +436,9 @@ const PlayerManager = ({
       setBuildingData(prev => {
         const newData = { ...prev };
         if (newData.floors[floor] && newData.floors[floor][cellKey]) {
-          // Create scrap object using existing scrap structure
+          // Create scrap object with truly unique ID
           const droppedScrap = {
-            id: `dropped_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: dropId,
             name: item.name,
             weight: item.weight || 0,
             value: item.price || 0,
@@ -442,18 +446,46 @@ const PlayerManager = ({
             twoHanded: item.twoHanded || false
           };
           
-          // Add as scrap to the cell (reusing existing scrap system)
-          newData.floors[floor][cellKey].scrap = droppedScrap;
+          // Add to scraps array
+          if (!newData.floors[floor][cellKey].scraps) {
+            newData.floors[floor][cellKey].scraps = [];
+          }
+          newData.floors[floor][cellKey].scraps.push(droppedScrap);
+        
+          // FIXED: Remove duplicates by ID, not name
+          const scrapsArray = newData.floors[floor][cellKey].scraps;
+          const seenIds = new Set();
+          const uniqueScraps = [];
+        
+          scrapsArray.forEach(scrap => {
+            if (!seenIds.has(scrap.id)) {
+              seenIds.add(scrap.id);
+              uniqueScraps.push(scrap);
+            } else {
+              console.log(`Removed duplicate scrap with ID: ${scrap.id}`);
+            }
+          });
+        
+          newData.floors[floor][cellKey].scraps = uniqueScraps;
         }
         return newData;
       });
     
       // Clear the inventory slot
-      updateInventoryItem(playerId, itemIndex, 'name', '');
-      updateInventoryItem(playerId, itemIndex, 'weight', 0);
-      updateInventoryItem(playerId, itemIndex, 'price', 0);
-      updateInventoryItem(playerId, itemIndex, 'conductive', false);
-      updateInventoryItem(playerId, itemIndex, 'twoHanded', false);
+      setPlayers(prev => prev.map(p => {
+        if (p.id === playerId) {
+          const newInventory = [...p.inventory];
+          newInventory[itemIndex] = {
+            name: '',
+            weight: 0,
+            price: 0,
+            conductive: false,
+            twoHanded: false
+          };
+          return { ...p, inventory: newInventory };
+        }
+        return p;
+      }));
     
       alert(`${item.name} dropped in ${player.position.interior.room}!`);
     }

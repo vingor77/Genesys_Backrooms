@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import ObjectItem from '../Components/objectItem';
-import WeaponItem from '../Components/weaponItem';
-import ArmorItem from '../Components/armorItem';
-import MundaneItem from '../Components/mundaneItem';
 import People from '../Components/people';
-import PhenomenonItem from '../Components/phenomenonItem';
 import EntityItem from '../Components/entityItem';
 
 export default function LevelItem(props) {
@@ -281,18 +277,9 @@ export default function LevelItem(props) {
           const objectRoll = Math.floor(Math.random() * 100) + 1;
           const rarity = Math.floor(Math.random() * 10) + 1;
           
-          if(objectRoll <= 25 && props.data.armor?.length > 0) {
-            const chosen = props.data.armor[Math.floor(Math.random() * props.data.armor.length)];
-            return <ArmorItem currArmor={chosen}/>;
-          } else if(objectRoll <= 50 && props.data.weapons?.length > 0) {
-            const chosen = props.data.weapons[Math.floor(Math.random() * props.data.weapons.length)];
-            return <WeaponItem currWeapon={chosen}/>;
-          } else if(objectRoll <= 75 && props.data.objects?.length > 0) {
+          if(objectRoll <= 75 && props.data.objects?.length > 0) {
             const chosen = props.data.objects[Math.floor(Math.random() * props.data.objects.length)];
             return <ObjectItem currObject={chosen}/>;
-          } else if(props.data.mundane?.length > 0) {
-            const chosen = props.data.mundane[Math.floor(Math.random() * props.data.mundane.length)];
-            return <MundaneItem currMundane={chosen}/>;
           }
         }
         
@@ -304,11 +291,6 @@ export default function LevelItem(props) {
         if(selectedType === 'SOCIAL' && props.data.interest?.length > 0) {
           const chosen = props.data.interest[Math.floor(Math.random() * props.data.interest.length)];
           return <People currPerson={chosen}/>;
-        }
-        
-        if(selectedType === 'PHENOMENA' && props.data.phenomena?.length > 0) {
-          const chosen = props.data.phenomena[Math.floor(Math.random() * props.data.phenomena.length)];
-          return <PhenomenonItem currPhenomenon={chosen}/>;
         }
         break;
       }

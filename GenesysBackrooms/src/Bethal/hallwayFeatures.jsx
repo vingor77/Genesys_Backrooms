@@ -1,617 +1,421 @@
-// Enhanced hallway description system for NewInteriorGrid.jsx
+// Story-aligned hallway features with Genesys RPG mechanics for Voidsteel contamination narrative
 import { ROOM_TYPES } from './indoorData.jsx';
 import { INTERIOR_TYPES } from './moonData.jsx';
 
-// Massive feature pool for near-infinite variety
+// Core contamination and facility features aligned with the Voidsteel story and Genesys mechanics
 export const HALLWAY_FEATURES = {
-  // Visual/Environmental Features (40+ options)
-  VISUAL: [
-    // Lighting variants
-    { name: "Flickering Fluorescents", description: "Tube lights stutter between light and darkness", effect: "Intermittent illumination", icon: "💡" },
-    { name: "Dying LED Strips", description: "Blue LED strips fade in and out along the baseboards", effect: "Eerie blue glow", icon: "🔵" },
-    { name: "Emergency Red Lighting", description: "Crimson emergency lights bathe everything in blood-red", effect: "Ominous atmosphere", icon: "🔴" },
-    { name: "Sparking Junction Box", description: "An electrical panel throws occasional sparks", effect: "Electrical hazard", icon: "⚡" },
-    { name: "Strobing Security Light", description: "Motion sensor light rapidly flickers on and off", effect: "Disorienting flashes", icon: "🚨" },
-    { name: "Broken Skylight", description: "Shattered glass allows pale light to filter down", effect: "Natural lighting with hazards", icon: "🌤️" },
-    { name: "Neon Exit Sign", description: "Buzzing green exit sign casts sickly light", effect: "Constant electrical hum", icon: "🟢" },
-    { name: "UV Blacklight", description: "Purple ultraviolet light reveals hidden stains", effect: "Shows things better left unseen", icon: "🟣" },
-    
-    // Wall conditions
-    { name: "Rust Stains", description: "Orange-brown oxidation streaks down metal walls", effect: "Industrial decay", icon: "🦠" },
-    { name: "Peeling Institutional Paint", description: "Mint green paint curls off in long strips", effect: "Institutional neglect", icon: "🎨" },
-    { name: "Graffiti Tags", description: "Spray-painted tags cover concrete surfaces", effect: "Urban decay", icon: "🏷️" },
-    { name: "Bullet Holes", description: "Small circular impacts pockmark the walls", effect: "Evidence of violence", icon: "🔫" },
-    { name: "Scorch Marks", description: "Black burn patterns mar the ceiling", effect: "Fire damage", icon: "🔥" },
-    { name: "Mold Growth", description: "Dark green fungus spreads across damp corners", effect: "Unhealthy air quality", icon: "🦠" },
-    { name: "Cracked Plaster", description: "Spider web fractures spread across aged walls", effect: "Structural aging", icon: "🕸️" },
-    { name: "Water Damage", description: "Brown stains bloom across ceiling tiles", effect: "Moisture problems", icon: "💧" },
-    { name: "Exposed Insulation", description: "Pink fiberglass hangs from gaps in the ceiling", effect: "Poor maintenance", icon: "🧶" },
-    { name: "Chipped Concrete", description: "Chunks of concrete litter the floor edges", effect: "Deteriorating structure", icon: "🧱" },
-    
-    // Atmospheric effects
-    { name: "Steam Leak", description: "Pressurized steam hisses from a ceiling pipe", effect: "Reduces visibility", icon: "💨" },
-    { name: "Condensation Drip", description: "Water droplets fall rhythmically from above", effect: "Constant dripping sound", icon: "💧" },
-    { name: "Dust Particles", description: "Thick motes dance in shafts of light", effect: "Poor air quality", icon: "✨" },
-    { name: "Chemical Vapor", description: "Faint wisps of unknown gas drift past", effect: "Unidentified hazard", icon: "☁️" },
-    { name: "Oil Sheen", description: "Rainbow film covers puddles on the floor", effect: "Slippery surface", icon: "🌈" },
-    
-    // Architectural details
-    { name: "Vaulted Ceiling", description: "High arched ceiling creates echoing acoustics", effect: "Sound amplification", icon: "⛪" },
-    { name: "Low Hanging Pipes", description: "Industrial conduits force you to duck", effect: "Restricted headroom", icon: "🪠" },
-    { name: "Tiled Walls", description: "Institutional white tiles, many cracked or missing", effect: "Clinical atmosphere", icon: "⬜" },
-    { name: "Brick Archway", description: "Old red brick frames the passage entrance", effect: "Historic architecture", icon: "🧱" },
-    { name: "Metal Grating Floor", description: "Perforated steel plates reveal darkness below", effect: "Industrial flooring", icon: "🔳" },
-    { name: "Concrete Pillars", description: "Thick support columns narrow the walkway", effect: "Structural obstacles", icon: "🏛️" },
-    { name: "Dropped Ceiling", description: "Acoustic tiles hang at various heights", effect: "Uneven headspace", icon: "📐" },
-    
-    // Doors and openings
-    { name: "Sealed Doorway", description: "Steel plates weld shut a former entrance", effect: "Blocked access", icon: "🚪" },
-    { name: "Broken Window", description: "Shattered glass window overlooks another area", effect: "Visibility to adjacent spaces", icon: "🪟" },
-    { name: "Ventilation Grate", description: "Large air intake draws a constant breeze", effect: "Air circulation", icon: "🌪️" },
-    { name: "Security Camera", description: "Defunct surveillance camera hangs askew", effect: "Former monitoring", icon: "📹" },
-    
-    // Color variations
-    { name: "Yellow Warning Stripes", description: "Faded hazard tape lines the walls", effect: "Safety marking", icon: "⚠️" },
-    { name: "Blue Floor Marking", description: "Painted navigation lines guide the way", effect: "Directional aid", icon: "🔵" },
-    { name: "Red Restricted Zone", description: "Crimson paint marks this as off-limits", effect: "Forbidden area", icon: "🔴" },
-    { name: "Green Safety Path", description: "Luminescent paint glows faintly", effect: "Emergency route", icon: "🟢" },
-    
-    // Decay variations
-    { name: "Rusted Metal Sheets", description: "Corrugated steel walls show extensive corrosion", effect: "Industrial deterioration", icon: "🦠" },
-    { name: "Crumbling Mortar", description: "Cement between bricks has eroded away", effect: "Structural weakness", icon: "🏗️" },
-    { name: "Warped Flooring", description: "Wooden planks have buckled and twisted", effect: "Uneven walking surface", icon: "🪵" },
-    { name: "Sagging Ceiling", description: "Support beams bow under unseen weight", effect: "Structural concern", icon: "📉" },
+  // Voidsteel Contamination Hazards (30+ options)
+  CONTAMINATION_HAZARDS: [
+    // Radiation hazards
+    { name: "Voidsteel Radiation Zone", description: "Dark crystals emit dangerous levels of contamination", effect: "Add 2 Setback dice to all checks while in this room. Make Hard (3) Resilience check each round or suffer 1 strain", icon: "☢️", dangerous: true },
+    { name: "Crystalline Growth Barrier", description: "Jagged Voidsteel crystals block half the corridor", effect: "Movement through this area requires Average (2) Athletics check or suffer 2 wounds from cuts", icon: "💎", blocking: true },
+    { name: "Radiation Leak", description: "Broken containment unit spews contaminated particles", effect: "Upgrade difficulty of all checks by 1 while in area. Resilience vs 2 Difficulty each turn or gain 1 strain", icon: "⚠️", environmental: true },
+    { name: "Geiger Counter Alarm", description: "Abandoned detector clicking frantically", effect: "Loud clicking adds 1 Setback to Stealth checks", icon: "📡", mixed: true },
+    { name: "Quarantine Breach", description: "Torn plastic barriers flutter uselessly", effect: "No Effect", icon: "🚧", informational: true },
+    { name: "Hazmat Equipment Failure", description: "Shredded protective suits litter the floor", effect: "No Effect", icon: "🧥", warning: true },
+    { name: "Contamination Footprints", description: "Glowing boot prints show contaminated personnel paths", effect: "Add 2 Boost to all navigation checks for 5 rounds", icon: "👣", tracking: true },
+    { name: "Voidsteel Dust Cloud", description: "Fine particles hang in the air like deadly snow", effect: "Reduce visibility to Short range. Breathing requires Resilience vs 1 Difficulty each round", icon: "✨", vision: true },
+    { name: "Emergency Shower Malfunction", description: "Decontamination station sprays contaminated water", effect: "Using shower requires Average (2) Mechanics + 1 setback check or suffer chemical burns (2 wounds)", icon: "🚿", trap: true },
+    { name: "Lead Shielding Collapse", description: "Heavy protective barriers have fallen, creating obstacles", effect: "Blocks movement. Athletics vs 3 Difficulty to climb over, or Coordination vs 2 to squeeze around", icon: "🛡️", blocking: true },
+    { name: "Dosimeter Overload", description: "Radiation badges scattered, all reading maximum exposure", effect: "Clear evidence of lethal contamination levels. Add 1 Boost to Medicine checks to treat radiation", icon: "🏷️", medical: true },
+    { name: "Glowing Condensation", description: "Water droplets pulse with dark Voidsteel energy", effect: "Contact with water causes 1 strain. Can be collected for Mechanics checks on Voidsteel equipment", icon: "💧", resource: true },
+    { name: "Corroded Ventilation", description: "Air ducts eaten away by Voidsteel particles", effect: "Air quality degraded. All characters suffer 1 strain per round in this area", icon: "🌪️", persistent: true },
+    { name: "Containment Breach Alarm", description: "Red lights flash emergency warnings continuously", effect: "Strobing light causes disorientation. Add 1 Setback to Perception and Vigilance checks for 3 rounds", icon: "🚨", hindering: true },
+    { name: "Mutation Warning Charts", description: "Medical posters showing stages of Voidsteel transformation", effect: "Study for 2 rounds to add 2 Boost dice to next Medicine check", icon: "📊", educational: true },
   ],
 
-  // Physical Obstacles (40+ options)
-  OBSTACLES: [
-    // Debris types
-    { name: "Concrete Rubble", description: "Chunks of reinforced concrete block the path", effect: "Navigation obstacle", icon: "🪨" },
-    { name: "Twisted Rebar", description: "Bent steel reinforcement bars jut dangerously", effect: "Sharp hazard", icon: "🔩" },
-    { name: "Fallen Ceiling Tiles", description: "Acoustic panels litter the walkway", effect: "Crunchy footing", icon: "🔲" },
-    { name: "Shattered Glass", description: "Window fragments create a glittering carpet", effect: "Cutting hazard", icon: "💎" },
-    { name: "Collapsed Shelving", description: "Metal storage racks have toppled over", effect: "Climbing obstacle", icon: "📚" },
-    { name: "Overturned Desk", description: "Office furniture blocks half the corridor", effect: "Partial obstruction", icon: "🪑" },
-    { name: "Cable Spaghetti", description: "Hundreds of wires tangle across the floor", effect: "Trip hazard", icon: "🍝" },
-    { name: "Broken Mannequin", description: "Store display dummy lies dismembered", effect: "Eerie obstruction", icon: "🏃" },
-    { name: "Spilled Chemical Barrels", description: "Industrial drums leak unknown substances", effect: "Chemical hazard", icon: "🛢️" },
-    { name: "Fallen Beam", description: "Steel I-beam has crashed from the ceiling", effect: "Major blockage", icon: "🏗️" },
-    
-    // Water/liquid obstacles
-    { name: "Knee-Deep Flood", description: "Murky water fills the lower portion", effect: "Slow movement", icon: "🌊" },
-    { name: "Slippery Oil Spill", description: "Black petroleum creates a treacherous surface", effect: "Fall risk", icon: "⚫" },
-    { name: "Frozen Puddle", description: "Ice sheet covers the entire walkway", effect: "Slipping hazard", icon: "🧊" },
-    { name: "Sewage Backup", description: "Unpleasant brown liquid seeps from drains", effect: "Disgusting obstacle", icon: "💩" },
-    { name: "Acid Pool", description: "Corrosive liquid has eaten through the floor", effect: "Dangerous pit", icon: "🟢" },
-    { name: "Steam Geyser", description: "Broken pipe shoots scalding water upward", effect: "Burn hazard", icon: "💨" },
-    
-    // Equipment obstacles
-    { name: "Abandoned Forklift", description: "Industrial vehicle blocks the entire width", effect: "Complete blockage", icon: "🚚" },
-    { name: "Medical Gurney", description: "Hospital bed sits motionless in the center", effect: "Partial obstruction", icon: "🛏️" },
-    { name: "Shopping Cart Pile", description: "Dozens of carts form a metallic barricade", effect: "Climbing required", icon: "🛒" },
-    { name: "Server Racks", description: "Computer equipment towers create a maze", effect: "Narrow passages", icon: "🖥️" },
-    { name: "Laboratory Equipment", description: "Overturned scientific instruments scatter about", effect: "Delicate obstacles", icon: "🧪" },
-    { name: "Vending Machine", description: "Toppled snack dispenser blocks the way", effect: "Heavy obstacle", icon: "🥤" },
-    { name: "Copy Machine", description: "Office printer lies on its side", effect: "Awkward barrier", icon: "🖨️" },
-    
-    // Natural/organic obstacles
-    { name: "Overgrown Vines", description: "Thick vegetation has invaded through cracks", effect: "Jungle-like obstruction", icon: "🌿" },
-    { name: "Bird Nest Blockage", description: "Massive nest blocks the upper portion", effect: "Ducking required", icon: "🪺" },
-    { name: "Spider Web Wall", description: "Enormous web spans the entire opening", effect: "Sticky barrier", icon: "🕷️" },
-    { name: "Mushroom Growth", description: "Giant fungi have sprouted from the floor", effect: "Organic obstacles", icon: "🍄" },
-    { name: "Tree Root Intrusion", description: "Thick roots have pushed through the concrete", effect: "Natural barrier", icon: "🌳" },
-    
-    // Construction/maintenance
-    { name: "Caution Tape Maze", description: "Yellow warning tape crisscrosses everywhere", effect: "Tangled navigation", icon: "⚠️" },
-    { name: "Scaffolding Collapse", description: "Construction framework has fallen inward", effect: "Metal obstacle course", icon: "🏗️" },
-    { name: "Paint Buckets", description: "Spilled containers create colorful hazards", effect: "Slippery mess", icon: "🪣" },
-    { name: "Tool Cart Wreck", description: "Overturned maintenance cart spills tools", effect: "Sharp debris", icon: "🧰" },
-    { name: "Plastic Sheeting", description: "Construction plastic hangs like curtains", effect: "Vision obstruction", icon: "🛠️" },
-    
-    // Vehicle obstacles
-    { name: "Golf Cart", description: "Electric utility vehicle sits abandoned", effect: "Moderate blockage", icon: "🏌️" },
-    { name: "Wheelchair", description: "Empty mobility device blocks the center", effect: "Eerie obstacle", icon: "♿" },
-    { name: "Hand Truck", description: "Delivery cart lies tipped over", effect: "Metal barrier", icon: "📦" },
-    { name: "Motorcycle", description: "Crashed bike creates an odd obstruction", effect: "Unexpected barrier", icon: "🏍️" },
-    
-    // Furniture obstacles
-    { name: "Conference Table", description: "Long wooden table spans the width", effect: "Crawling required", icon: "🪑" },
-    { name: "Filing Cabinets", description: "Metal drawers have toppled like dominoes", effect: "Stepped obstacles", icon: "🗄️" },
-    { name: "Couch Barricade", description: "Upholstered furniture forms a wall", effect: "Soft but complete block", icon: "🛋️" },
-    { name: "Piano", description: "Grand piano somehow blocks the passage", effect: "Massive obstacle", icon: "🎹" },
-    { name: "Bookshelf Avalanche", description: "Fallen shelves create a paper mountain", effect: "Climbable debris", icon: "📚" },
+  // Corporate/Syndicate Evidence (25+ options)
+  CORPORATE_HAZARDS: [
+    // Syndicate control systems
+    { name: "Surveillance Terminal", description: "Active security station monitoring facility", effect: "Computers vs 3 Difficulty to access security feeds. Success reveals entity locations within 3 adjacent rooms", icon: "📺", terminal: true },
+    { name: "Efficiency Monitor", description: "Screen showing worker productivity metrics and quotas", effect: "Displays current facility scrap total. Knowledge (Lore) check reveals nearest scrap location", icon: "📊", informational: true },
+    { name: "Worker Tracking System", description: "Digital board showing employee locations and status", effect: "Computers vs 2 Difficulty to access. Success shows which rooms have had movement within the last 3 rounds", icon: "🗂️", tracking: true },
+    { name: "Emergency Lockdown Panel", description: "Corporate override system for facility control", effect: "Skulduggery vs 4 Difficulty to activate. Success opens or closes any one door (secure or not)", icon: "🔐", control: true },
+    { name: "Propaganda Speaker", description: "PA system broadcasting Syndicate efficiency messages", effect: "Constant corporate messaging. Add 1 Setback to Discipline checks against fear and despair", icon: "📢", psychological: true },
+    { name: "Quality Control Override", description: "Station marked 'SAFETY CHECKS DISABLED'", effect: "Evidence of deliberate negligence. No Effect", icon: "❌", sabotage: true },
+    { name: "Executive Access Terminal", description: "High-clearance workstation with active connection", effect: "Computers vs 4 Difficulty. Success allows one ship action to be performed remotely", icon: "💻", ship_access: true },
+    { name: "Profit Calculation Display", description: "Real-time revenue from contaminated products", effect: "Average (2) Knowledge check reveals top valued scrap within the facility", icon: "💰", economics: true },
+    { name: "Worker Expendability Chart", description: "Graph showing acceptable loss rates for productivity", effect: "Disturbing corporate data. Viewing requires Average (2) Discipline check or suffer 2 strain", icon: "📈", disturbing: true },
+    { name: "Syndicate Communication Hub", description: "Multi-channel corporate communication array", effect: "Computers vs 3 Difficulty to access. Can send messages to ship or other team members anywhere", icon: "📡", communication: true },
+    { name: "Automated Quota Enforcement", description: "System that punishes workers for quota failures", effect: "Mechanical trap. Skulduggery vs 3 Difficulty to disable, or triggers security alert", icon: "⚙️", enforcement: true },
+    { name: "Executive Emergency Kit", description: "Management survival supplies in locked cabinet", effect: "Skulduggery vs 2 Difficulty to open. 2 Use Medkit", icon: "🎒", beneficial: true },
   ],
 
-  // Lore Elements (50+ options)
-  LORE: [
-    // Audio devices
-    { name: "Crackling Radio", description: "Emergency radio broadcasts static and fragments", media: "Audio Log", content: "Distress calls and evacuation orders", icon: "📻" },
-    { name: "Answering Machine", description: "Office phone blinks with unheard messages", media: "Voice Messages", content: "Employee communications", icon: "📞" },
-    { name: "Intercom Feedback", description: "PA system occasionally squeals to life", media: "Public Address", content: "Automated facility warnings", icon: "📢" },
-    { name: "Tape Recorder", description: "Handheld device plays on endless loop", media: "Personal Recording", content: "Survivor's journal entries", icon: "📼" },
-    { name: "Music Box", description: "Broken toy plays a haunting melody", media: "Environmental Sound", content: "Childhood memories", icon: "🎵" },
-    
-    // Visual displays
-    { name: "Security Feed", description: "Monitor displays looping surveillance footage", media: "Video Log", content: "Incident documentation", icon: "📺" },
-    { name: "Digital Display", description: "LED sign scrolls error messages endlessly", media: "System Messages", content: "Technical diagnostics", icon: "💻" },
-    { name: "Projection Screen", description: "Wall display shows frozen presentation", media: "Corporate Briefing", content: "Company procedures", icon: "📽️" },
-    { name: "Tablet Computer", description: "Cracked device still shows last opened file", media: "Digital Document", content: "Employee schedules", icon: "📱" },
-    { name: "CRT Monitor", description: "Old computer screen flickers with green text", media: "Terminal Interface", content: "System logs", icon: "🖥️" },
-    
-    // Written materials
-    { name: "Scattered Documents", description: "Important papers litter the ground", media: "Paper Files", content: "Classified reports", icon: "📄" },
-    { name: "Whiteboard Notes", description: "Urgent messages scrawled in dry erase", media: "Written Messages", content: "Last-minute communications", icon: "📝" },
-    { name: "Bulletin Board", description: "Cork surface covered in pushpin notices", media: "Posted Announcements", content: "Safety updates and warnings", icon: "📌" },
-    { name: "Sticky Note Trail", description: "Yellow notes create a breadcrumb path", media: "Personal Notes", content: "Escape route markers", icon: "🗒️" },
-    { name: "Graffitied Wall", description: "Desperate messages carved into concrete", media: "Survivor Messages", content: "Warnings and pleas for help", icon: "✍️" },
-    
-    // Personal effects
-    { name: "Dropped Wallet", description: "Leather billfold contains ID and photos", media: "Personal Items", content: "Employee identification", icon: "🪪" },
-    { name: "Coffee Mug", description: "Half-empty cup with lipstick stain", media: "Personal Belongings", content: "Signs of interrupted routine", icon: "☕" },
-    { name: "Reading Glasses", description: "Broken spectacles with prescription label", media: "Personal Effects", content: "Owner identification", icon: "👓" },
-    { name: "Keychain Collection", description: "Janitor's keys scattered on the floor", media: "Access Items", content: "Facility master keys", icon: "🗝️" },
-    { name: "Employee Badge", description: "Photo ID clipped to torn shirt fabric", media: "Identification", content: "Staff member information", icon: "🆔" },
-    
-    // Evidence of struggle
-    { name: "Overturned Table", description: "Furniture shows signs of violent disturbance", media: "Physical Evidence", content: "Scene of conflict", icon: "🪑" },
-    { name: "Broken Window", description: "Glass shards suggest explosive exit", media: "Escape Evidence", content: "Emergency evacuation route", icon: "🪟" },
-    { name: "Torn Clothing", description: "Fabric strips hang from sharp edges", media: "Personal Evidence", content: "Hasty escape indicators", icon: "👕" },
-    { name: "Spilled Blood", description: "Dark stains tell a violent story", media: "Forensic Evidence", content: "Incident scene markers", icon: "🩸" },
-    { name: "Claw Marks", description: "Deep gouges score the metal walls", media: "Attack Evidence", content: "Creature encounter signs", icon: "🐾" },
-    
-    // Technology
-    { name: "Server Terminal", description: "Blinking lights indicate active processes", media: "Computer System", content: "Facility management data", icon: "🖥️" },
-    { name: "Backup Generator", description: "Emergency power system hums quietly", media: "Technical Equipment", content: "Power grid information", icon: "⚡" },
-    { name: "Ventilation Control", description: "Air system panel shows red warning lights", media: "Environmental Controls", content: "Atmospheric monitoring", icon: "🌪️" },
-    { name: "Fire Suppression", description: "Sprinkler system shows malfunction codes", media: "Safety Systems", content: "Emergency response logs", icon: "🚿" },
-    
-    // Medical/scientific
-    { name: "Medical Chart", description: "Patient clipboard with disturbing notes", media: "Medical Records", content: "Quarantine documentation", icon: "📋" },
-    { name: "Lab Notebook", description: "Research journal with urgent scribbles", media: "Scientific Data", content: "Experiment observations", icon: "🧪" },
-    { name: "Specimen Container", description: "Empty jar with warning labels", media: "Research Materials", content: "Biological sample data", icon: "🧫" },
-    { name: "X-Ray Viewer", description: "Medical imaging shows unusual anomalies", media: "Diagnostic Images", content: "Biological anomaly records", icon: "🔍" },
-    
-    // Security/military
-    { name: "Weapon Cache", description: "Hidden compartment contains emergency arms", media: "Security Equipment", content: "Tactical response protocols", icon: "🔫" },
-    { name: "Surveillance Hub", description: "Multiple monitors show facility coverage", media: "Security Network", content: "Real-time monitoring data", icon: "📹" },
-    { name: "Access Control", description: "Card reader flashes red denial messages", media: "Security System", content: "Authorization logs", icon: "🔐" },
-    { name: "Panic Button", description: "Emergency alert switch has been triggered", media: "Alert System", content: "Emergency activation records", icon: "🚨" },
+  // Facility Infrastructure Hazards (20+ options per facility type)
+  FACILITY_HAZARDS: [
+    // March/Adamance (Mining Operations) - Hazardous
+    { name: "Collapsed Mining Shaft", description: "Cave-in blocks passage with unstable rubble", effect: "Complete blockage. Athletics vs 4 Difficulty to clear safely, failure causes 3 wounds from falling debris", icon: "⛏️", blocking: true, facility: ["61-March", "20-Adamance"] },
+    { name: "Ore Processing Malfunction", description: "Broken equipment sprays Voidsteel particles", effect: "Hazardous area. Resilience vs 3 Difficulty each round or suffer 2 strain from ore exposure", icon: "🪨", environmental: true, facility: ["61-March", "20-Adamance"] },
+    { name: "Mining Drill Overload", description: "Massive boring equipment sparks and smokes dangerously", effect: "Mechanics vs 3 Difficulty to shut down safely, or room fills with toxic fumes (2 strain/round)", icon: "🔨", mechanical: true, facility: ["61-March", "20-Adamance"] },
+    { name: "Geological Instability Scanner", description: "Warning system shows critical structural damage", effect: "Terminal shows unstable areas. Computer Use vs 1 Difficulty reveals safe paths through building", icon: "📊", navigation: true, facility: ["61-March", "20-Adamance"] },
+
+    // Vow/Rend (Processing Operations) - High Heat/Pressure
+    { name: "Gamma Radiation Leak", description: "Processing equipment sprays molecular bombardment", effect: "Extreme radiation zone. Resilience vs 4 Difficulty each round or suffer 1 wound from cellular damage", icon: "☢️", extreme: true, facility: ["56-Vow", "85-Rend"] },
+    { name: "Superheated Slag Spill", description: "30% processing waste blocks corridor as molten hazard", effect: "Impassable while hot. Wait 30 minutes or Athletics vs 4 Difficulty to leap across (failure = 4 wounds)", icon: "🔥", timed: true, facility: ["56-Vow", "85-Rend"] },
+    { name: "Cooling System Rupture", description: "Massive pipes spray scalding coolant across area", effect: "Coordination vs 2 Difficulty to avoid spray each round in room, failure causes 2 wounds from burns", icon: "💨", persistent: true, facility: ["56-Vow", "85-Rend"] },
+    { name: "Pressure Monitoring Terminal", description: "System shows dangerous pressure buildup in facility", effect: "Computer Use vs 2 Difficulty. Success warns of areas about to explode, adding 2 Boost to avoid", icon: "🖥️", warning: true, facility: ["56-Vow", "85-Rend"] },
+
+    // Titan (Manufacturing) - Industrial Hazards
+    { name: "Assembly Line Malfunction", description: "Conveyor belt creates contaminated products uncontrolled", effect: "Moving machinery hazard. Coordination vs 2 Difficulty to cross safely or be pulled in (3 wounds)", icon: "🏭", moving: true, facility: ["8-Titan"] },
+    { name: "Quality Control Failure", description: "Inspection station randomly accepts dangerous products", effect: "Evidence of systemic failure. Mechanics checks on facility equipment gain 2 Setback dice", icon: "❌", systemic: true, facility: ["8-Titan"] },
+    { name: "Robotic Assembly Arm", description: "Malfunctioning robot continues dangerous manufacturing", effect: "Athletics vs 3 Difficulty to duck under arm, or Mechanics vs 4 Difficulty to shut down safely", icon: "🦾", robotic: true, facility: ["8-Titan"] },
+    { name: "Production Control Terminal", description: "Central manufacturing oversight system", effect: "Computer Use vs 3 Difficulty. Success can shut down dangerous equipment or activate emergency protocols", icon: "🖥️", control: true, facility: ["8-Titan"] },
+
+    // Offense (Weapons) - Military Hazards
+    { name: "Voidsteel Weapon Discharge", description: "Dark energy weapons have fired, leaving radiation burns", effect: "Weapon testing area. Resilience vs 3 Difficulty or suffer 2 strain from residual weapon energy", icon: "💥", weapon: true, facility: ["21-Offense"] },
+    { name: "Tactical Deployment Malfunction", description: "Automated weapon systems track movement", effect: "Security hazard. Stealth vs 3 Difficulty to avoid detection, failure triggers non-lethal deterrent", icon: "🎯", security: true, facility: ["21-Offense"] },
+    { name: "Weapons Testing Terminal", description: "Control system for dangerous weapon experiments", effect: "Computer Use vs 4 Difficulty. Success can disable security systems or access tactical data", icon: "🖥️", tactical: true, facility: ["21-Offense"] },
+
+    // Assurance (Agriculture) - Biological Hazards
+    { name: "Contaminated Crop Mutation", description: "Voidsteel-affected plants grow in twisted patterns", effect: "Biological hazard. Medicine vs 2 Difficulty to safely navigate, failure causes 1 strain from spores", icon: "🌱", biological: true, facility: ["220-Assurance"] },
+    { name: "Irrigation System Breach", description: "Contaminated water floods the area", effect: "Flooded area. Athletics vs 2 Difficulty for movement, contact with water causes 1 strain", icon: "💧", flooded: true, facility: ["220-Assurance"] },
+    { name: "Agricultural Terminal", description: "Crop monitoring system showing contamination spread", effect: "Computer Use vs 2 Difficulty. Success reveals contamination patterns and safe food sources", icon: "📊", agricultural: true, facility: ["220-Assurance"] },
+
+    // Artifice (Research) - Experimental Hazards
+    { name: "Halden Incident Ground Zero", description: "Epicenter of catastrophic Voidsteel breach", effect: "Extreme contamination. All checks gain 3 Setback dice. Resilience vs 5 Difficulty or suffer Critical Injury", icon: "💀", extreme: true, facility: ["68-Artifice"] },
+    { name: "Experimental Equipment Leak", description: "Research apparatus continuously releases contamination", effect: "Ongoing hazard. Each round in area requires Resilience vs 2 Difficulty or gain 1 strain", icon: "⚗️", experimental: true, facility: ["68-Artifice"] },
+    { name: "Research Terminal Network", description: "Advanced scientific computing system", effect: "Computer Use vs 2 Difficulty. Success provides detailed contamination data and emergency protocols", icon: "🖥️", research: true, facility: ["68-Artifice"] },
+
+    // Dine (Waste Management) - Environmental Hazards
+    { name: "Waste Processing Overflow", description: "Treatment systems have failed, spilling toxic materials", effect: "Environmental hazard. Resilience vs 3 Difficulty each round or suffer 1 wound from toxic exposure", icon: "☠️", toxic: true, facility: ["7-Dine"] },
+    { name: "Environmental System Failure", description: "Air and water purification has completely broken down", effect: "Life support failure. All characters suffer 1 strain per 10 minutes in this area", icon: "🌡️", life_support: true, facility: ["7-Dine"] },
+    { name: "Waste Management Terminal", description: "Environmental control and monitoring system", effect: "Computer Use vs 2 Difficulty. Success can restore life support or identify clean areas", icon: "🖥️", environmental: true, facility: ["7-Dine"] },
+
+    // Experimentation (Abandoned) - Historical Hazards
+    { name: "Early Research Remnants", description: "Prototype Voidsteel experiments left to decay", effect: "Historical contamination. Medicine vs 3 Difficulty to safely examine and gain research insights", icon: "🧪", historical: true, facility: ["41-Experimentation"] },
+    { name: "Abandoned Safety Systems", description: "Original protective measures no longer function", effect: "Safety equipment failure. All environmental hazards in facility gain 1 additional Setback die", icon: "⚠️", systemic: true, facility: ["41-Experimentation"] },
+    { name: "Research Archive Terminal", description: "Original research database with safety protocols", effect: "Computer Use vs 3 Difficulty. Success provides pre-Syndicate safety data, reducing facility hazards", icon: "🖥️", archival: true, facility: ["41-Experimentation"] },
   ],
 
-  // Atmospheric Elements (20+ options)
-  ATMOSPHERIC: [
-    // Temperature effects
-    { name: "Freezing Cold", description: "Breath mists in the frigid air", effect: "Uncomfortable chill", icon: "🧊" },
-    { name: "Oppressive Heat", description: "Stifling warmth radiates from nearby machinery", effect: "Uncomfortable warmth", icon: "🔥" },
-    { name: "Temperature Gradient", description: "One side cold, the other uncomfortably warm", effect: "Uneven climate", icon: "🌡️" },
-    { name: "Humid Condensation", description: "Moisture beads on every surface", effect: "Sticky atmosphere", icon: "💧" },
-    
-    // Air quality
-    { name: "Stale Air", description: "Oxygen feels thin and recycled", effect: "Breathing difficulty", icon: "💨" },
-    { name: "Chemical Scent", description: "Sharp industrial odor burns the nostrils", effect: "Unpleasant smell", icon: "⚗️" },
-    { name: "Metallic Taste", description: "Copper flavor coats the tongue", effect: "Disturbing sensation", icon: "🪙" },
-    { name: "Ozone Smell", description: "Electric discharge creates sharp aroma", effect: "Electrical activity nearby", icon: "⚡" },
-    { name: "Decay Odor", description: "Something organic is rotting nearby", effect: "Nauseating smell", icon: "🦠" },
-    
-    // Acoustic effects
-    { name: "Perfect Silence", description: "Sound seems to be absorbed completely", effect: "Unnaturally quiet", icon: "🔇" },
-    { name: "Mechanical Rhythm", description: "Distant machinery creates steady beat", effect: "Hypnotic percussion", icon: "🥁" },
-    { name: "Echo Amplification", description: "Every sound reverberates endlessly", effect: "Sound magnification", icon: "📢" },
-    { name: "Subsonic Vibration", description: "Low frequency hum felt in bones", effect: "Physical discomfort", icon: "🔊" },
-    { name: "White Noise", description: "Constant static fills the audio space", effect: "Sound masking", icon: "📻" },
-    
-    // Pressure/air movement
-    { name: "Strong Draft", description: "Constant wind pulls through the corridor", effect: "Air circulation", icon: "🌪️" },
-    { name: "Pressure Drop", description: "Ears pop as elevation seems to change", effect: "Altitude sensation", icon: "✈️" },
-    { name: "Vacuum Effect", description: "Air seems to be drawn away constantly", effect: "Breathing resistance", icon: "🌪️" },
-    { name: "Gentle Breeze", description: "Soft air movement provides mild relief", effect: "Pleasant circulation", icon: "🍃" },
-    
-    // Magnetic/electrical
-    { name: "Static Charge", description: "Hair stands on end from electrical buildup", effect: "Electromagnetic activity", icon: "⚡" },
-    { name: "Magnetic Pull", description: "Metal objects seem drawn to the walls", effect: "Magnetic anomaly", icon: "🧲" },
-    { name: "Radio Interference", description: "Electronic devices malfunction here", effect: "Communication disruption", icon: "📡" },
-    
-    // Psychological
-    { name: "Oppressive Feeling", description: "Inexplicable sense of being watched", effect: "Psychological unease", icon: "👁️" },
-    { name: "Claustrophobic Space", description: "Walls seem to press inward", effect: "Spatial anxiety", icon: "📦" },
-    { name: "Vertigo Sensation", description: "Floor appears to tilt despite being level", effect: "Balance disruption", icon: "🌀" },
-    { name: "Time Distortion", description: "Clocks seem to move differently here", effect: "Temporal confusion", icon: "⏰" },
+  // Worker Evidence and Environmental Storytelling (25+ options)
+  WORKER_EVIDENCE: [
+    // Personal tragedy
+    { name: "Worker Transformation Recording", description: "Security footage shows employee becoming entity", effect: "Disturbing evidence. Viewing requires Hard (3) Discipline check or suffer 3 strain from horror", icon: "📹", disturbing: true },
+    { name: "Medical Alert Bracelet", description: "Health monitor showing increasing contamination levels", effect: "Medical data. Medicine check reveals contamination progression stages and symptoms", icon: "🏥", medical: true },
+    { name: "Final Message Terminal", description: "Computer with half-typed goodbye letter", effect: "Computer Use reveals worker's final thoughts. Gain 1 Boost to Knowledge about entity behavior", icon: "💻", insight: true },
+    { name: "Employee Time Clock", description: "Punch cards show workers never checked out", effect: "Personnel records show missing workers. Knowledge check reveals shift patterns and safe times", icon: "🕐", timing: true },
+    { name: "Contaminated Work Tools", description: "Equipment glowing with absorbed Voidsteel energy", effect: "Dangerous tools. Can be used for +1 Mechanics check bonus but cause 1 strain from exposure", icon: "🔧", tool: true },
+    { name: "Worker Union Documents", description: "Hidden organizing materials and safety complaints", effect: "Labor evidence. Knowledge check reveals facility weak points and emergency procedures", icon: "📄", intelligence: true },
+    { name: "Personal Protective Equipment", description: "Safety gear that failed to protect workers", effect: "False security. Using similar equipment provides only half normal protection against hazards", icon: "🦺", false_security: true },
   ],
 
-  BENEFICIAL: [
-    // Temporary Boosts and Minor Aids (15+ options)
-    { name: "Fresh Battery", description: "Single AA battery with some charge left", effect: "Restore 15 battery charge to one electronic item", icon: "🔋" },
-    { name: "Emergency Flare", description: "Red signal flare with limited burn time", effect: "Create bright illumination in current room for 1 round", icon: "🔥" },
-    { name: "Pocket Mirror", description: "Small reflective surface for signaling", effect: "Add 2 boost dice to next Perception check to see around corners", icon: "🪞" },
-    { name: "Chalk Stick", description: "White marking chalk, almost used up", effect: "Mark current room - add 1 boost die to Navigation checks when returning here", icon: "✏️" },
-    { name: "Paper Clip", description: "Bent metal wire for simple tasks", effect: "Add 2 boost dice to next Skulduggery check to pick a simple lock", icon: "📎" },
-    { name: "Rubber Band", description: "Elastic band for improvised solutions", effect: "Hold one door open or trigger one pressure plate for 2 rounds", icon: "🔗" },
-    { name: "Coin", description: "Metal disk for simple mechanical needs", effect: "Add 1 boost die to next Mechanics check involving screws or small parts", icon: "🪙" },
-    { name: "Sticky Note", description: "Adhesive paper for quick messages", effect: "Leave one message that gives team +1 boost die to related checks", icon: "🗒️" },
-    { name: "Shoelace", description: "Spare bootlace for binding things", effect: "Secure one small item or bind one immobilized target", icon: "👟" },
-    { name: "Magnifying Glass", description: "Cracked lens still partially functional", effect: "Add 2 boost dice to next check examining small details or clues", icon: "🔍" },
-    { name: "Whistle", description: "Emergency signaling device", effect: "Alert all team members within 5 rooms of your location", icon: "🎺" },
-    { name: "Marble", description: "Small glass sphere for testing slopes", effect: "Detect floor vibrations or movement in adjacent rooms", icon: "⚪" },
-    { name: "Safety Pin", description: "Sharp metal fastener", effect: "Add 1 boost die to Skulduggery or Mechanics check involving small mechanisms", icon: "📍" },
-    { name: "Rubber Glove", description: "Single protective hand covering", effect: "Handle one electrically charged or contaminated item safely", icon: "🧤" },
-    { name: "Button", description: "Plastic fastener from clothing", effect: "Wedge one door slightly open or trigger one button/switch remotely", icon: "⚫" },
+  // Environmental Systems and Atmosphere (15+ options)
+  ENVIRONMENTAL_SYSTEMS: [
+    // Infrastructure
+    { name: "Life Support Monitoring", description: "Terminal showing critical environmental systems", effect: "Computer Use vs 2 Difficulty. Success reveals air quality and can improve environmental conditions", icon: "🖥️", life_support: true },
+    { name: "Ventilation System Override", description: "Emergency air circulation controls", effect: "Mechanics vs 3 Difficulty to activate. Success clears toxic air from adjacent rooms for 1 hour", icon: "🌪️", air_control: true },
+    { name: "Emergency Lighting Failure", description: "Backup illumination systems have died", effect: "Darkness hazard. Add 2 Setback to all checks requiring vision until lights restored", icon: "💡", lighting: true },
+    { name: "Structural Integrity Alert", description: "Warning system showing building instability", effect: "Computer Use reveals dangerous areas. Knowledge of unstable zones adds 2 Boost to Athletics", icon: "🏗️", structural: true },
+    { name: "Temperature Control Malfunction", description: "Climate system creating extreme hot/cold zones", effect: "Environmental extreme. Resilience vs 2 Difficulty each 10 minutes or suffer 1 strain", icon: "🌡️", climate: true },
+    { name: "Magnetic Field Distortion", description: "Voidsteel creating electromagnetic anomalies", effect: "Equipment malfunction. All electronic devices have 25% chance to fail each use", icon: "🧲", electromagnetic: true },
+    { name: "Gravity Fluctuation Zone", description: "Voidsteel energy affects local gravitational fields", effect: "Movement difficulty. All Athletics and Coordination checks gain 1 Setback die", icon: "🌀", gravity: true },
+  ],
 
-    // Consumables and Chemicals (12+ options)
-    { name: "Focus Stimulant", description: "Laboratory nootropic enhancer", effect: "Add 1 boost die to all Perception checks for 4 rounds", icon: "💊" },
-    { name: "Energy Drink", description: "High-caffeine beverage, still cold", effect: "Add 1 boost die to all Athletics checks for 8 rounds", icon: "🥤" },
-    { name: "Protein Bar", description: "High-calorie emergency ration", effect: "Recover 2 strain immediately", icon: "🍫" },
-    { name: "Antiseptic Wipes", description: "Sterile cleaning packets", effect: "Remove 1 poison or disease condition", icon: "🧽" },
-    { name: "Pain Reliever", description: "Over-the-counter medication bottle", effect: "Ignore all wound penalties for 16 rounds", icon: "💉" },
-    { name: "Vitamin Supplements", description: "Immune system boosters", effect: "Add 1 boost die to Resilience checks for 8 rounds", icon: "🟡" },
-    { name: "Hand Sanitizer", description: "Alcohol-based disinfectant gel", effect: "Remove contamination conditions from hands", icon: "🧴" },
-    { name: "Electrolyte Solution", description: "Sports drink for rehydration", effect: "Remove fatigue and dehydration conditions", icon: "💧" },
-    { name: "Oxygen Canister", description: "Emergency breathing supplement", effect: "Ignore suffocation effects for 3 rounds", icon: "🫁" },
-    { name: "Smelling Salts", description: "Ammonia capsules for revival", effect: "Immediately wake one unconscious character", icon: "💨" },
-    { name: "Antacid Tablets", description: "Stomach relief medication", effect: "Neutralize one ingested poison or toxin", icon: "🟢" },
-    { name: "Eye Drops", description: "Saline solution for eye irritation", effect: "Remove blinded condition from chemical exposure", icon: "👁️" },
+  // Beneficial Corporate/Technical Items (30+ options)
+  BENEFICIAL_SYSTEMS: [
+    // Ship access terminals
+    { name: "Ship Communication Array", description: "High-power transmitter with facility access", effect: "Computer Use vs 2 Difficulty. Success allows one ship action: landing zone change, cargo scan, or emergency beacon", icon: "📡", ship_action: true },
+    { name: "Cargo Manifest Terminal", description: "System showing ship inventory and capacity", effect: "Computer Use vs 1 Difficulty. Success reveals optimal scrap to collect and current ship inventory status", icon: "📦", cargo: true },
+    { name: "Navigation Uplink", description: "Satellite connection for ship positioning", effect: "Computer Use vs 2 Difficulty. Success allows ship repositioning or weather avoidance maneuvers", icon: "🛰️", navigation: true },
+    { name: "Emergency Extraction Beacon", description: "Direct line to ship emergency systems", effect: "Computer Use vs 3 Difficulty. Success can trigger immediate ship emergency protocols or pickup", icon: "🚨", extraction: true },
+    { name: "Ship System Diagnostics", description: "Remote monitoring of ship health and status", effect: "Computer Use vs 2 Difficulty. Success reveals ship system status and can run basic repairs", icon: "🔧", diagnostics: true },
+    
+    // Facility benefits
+    { name: "Executive Override Terminal", description: "High-clearance access to facility systems", effect: "Computer Use vs 3 Difficulty. Success grants temporary access to any locked door or system", icon: "🔐", override: true },
+    { name: "Medical Supply Dispenser", description: "Automated medical equipment distribution", effect: "Medicine vs 1 Difficulty. Success provides medical supplies: remove 1 wound or 2 strain", icon: "🏥", medical_supplies: true },
+    { name: "Emergency Oxygen Station", description: "Backup life support with fresh air supply", effect: "Automatic benefit. All characters in room recover 1 strain and ignore air quality hazards", icon: "💨", oxygen: true },
+    { name: "Facility Map Terminal", description: "Interactive building layout and navigation aid", effect: "Computer Use vs 1 Difficulty. Success provides facility map, adding 2 Boost to Navigation checks", icon: "🗺️", mapping: true },
+    { name: "Security Camera Access", description: "Surveillance system showing facility status", effect: "Computer Use vs 2 Difficulty. Success reveals entity locations and safe routes through facility", icon: "📹", surveillance: true },
+    { name: "Environmental Controls", description: "Climate and hazard management system", effect: "Computer Use vs 3 Difficulty. Success can neutralize environmental hazards in chosen areas", icon: "🌡️", environmental_control: true },
+    { name: "Power Distribution Panel", description: "Electrical system controls for facility sections", effect: "Mechanics vs 2 Difficulty. Success can restore power to chosen areas or shut down dangerous equipment", icon: "⚡", power_control: true },
+    { name: "Emergency Supply Cache", description: "Corporate emergency stockpile", effect: "Skulduggery vs 2 Difficulty to access. Success provides: food (recover 2 strain) and tools (+1 Mechanics)", icon: "🎒", supply_cache: true },
+    { name: "Radiation Shielding Controls", description: "Protective barrier management system", effect: "Computer Use vs 3 Difficulty. Success activates shielding, reducing radiation effects by half in area", icon: "🛡️", shielding: true },
+    { name: "Decontamination Station", description: "Working hazmat cleaning system", effect: "Mechanics vs 1 Difficulty to operate. Success removes all contamination conditions and prevents new ones for 1 hour", icon: "🚿", decontamination: true },
 
-    // Temporary Navigation and Access (10+ options)
-    { name: "Torn Keycard", description: "Damaged access badge with partial function", effect: "Add 3 boost dice to next Skulduggery check to bypass electronic door", icon: "🔑" },
-    { name: "Scribbled Map Fragment", description: "Hand-drawn partial floor plan", effect: "Add 2 boost dice to Navigation checks on current floor for 8 rounds", icon: "🗺️" },
-    { name: "Dying Phone GPS", description: "Smartphone with 5% battery showing location", effect: "Know exact grid position and add 1 boost die to Navigation for 3 rounds", icon: "📱" },
-    { name: "Pocket Compass", description: "Magnetic needle stuck in cracked case", effect: "Add 1 boost die to Navigation checks for 4 rounds", icon: "🧭" },
-    { name: "Scrawled Door Code", description: "4-digit number written on wall", effect: "Automatically open one electronic lock without a check", icon: "🔢" },
-    { name: "Vending Machine Change", description: "Scattered coins from broken dispenser", effect: "Purchase one item from any functioning vending machine", icon: "🪙" },
-    { name: "Fake ID Badge", description: "Expired employee credentials", effect: "Add 3 boost dice to next Deception check against security systems", icon: "🆔" },
-    { name: "Shift Schedule Note", description: "Crumpled paper with patrol times", effect: "Add 2 boost dice to Stealth checks for 6 rounds", icon: "📅" },
-    { name: "Emergency Exit Arrow", description: "Glowing sign pointing toward safety", effect: "Automatically succeed on next Navigation check to find building exit", icon: "🚪" },
-    { name: "Post-it Combo", description: "Sticky note with locker numbers", effect: "Open one storage container without Skulduggery check", icon: "🔐" },
-
-    // Quick Information and Clues (12+ options)
-    { name: "Flickering Security Monitor", description: "Screen shows brief footage of other areas", effect: "Reveal contents and entities in 2 adjacent rooms", icon: "📹" },
-    { name: "Scattered Memo Pages", description: "Torn employee notices blowing around", effect: "Learn one facility detail: add 1 boost die to next Knowledge check", icon: "📝" },
-    { name: "Overheard Radio Chatter", description: "Brief transmission from emergency responders", effect: "Learn location of one entity within 3 rooms", icon: "📻" },
-    { name: "Weather Alert Display", description: "Digital sign showing current conditions", effect: "Know outdoor weather: add 2 boost dice to outdoor Survival checks", icon: "🌤️" },
-    { name: "Inventory Slip", description: "Crumpled supply list from clipboard", effect: "Know scrap locations in one adjacent room", icon: "📋" },
-    { name: "Emergency Contact Poster", description: "Faded wall chart with phone numbers", effect: "If communication available, call for rescue (GM determines response)", icon: "📞" },
-    { name: "Safety Warning Sign", description: "Posted notice about local hazards", effect: "Add 2 boost dice to next check avoiding environmental dangers", icon: "⚠️" },
-    { name: "Employee Photo Board", description: "Staff pictures with name tags", effect: "Identify personnel: add 1 boost die to social checks with facility staff", icon: "👥" },
-    { name: "Maintenance Sticker", description: "Equipment tag showing last service date", effect: "Add 2 boost dice to Mechanics checks on tagged equipment", icon: "🔧" },
-    { name: "Delivery Receipt", description: "Carbon copy of recent shipment", effect: "Know what supplies arrived recently and where they might be", icon: "📦" },
-    { name: "Training Poster", description: "Laminated instructions for equipment", effect: "Use one unfamiliar device without penalty to difficulty", icon: "📖" },
-    { name: "Incident Report Copy", description: "Duplicate of accident documentation", effect: "Learn about one specific hazard: add 2 boost dice to avoid similar dangers", icon: "📄" },
-
-    // Brief Environmental Relief (8+ options)
-    { name: "Working AC Vent", description: "Cool air flows for a few minutes", effect: "Remove heat exhaustion condition and recover 1 strain", icon: "❄️" },
-    { name: "Fresh Air Leak", description: "Crack in wall lets outside air in", effect: "Remove suffocation and gas poisoning conditions", icon: "🌬️" },
-    { name: "Sunbeam", description: "Natural light streams through small opening", effect: "Add 1 boost die to Discipline checks for 6 rounds", icon: "☀️" },
-    { name: "Cushioned Debris", description: "Pile of soft material good for quick rest", effect: "Recover 1 additional strain when resting here", icon: "💺" },
-    { name: "Clean Water Drip", description: "Condensation collects in clean container", effect: "Remove dehydration condition", icon: "💧" },
-    { name: "Sound Buffer Zone", description: "Acoustic deadening reduces noise briefly", effect: "Add 2 boost dice to Stealth checks for 3 rounds", icon: "🔇" },
-    { name: "Emergency Wash Station", description: "Eye wash with limited water supply", effect: "Remove blinded condition and chemical contamination", icon: "🚿" },
-    { name: "Lead Lined Section", description: "Thick walls block radiation temporarily", effect: "Remove radiation poisoning condition while in this room", icon: "☢️" },
-
-    // Temporary Technology Access (10+ options)
-    { name: "Live Power Outlet", description: "Wall socket with limited electricity remaining", effect: "Restore 10 battery charge to one electronic device", icon: "🔌" },
-    { name: "Functioning Terminal", description: "Computer with brief access before auto-logout", effect: "Access facility database: add 3 boost dice to next Knowledge check", icon: "💻" },
-    { name: "Spare Battery Pack", description: "Backup cell with partial charge remaining", effect: "Restore 20 battery charge to one electronic device", icon: "🔋" },
-    { name: "Signal Amplifier", description: "Antenna boosts radio for one transmission", effect: "Send one walkie-talkie message to any range within facility", icon: "📡" },
-    { name: "Motion Sensor Light", description: "Detector illuminates area when triggered", effect: "Automatically detect entities entering adjacent rooms for 4 rounds", icon: "👀" },
-    { name: "Emergency Beacon Button", description: "One-time distress signal transmitter", effect: "Send rescue signal (GM determines if/when help arrives)", icon: "🚨" },
-    { name: "Infrared Thermometer", description: "Handheld device with single reading left", effect: "Detect heat signatures through walls in one adjacent room", icon: "🌡️" },
-    { name: "Voice Message Player", description: "Device plays one recorded message", effect: "Hear facility staff message: add 2 boost dice to related Knowledge check", icon: "🎙️" },
-    { name: "UV Sanitizer Wand", description: "Sterilization device with brief battery", effect: "Remove one disease or contamination condition", icon: "💡" },
-    { name: "Metal Detector Sweep", description: "Handheld scanner with one detection left", effect: "Detect all metallic scrap in current room automatically", icon: "🔍" },
-
-    // Temporary Protection and Relief (8+ options)
-    { name: "Makeshift Shield", description: "Piece of metal provides brief cover", effect: "Add 1 defense die to next attack, then item is destroyed", icon: "🛡️" },
-    { name: "Filter Mask", description: "Disposable respirator with limited filtration", effect: "Ignore gas and airborne toxin effects for 4 rounds", icon: "😷" },
-    { name: "Thick Newspaper", description: "Multiple layers provide foot protection", effect: "Move through hazardous floor tiles without taking damage once", icon: "📰" },
-    { name: "Thermal Blanket", description: "Emergency foil wrap retains body heat", effect: "Remove cold exposure condition and add 1 boost die to Resilience vs cold", icon: "🥶" },
-    { name: "Plastic Bag", description: "Waterproof covering for one item", effect: "Protect one carried item from water or chemical damage", icon: "🛍️" },
-    { name: "Safety Vest Scrap", description: "Reflective fabric torn from clothing", effect: "Add 2 boost dice to being spotted by rescue teams for 16 rounds", icon: "🦺" },
-    { name: "Rubber Mat Piece", description: "Insulating floor covering", effect: "Stand on electrified surfaces without taking damage for 2 rounds", icon: "⚡" },
-    { name: "Cardboard Padding", description: "Thick material for impact protection", effect: "Reduce damage from next fall by 3 points", icon: "📦" },
+    // Interior type specific benefits
+    { name: "Mining Equipment Cache", description: "Heavy-duty tools for excavation work", effect: "Tool access. Gain +2 Boost dice to Athletics checks involving climbing or breaking barriers", icon: "⛏️", tools: true, interior: ["Mineshaft"] },
+    { name: "Luxury Emergency Kit", description: "High-end supplies from executive areas", effect: "Quality items. Recover 3 strain immediately and gain +1 Boost die to next social check", icon: "🍾", luxury: true, interior: ["Mansion"] },
+    { name: "Industrial Safety Override", description: "Master shutdown for dangerous factory equipment", effect: "Mechanics vs 2 Difficulty. Success shuts down all hazardous machinery on current floor", icon: "🏭", industrial_safety: true, interior: ["Factory"] },
+    { name: "Corporate Executive Terminal", description: "High-level access with ship command authority", effect: "Computer Use vs 4 Difficulty. Success allows two ship actions or facility-wide system control", icon: "💼", executive: true, interior: ["Mansion"] },
+    { name: "Processing Control Station", description: "Master controls for facility refinement systems", effect: "Computer Use vs 3 Difficulty. Success can halt contamination spread or optimize material processing", icon: "🏭", processing: true, interior: ["Factory"] },
+    { name: "Geological Survey Data", description: "Rock formation analysis and stability mapping", effect: "Knowledge check reveals safe paths and structural weak points. Add 3 Boost to Athletics in unstable areas", icon: "📊", geology: true, interior: ["Mineshaft"] }
   ]
 };
 
-// Position descriptors for features
-export const POSITION_DESCRIPTORS = {
-  WALL_POSITIONS: [
-    "along the north wall", "against the south wall", "pressed against the east wall", "hugging the west wall",
-    "in the northeast corner", "in the northwest corner", "in the southeast corner", "in the southwest corner",
-    "mounted on the north wall", "affixed to the south wall", "attached to the east wall", "bolted to the west wall"
-  ],
+// Facility-specific feature pools based on supply chain role and interior type
+export const FACILITY_FEATURES = {
+  "41-Experimentation": {
+    primary: ["CORPORATE_HAZARDS", "WORKER_EVIDENCE", "ENVIRONMENTAL_SYSTEMS"],
+    hazards: ["CONTAMINATION_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Original Safety Protocols Terminal", description: "Pre-Syndicate worker protection database", effect: "Computer Use vs 2 Difficulty. Success reduces all facility hazard difficulties by 1 for team", icon: "📋", historical: true },
+      { name: "Early Voidsteel Research", description: "Prototype contamination with unknown properties", effect: "Medicine vs 4 Difficulty to study safely. Success provides unique insights about Voidsteel properties", icon: "🧪", research: true },
+      { name: "Legitimate Company Archives", description: "Original corporate values before transformation", effect: "Knowledge check reveals pre-Syndicate procedures. Add 2 Boost to resist corporate manipulation", icon: "🏢", historical: true }
+    ]
+  },
   
-  CEILING_POSITIONS: [
-    "hanging from the ceiling", "suspended overhead", "dangling from above", "mounted on the ceiling",
-    "hanging at head height", "suspended in the center", "drooping from the ceiling", "affixed to the overhead", "swaying from above"
-  ],
+  "220-Assurance": {
+    primary: ["FACILITY_HAZARDS", "CONTAMINATION_HAZARDS", "ENVIRONMENTAL_SYSTEMS"],
+    hazards: ["CORPORATE_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Crop Contamination Analysis", description: "Agricultural monitoring showing food chain corruption", effect: "Computer Use vs 2 Difficulty. Success reveals contaminated food sources and safe alternatives", icon: "🌾", agricultural: true },
+      { name: "Pesticide Distribution System", description: "Equipment for mixing Voidsteel into agricultural chemicals", effect: "Dangerous chemical system. Mechanics vs 4 Difficulty to safely shut down contamination source", icon: "🧪", hazardous: true },
+      { name: "Agricultural Emergency Protocol", description: "Crisis response system for contaminated crops", effect: "Computer Use vs 3 Difficulty. Success can isolate contamination or activate emergency food supplies", icon: "📊", emergency: true }
+    ]
+  },
   
-  FLOOR_POSITIONS: [
-    "scattered across the floor", "littering the ground", "spread on the floor", "covering the walkway",
-    "strewn about the floor", "piled in the center", "heaped on the ground", "clustered on the floor"
-  ],
+  "56-Vow": {
+    primary: ["FACILITY_HAZARDS", "CONTAMINATION_HAZARDS", "CORPORATE_HAZARDS"],
+    hazards: ["ENVIRONMENTAL_SYSTEMS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Refinement Efficiency Monitor", description: "Display showing 70% Voidsteel conversion rate", effect: "Computer Use vs 1 Difficulty. Success provides processing data to optimize scrap collection routes", icon: "📊", processing: true },
+      { name: "Gamma Bombardment Controls", description: "Molecular restructuring equipment controls", effect: "Computer Use vs 4 Difficulty. Success can shut down dangerous radiation or boost processing efficiency", icon: "☢️", radiation: true },
+      { name: "Slag Waste Management", description: "System for handling 30% processing byproduct", effect: "Mechanics vs 3 Difficulty. Success can clear slag blockages or redirect waste flow safely", icon: "⚫", waste: true }
+    ]
+  },
   
-  BLOCKING_POSITIONS: [
-    "blocking the north passage", "obstructing the south exit", "barring the east path", "blocking the west route",
-    "completely blocking passage", "partially obstructing the way", "creating a bottleneck", "forcing navigation around it",
-    "sprawled across the entrance", "wedged in the doorway"
-  ],
+  "21-Offense": {
+    primary: ["FACILITY_HAZARDS", "CORPORATE_HAZARDS", "WORKER_EVIDENCE"],
+    hazards: ["CONTAMINATION_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Weapons Testing Override", description: "Control system for Voidsteel weapon experiments", effect: "Computer Use vs 4 Difficulty. Success can disable weapon testing or access tactical protocols", icon: "⚔️", weapons: true },
+      { name: "Tactical Deployment Database", description: "Military strategies for Voidsteel weapon usage", effect: "Knowledge check reveals weapon deployment patterns. Add 2 Boost to avoid military hazards", icon: "📋", tactical: true },
+      { name: "Arsenal Security Terminal", description: "Weapons storage and tracking system", effect: "Computer Use vs 3 Difficulty. Success reveals weapon locations or can trigger security lockdown", icon: "🎯", security: true }
+    ]
+  },
   
-  CENTER_POSITIONS: [
-    "dominating the center", "positioned in the middle", "occupying the center space",
-    "standing in the middle", "centered in the hallway", "placed prominently in center"
-  ],
+  "61-March": {
+    primary: ["FACILITY_HAZARDS", "WORKER_EVIDENCE", "ENVIRONMENTAL_SYSTEMS"],
+    hazards: ["CONTAMINATION_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Deep Mining Control", description: "Excavation system for asteroid core extraction", effect: "Computer Use vs 3 Difficulty. Success can shut down dangerous mining equipment or access ore data", icon: "⛏️", mining: true },
+      { name: "Ore Composition Database", description: "Geological surveys marking Voidsteel deposits", effect: "Knowledge check reveals valuable ore locations. Add 2 Boost to identify high-value scrap", icon: "📊", geological: true },
+      { name: "Mining Safety Override", description: "Emergency shutdown for dangerous extraction equipment", effect: "Mechanics vs 3 Difficulty. Success can prevent cave-ins or stabilize mining structures", icon: "⚠️", safety: true }
+    ]
+  },
   
-  AMBIENT_POSITIONS: [
-    "permeating the entire area", "filling the whole space", "throughout the corridor",
-    "enveloping the hallway", "present everywhere", "affecting the entire area"
-  ]
+  "20-Adamance": {
+    primary: ["FACILITY_HAZARDS", "ENVIRONMENTAL_SYSTEMS", "CONTAMINATION_HAZARDS"],
+    hazards: ["CORPORATE_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Mountain Extraction Terminal", description: "Massive excavation control system", effect: "Computer Use vs 4 Difficulty. Success can shut down large-scale mining or prevent structural collapse", icon: "🏔️", extraction: true },
+      { name: "Geological Instability Warning", description: "System monitoring mining-induced damage", effect: "Computer Use vs 2 Difficulty. Success reveals unstable areas and provides safe navigation routes", icon: "🌍", stability: true },
+      { name: "Ore Transport Controls", description: "Conveyor system management for raw materials", effect: "Mechanics vs 2 Difficulty. Success can redirect ore flow or clear transport blockages", icon: "🚛", transport: true }
+    ]
+  },
+  
+  "85-Rend": {
+    primary: ["FACILITY_HAZARDS", "CONTAMINATION_HAZARDS", "ENVIRONMENTAL_SYSTEMS"],
+    hazards: ["CORPORATE_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Heat Processing Controls", description: "High-temperature Voidsteel refinement system", effect: "Computer Use vs 3 Difficulty. Success can regulate temperature or shut down overheating equipment", icon: "🔥", thermal: true },
+      { name: "Cooling System Emergency", description: "Critical temperature management for processing", effect: "Mechanics vs 4 Difficulty. Success prevents thermal overload or restores safe cooling", icon: "💨", cooling: true },
+      { name: "Thermal Processing Data", description: "Temperature monitoring and safety thresholds", effect: "Knowledge check reveals thermal hazards. Add 2 Boost to avoid heat-related dangers", icon: "🌡️", thermal_data: true }
+    ]
+  },
+  
+  "7-Dine": {
+    primary: ["ENVIRONMENTAL_SYSTEMS", "CONTAMINATION_HAZARDS", "CORPORATE_HAZARDS"],
+    hazards: ["FACILITY_HAZARDS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Waste Treatment Override", description: "Environmental system controls for contamination", effect: "Computer Use vs 3 Difficulty. Success can restore water treatment or isolate toxic waste", icon: "🗑️", treatment: true },
+      { name: "Environmental Monitoring Hub", description: "Air and water quality management system", effect: "Computer Use vs 2 Difficulty. Success reveals contamination levels and can improve air quality", icon: "💧", monitoring: true },
+      { name: "Emergency Life Support", description: "Backup environmental controls for crisis situations", effect: "Computer Use vs 3 Difficulty. Success restores safe air and water to facility sections", icon: "🫁", life_support: true }
+    ]
+  },
+  
+  "8-Titan": {
+    primary: ["FACILITY_HAZARDS", "CORPORATE_HAZARDS", "CONTAMINATION_HAZARDS"],
+    hazards: ["ENVIRONMENTAL_SYSTEMS"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Manufacturing Hub Control", description: "Central processing for contaminated product creation", effect: "Computer Use vs 4 Difficulty. Success can halt contaminated production or access distribution data", icon: "🏭", manufacturing: true },
+      { name: "Quality Control Bypass Terminal", description: "System showing deliberately skipped safety inspections", effect: "Computer Use vs 2 Difficulty. Success reveals which products are most dangerous to handle", icon: "❌", quality_control: true },
+      { name: "Product Distribution Override", description: "Shipping control for contaminated items", effect: "Computer Use vs 3 Difficulty. Success can redirect shipments or access facility supply data", icon: "📦", distribution: true }
+    ]
+  },
+  
+  "68-Artifice": {
+    primary: ["CONTAMINATION_HAZARDS", "CORPORATE_HAZARDS", "FACILITY_HAZARDS"],
+    hazards: ["ENVIRONMENTAL_SYSTEMS", "WORKER_EVIDENCE"],
+    beneficial: ["BENEFICIAL_SYSTEMS"],
+    specific: [
+      { name: "Halden Incident Archive", description: "Complete records of the catastrophic Voidsteel breach", effect: "Computer Use vs 4 Difficulty. Success provides incident timeline and emergency containment protocols", icon: "☢️", incident: true },
+      { name: "Experimental Containment Override", description: "Emergency shutdown for dangerous research equipment", effect: "Computer Use vs 5 Difficulty. Success can halt ongoing experiments or seal breach areas", icon: "⚗️", containment: true },
+      { name: "Corporate Cover-up Database", description: "Evidence of Syndicate concealing incident details", effect: "Knowledge check reveals corporate conspiracy. Add 3 Boost to resist corporate authority", icon: "🤐", conspiracy: true }
+    ]
+  }
 };
 
-// Determine appropriate position based on feature type
-export const getFeaturePosition = (feature, positionSeed) => {
-  const rand = Math.abs(Math.sin(positionSeed) * 10000) % 1;
+// Generate features based on facility role, story context, and interior type
+export const generateStoryAlignedFeatures = (x, y, floorNum, interiorType, moonName) => {
+  const hasAnyFeature = Math.random() < 0.85; // 85% chance for story relevance
+  if (!hasAnyFeature) return [];
   
-  // Safe string checking with fallbacks
-  const name = feature.name || '';
-  const description = feature.description || '';
-  const effect = feature.effect || '';
-  const media = feature.media || '';
+  const facilityConfig = FACILITY_FEATURES[moonName];
+  if (!facilityConfig) return [];
   
-  // Determine position category based on feature characteristics
-  if (name.includes('Ceiling') || name.includes('Light') || 
-      name.includes('Beam') || name.includes('Pipe') ||
-      description.includes('ceiling') || description.includes('overhead')) {
-    const positions = POSITION_DESCRIPTORS.CEILING_POSITIONS;
-    return positions[Math.floor(rand * positions.length)];
-  }
-  
-  if (name.includes('Floor') || name.includes('Debris') || 
-      name.includes('Spill') || name.includes('Scattered') ||
-      description.includes('floor') || description.includes('ground')) {
-    const positions = POSITION_DESCRIPTORS.FLOOR_POSITIONS;
-    return positions[Math.floor(rand * positions.length)];
-  }
-  
-  if (name.includes('Block') || name.includes('Cart') || 
-      name.includes('Machine') || name.includes('Vehicle') ||
-      effect.includes('obstacle') || effect.includes('block')) {
-    const positions = POSITION_DESCRIPTORS.BLOCKING_POSITIONS;
-    return positions[Math.floor(rand * positions.length)];
-  }
-  
-  if (name.includes('Wall') || name.includes('Paint') || 
-      name.includes('Monitor') || name.includes('Terminal') ||
-      description.includes('wall') || media.length > 0) {
-    const positions = POSITION_DESCRIPTORS.WALL_POSITIONS;
-    return positions[Math.floor(rand * positions.length)];
-  }
-  
-  if (effect.includes('atmosphere') || effect.includes('air') || 
-      effect.includes('sound') || effect.includes('smell')) {
-    const positions = POSITION_DESCRIPTORS.AMBIENT_POSITIONS;
-    return positions[Math.floor(rand * positions.length)];
-  }
-  
-  // Default to center positions for other features
-  const positions = POSITION_DESCRIPTORS.CENTER_POSITIONS;
-  return positions[Math.floor(rand * positions.length)];
-};
-
-// Enhanced random generation with multiple features support
-export const generateHallwayFeatures = (x, y, floorNum, interiorType) => {
-  // 70% chance to have at least one feature (30% are plain hallways)
-  const hasAnyFeature = Math.random() < 0.7;
-  if (!hasAnyFeature) {
-    return [];
-  }
-  
-  // Determine number of features (1-2, with 2 being less common)
-  const numFeatures = Math.random() < 0.75 ? 1 : 2;
+  const numFeatures = Math.random() < 0.8 ? 1 : 2;
   const features = [];
   
   for (let i = 0; i < numFeatures; i++) {
-    // Create different seeds for each feature to ensure variety
-    const seed1 = (x * 31 + y * 17 + floorNum * 13 + i * 97) % 982451653;
-    const seed2 = (x * 47 + y * 23 + floorNum * 29 + i * 73) % 1299721;
-    const seed3 = (x * 61 + y * 37 + floorNum * 41 + i * 59) % 7919;
-    const positionSeed = (x * 83 + y * 79 + floorNum * 71 + i * 101) % 999983;
+    const seed = (x * 97 + y * 89 + floorNum * 83 + i * 79) % 999983;
+    const rand = Math.abs(Math.sin(seed) * 10000) % 1;
     
-    // Multiple random values to reduce clustering
-    const rand1 = Math.abs(Math.sin(seed1) * 10000) % 1;
-    const rand2 = Math.abs(Math.sin(seed2) * 10000) % 1;
-    const rand3 = Math.abs(Math.sin(seed3) * 10000) % 1;
-    const rand4 = Math.abs(Math.sin(seed1 + seed2 + seed3) * 10000) % 1;
+    let selectedFeature;
+    let categoryName;
     
-    // For multiple features, avoid same category unless very rare
-    let availableCategories = ['VISUAL', 'OBSTACLES', 'LORE', 'ATMOSPHERIC', 'BENEFICIAL'];
-    if (i > 0 && features.length > 0) {
-      const existingCategories = features.map(f => f.category);
-      // 80% chance to pick different category, 20% chance to allow same
-      if (Math.random() < 0.8) {
-        availableCategories = availableCategories.filter(cat => !existingCategories.includes(cat));
-        if (availableCategories.length === 0) {
-          availableCategories = ['VISUAL', 'OBSTACLES', 'LORE', 'ATMOSPHERIC']; // Fallback
+    // 30% facility-specific, 40% primary categories, 20% hazards, 10% beneficial
+    if (rand < 0.3 && facilityConfig.specific.length > 0) {
+      const specificIndex = Math.floor(rand * facilityConfig.specific.length * 3.33) % facilityConfig.specific.length;
+      selectedFeature = facilityConfig.specific[specificIndex];
+      categoryName = 'FACILITY_SPECIFIC';
+    } else if (rand < 0.7) {
+      // Select from primary categories
+      const primaryCategory = facilityConfig.primary[Math.floor((rand - 0.3) * facilityConfig.primary.length * 2.5) % facilityConfig.primary.length];
+      const categoryFeatures = HALLWAY_FEATURES[primaryCategory];
+      
+      if (categoryFeatures && categoryFeatures.length > 0) {
+        // Filter by interior type if applicable
+        let availableFeatures = categoryFeatures.filter(feature => {
+          if (feature.interior) {
+            return feature.interior.includes(interiorType);
+          }
+          if (feature.facility) {
+            return feature.facility.includes(moonName);
+          }
+          return true;
+        });
+        
+        if (availableFeatures.length === 0) availableFeatures = categoryFeatures;
+        
+        const featureIndex = Math.floor((rand - 0.3) * availableFeatures.length * 2.5) % availableFeatures.length;
+        selectedFeature = availableFeatures[featureIndex];
+        categoryName = primaryCategory;
+      }
+    } else if (rand < 0.9) {
+      // Select from hazard categories
+      const hazardCategory = facilityConfig.hazards[Math.floor((rand - 0.7) * facilityConfig.hazards.length * 5) % facilityConfig.hazards.length];
+      const categoryFeatures = HALLWAY_FEATURES[hazardCategory];
+      
+      if (categoryFeatures && categoryFeatures.length > 0) {
+        let availableFeatures = categoryFeatures.filter(feature => {
+          if (feature.interior) {
+            return feature.interior.includes(interiorType);
+          }
+          if (feature.facility) {
+            return feature.facility.includes(moonName);
+          }
+          return true;
+        });
+        
+        if (availableFeatures.length === 0) availableFeatures = categoryFeatures;
+        
+        const featureIndex = Math.floor((rand - 0.7) * availableFeatures.length * 5) % availableFeatures.length;
+        selectedFeature = availableFeatures[featureIndex];
+        categoryName = hazardCategory;
+      }
+    } else {
+      // Select from beneficial systems
+      const beneficialFeatures = HALLWAY_FEATURES.BENEFICIAL_SYSTEMS.filter(feature => {
+        if (feature.interior) {
+          return feature.interior.includes(interiorType);
         }
-      }
-    }
-    
-    // Weighted category selection based on interior type
-    let categoryWeights = {
-      VISUAL: 0.35,
-      OBSTACLES: 0.25,
-      LORE: 0.25,
-      ATMOSPHERIC: 0.15,
-      BENEFICIAL: 0.20
-    };
-    
-    // Adjust weights based on interior type
-    if (interiorType === 'Factory') {
-      categoryWeights = { VISUAL: 0.4, OBSTACLES: 0.3, LORE: 0.2, ATMOSPHERIC: 0.1 };
-    } else if (interiorType === 'Mansion') {
-      categoryWeights = { VISUAL: 0.3, OBSTACLES: 0.2, LORE: 0.35, ATMOSPHERIC: 0.15 };
-    } else if (interiorType === 'Mineshaft') {
-      categoryWeights = { VISUAL: 0.25, OBSTACLES: 0.45, LORE: 0.15, ATMOSPHERIC: 0.15 };
-    }
-    
-    // Filter weights to only available categories
-    const filteredWeights = {};
-    let totalWeight = 0;
-    for (const cat of availableCategories) {
-      filteredWeights[cat] = categoryWeights[cat] || 0.25;
-      totalWeight += filteredWeights[cat];
-    }
-    
-    // Normalize weights
-    for (const cat in filteredWeights) {
-      filteredWeights[cat] = filteredWeights[cat] / totalWeight;
-    }
-    
-    // Select category using weighted random
-    let cumulative = 0;
-    let selectedCategoryName = null;
-    const categoryRand = Math.abs(rand1);
-    
-    for (const [category, weight] of Object.entries(filteredWeights)) {
-      cumulative += weight;
-      if (categoryRand <= cumulative) {
-        selectedCategoryName = category;
-        break;
-      }
-    }
-    
-    if (!selectedCategoryName) {
-      selectedCategoryName = availableCategories[0];
-    }
-    
-    const selectedCategory = HALLWAY_FEATURES[selectedCategoryName];
-    if (!selectedCategory || selectedCategory.length === 0) {
-      continue; // Skip this feature if category is empty
-    }
-    
-    // Add interior-specific features to the pool
-    let enhancedPool = [...selectedCategory];
-    
-    // Factory-specific additions
-    if (interiorType === 'Factory') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Assembly Line Debris", description: "Conveyor belt parts scattered across the floor", effect: "Industrial obstacles", icon: "🏭" },
-        { name: "Pneumatic Hiss", description: "Air pressure systems cycle with mechanical precision", effect: "Rhythmic industrial sounds", icon: "💨" },
-        { name: "Quality Control Station", description: "Abandoned inspection booth with clipboards", media: "Production Records", content: "Manufacturing quality data", icon: "📊" },
-        { name: "Warning Klaxon", description: "Red industrial alarm light spins silently", effect: "Emergency alert system", icon: "🚨" },
-        { name: "Robotic Arm", description: "Motionless mechanical appendage hangs overhead", effect: "Automation equipment", icon: "🦾" }
-      ]);
-    }
-    
-    // Mansion-specific additions
-    if (interiorType === 'Mansion') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Crystal Chandelier", description: "Ornate light fixture dangles at odd angle", effect: "Elegant decay", icon: "💎" },
-        { name: "Persian Rug", description: "Expensive carpet shows signs of violence", effect: "Luxurious obstacle", icon: "🏺" },
-        { name: "Family Portrait", description: "Oil painting with eyes that seem to follow", media: "Personal History", content: "Family genealogy", icon: "🖼️" },
-        { name: "Grandfather Clock", description: "Antique timepiece chimes at wrong intervals", effect: "Temporal distortion", icon: "🕰️" },
-        { name: "Wine Cellar Aroma", description: "Rich burgundy scents drift from hidden spaces", effect: "Alcoholic fragrance", icon: "🍷" }
-      ]);
-    }
-    
-    // Mineshaft-specific additions
-    if (interiorType === 'Mineshaft') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Mine Cart Rails", description: "Twisted steel tracks create floor hazards", effect: "Trip obstacles", icon: "🛤️" },
-        { name: "Support Timber", description: "Rotting wooden beams creak ominously", effect: "Structural instability", icon: "🪵" },
-        { name: "Coal Dust", description: "Black powder coats every surface", effect: "Breathing hazard", icon: "⚫" },
-        { name: "Miner's Helmet", description: "Hard hat with defunct headlamp", media: "Personal Equipment", content: "Worker identification", icon: "⛑️" },
-        { name: "Cave-in Warning", description: "Posted signs warn of unstable ceiling", media: "Safety Documentation", content: "Geological hazard reports", icon: "⚠️" }
-      ]);
-    }
-
-    // Factory-specific beneficial additions
-    if (interiorType === 'Factory') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Emergency Stop Button", description: "Red switch that shuts down nearby machinery", effect: "Disable dangerous machinery in current room for 8 rounds", icon: "🛑" },
-        { name: "Compressed Air Burst", description: "Pressurized line with quick release valve", effect: "Clear all debris obstacles from one adjacent room", icon: "💨" },
-        { name: "Assembly Instructions", description: "Laminated card showing equipment operation", effect: "Add 3 boost dice to next Mechanics check on industrial equipment", icon: "📋" },
-        { name: "Quality Control Stamp", description: "Approval marker for passing inspection", effect: "Mark one item as 'certified safe' - add 2 boost dice to convince others", icon: "✅" },
-        { name: "Warning Light", description: "Amber beacon that still flashes briefly", effect: "Signal team location - all allies add 1 boost die to Navigation to reach you", icon: "🚨" }
-      ]);
-    }
-    
-    // Mansion-specific beneficial additions
-    if (interiorType === 'Mansion') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Silver Dinner Bell", description: "Tarnished bell with clear tone", effect: "Alert all team members within mansion of your location", icon: "🔔" },
-        { name: "Vintage Wine Cork", description: "High-quality stopper for sealing containers", effect: "Seal one leak or prevent gas escape for 6 rounds", icon: "🍷" },
-        { name: "Opera Glasses", description: "Antique binoculars for distant viewing", effect: "Add 3 boost dice to Perception checks in large rooms", icon: "🔭" },
-        { name: "Servant Call Button", description: "Brass switch connected to mansion system", effect: "Send one audio signal through mansion intercom system", icon: "📞" },
-        { name: "Hidden Panel Latch", description: "Concealed mechanism reveals storage space", effect: "Reveal secret compartment containing random scrap", icon: "🗝️" }
-      ]);
-    }
-    
-    // Mineshaft-specific beneficial additions
-    if (interiorType === 'Mineshaft') {
-      enhancedPool = enhancedPool.concat([
-        { name: "Canary Feather", description: "Yellow plume indicates good air quality", effect: "Confirm one adjacent room is free of toxic gases", icon: "🪶" },
-        { name: "Mine Cart Brake", description: "Hand lever for controlling cart speed", effect: "Stop any moving mine cart safely without damage", icon: "🚛" },
-        { name: "Rock Sample", description: "Mineral specimen showing tunnel stability", effect: "Add 2 boost dice to assess structural safety of walls and ceiling", icon: "🪨" },
-        { name: "Ventilation Pipe", description: "Air tube with brief fresh air flow", effect: "Clear toxic gas conditions from current room for 4 rounds", icon: "🌪️" },
-        { name: "Safety Rope End", description: "Frayed climbing line still partially secure", effect: "Safely descend one level or climb to adjacent elevated area", icon: "🪢" }
-      ]);
-    }
-    
-    // Filter out already selected features to avoid exact duplicates
-    if (i > 0) {
-      const existingNames = features.map(f => f.name);
-      enhancedPool = enhancedPool.filter(f => !existingNames.includes(f.name));
-    }
-    
-    if (enhancedPool.length === 0) {
-      continue; // Skip if no unique features available
-    }
-    
-    // Use multiple random values to select feature (reduces adjacent similarity)
-    const featureIndex = Math.floor(Math.abs(rand2) * enhancedPool.length);
-    const selectedFeature = enhancedPool[featureIndex];
-    
-    // Add variation to the selected feature using additional randomness
-    const variation = Math.floor(Math.abs(rand3) * 5); // 0-4 variations
-    let modifiedFeature = { ...selectedFeature };
-    
-    // Apply subtle variations to reduce repetition
-    if (variation === 1 && selectedFeature.description) {
-      modifiedFeature.description = selectedFeature.description.replace(/\b(the|a|an)\b/g, match => {
-        return Math.abs(rand4) > 0.5 ? match : (match === 'the' ? 'this' : match === 'a' ? 'one' : 'some');
+        return true;
       });
-    } else if (variation === 2 && selectedFeature.effect) {
-      const intensifiers = ['slightly', 'moderately', 'significantly', 'severely', 'barely'];
-      const intensifier = intensifiers[Math.floor(Math.abs(rand4) * intensifiers.length)];
-      modifiedFeature.effect = `${intensifier} ${selectedFeature.effect}`;
+      
+      if (beneficialFeatures.length > 0) {
+        const featureIndex = Math.floor((rand - 0.9) * beneficialFeatures.length * 10) % beneficialFeatures.length;
+        selectedFeature = beneficialFeatures[featureIndex];
+        categoryName = 'BENEFICIAL_SYSTEMS';
+      }
     }
     
-    // Generate position for this feature
-    const position = getFeaturePosition(modifiedFeature, positionSeed);
-    
-    features.push({
-      ...modifiedFeature,
-      id: `hallway_feature_${x}_${y}_${floorNum}_${i}_${variation}`,
-      position: { x, y, floor: floorNum },
-      discovered: false,
-      variation: variation,
-      category: selectedCategoryName,
-      locationInRoom: position
-    });
+    if (selectedFeature) {
+      const position = getStoryFeaturePosition(selectedFeature, seed);
+      
+      features.push({
+        ...selectedFeature,
+        id: `story_feature_${moonName}_${x}_${y}_${floorNum}_${i}`,
+        position: { x, y, floor: floorNum },
+        discovered: false,
+        category: categoryName,
+        locationInRoom: position,
+        storyRelevant: true,
+        facility: moonName,
+        interiorType: interiorType,
+        mechanicsType: getMechanicsType(selectedFeature)
+      });
+    }
   }
   
   return features;
 };
 
-// Add to NewInteriorGrid.jsx - integrate this into the existing cell rendering
-export const enhanceHallwayCell = (cell, x, y, currentFloor, currentInteriorType) => {
+// Determine mechanics type for UI styling
+export const getMechanicsType = (feature) => {
+  if (feature.dangerous || feature.extreme) return 'dangerous';
+  if (feature.beneficial || feature.ship_action) return 'beneficial';
+  if (feature.terminal || feature.control) return 'interactive';
+  if (feature.blocking || feature.trap) return 'obstacle';
+  return 'narrative';
+};
+
+// Position determination based on story context and feature type
+export const getStoryFeaturePosition = (feature, seed) => {
+  const rand = Math.abs(Math.sin(seed) * 10000) % 1;
+  const name = feature.name || '';
+  const description = feature.description || '';
+  
+  const positions = {
+    wall: ["mounted on the north wall", "built into the south wall", "embedded in the east wall", "affixed to the west wall"],
+    floor: ["scattered across the floor", "blocking the walkway", "strewn throughout the area", "piled in the corners"],
+    ceiling: ["hanging dangerously overhead", "suspended from damaged supports", "drooping from the ceiling", "mounted above"],
+    blocking: ["completely blocking passage", "partially obstructing the corridor", "creating a dangerous bottleneck", "forcing careful navigation"],
+    ambient: ["affecting the entire area", "permeating the atmosphere", "influencing the whole space", "present throughout"]
+  };
+  
+  // Terminal/computer systems go on walls
+  if (name.includes("Terminal") || name.includes("System") || name.includes("Display") || name.includes("Monitor")) {
+    return positions.wall[Math.floor(rand * positions.wall.length)];
+  }
+  // Spills, debris, equipment go on floor
+  else if (name.includes("Spill") || name.includes("Debris") || name.includes("Equipment") || feature.blocking) {
+    return positions.floor[Math.floor(rand * positions.floor.length)];
+  }
+  // Hanging/suspended dangers
+  else if (name.includes("Hanging") || name.includes("Suspended") || description.includes("overhead")) {
+    return positions.ceiling[Math.floor(rand * positions.ceiling.length)];
+  }
+  // Environmental/atmospheric effects
+  else if (feature.environmental || feature.atmospheric || description.includes("permeating")) {
+    return positions.ambient[Math.floor(rand * positions.ambient.length)];
+  }
+  // Default to floor positioning
+  else {
+    return positions.floor[Math.floor(rand * positions.floor.length)];
+  }
+};
+
+// Enhanced hallway cell function that works with story-aligned features
+export const enhanceHallwayCell = (cell, x, y, currentFloor, currentInteriorType, moonName) => {
   // Only enhance hallways and corridors
   if (!cell || cell.type !== 'room' || 
       (cell.room !== ROOM_TYPES.HALLWAY && cell.room !== ROOM_TYPES.CORRIDOR)) {
     return cell;
   }
   
-  // Generate or retrieve hallway features (multiple features support)
+  // Generate or retrieve story-aligned hallway features
   if (!cell.hallwayFeatures) {
-    cell.hallwayFeatures = generateHallwayFeatures(x, y, currentFloor, currentInteriorType);
+    cell.hallwayFeatures = generateHallwayFeatures(x, y, currentFloor, currentInteriorType, moonName);
     // Maintain backward compatibility with single feature
     cell.hallwayFeature = cell.hallwayFeatures.length > 0 ? cell.hallwayFeatures[0] : null;
   }
@@ -619,7 +423,7 @@ export const enhanceHallwayCell = (cell, x, y, currentFloor, currentInteriorType
   return cell;
 };
 
-// Update tooltip to include all hallway features
+// Enhanced tooltip function
 export const getEnhancedHallwayTooltip = (cell, originalTooltip) => {
   const features = cell.hallwayFeatures || (cell.hallwayFeature ? [cell.hallwayFeature] : []);
   if (features.length === 0) return originalTooltip;
@@ -631,39 +435,39 @@ export const getEnhancedHallwayTooltip = (cell, originalTooltip) => {
     if (feature.locationInRoom) {
       enhancedTooltip += ` (${feature.locationInRoom})`;
     }
-    if (feature.media) {
-      enhancedTooltip += ` | 📁 ${feature.media}`;
+    if (feature.effect) {
+      enhancedTooltip += ` | Effect: ${feature.effect}`;
     }
   });
   
   return enhancedTooltip;
 };
 
-// Add visual indicator for hallway features (supports multiple features)
+// Visual indicator function with mechanics-based styling
 export const getHallwayFeatureIndicator = (feature) => {
   if (!feature) return null;
   
+  const mechanicsType = getMechanicsType(feature);
   const categoryColors = {
-    VISUAL: 'bg-blue-500',
-    OBSTACLES: 'bg-orange-600', 
-    LORE: 'bg-purple-600',
-    ATMOSPHERIC: 'bg-green-500',
-    BENEFICIAL: 'bg-emerald-500'
+    dangerous: 'bg-red-600',
+    beneficial: 'bg-green-600', 
+    interactive: 'bg-blue-600',
+    obstacle: 'bg-orange-600',
+    narrative: 'bg-purple-600'
   };
   
   return {
-    color: categoryColors[feature.category] || 'bg-blue-500',
+    color: categoryColors[mechanicsType] || 'bg-gray-600',
     icon: feature.icon,
-    category: feature.category
+    category: feature.category,
+    mechanicsType: mechanicsType
   };
 };
 
-// Integration example for the main renderGridCell function:
+// Integration helper object
 export const integrateHallwayFeatures = {
-  // Add this to the existing renderGridCell function in NewInteriorGrid.jsx
-  
-  enhanceCell: (cell, x, y, currentFloor, currentInteriorType) => {
-    return enhanceHallwayCell(cell, x, y, currentFloor, currentInteriorType);
+  enhanceCell: (cell, x, y, currentFloor, currentInteriorType, moonName) => {
+    return enhanceHallwayCell(cell, x, y, currentFloor, currentInteriorType, moonName);
   },
   
   addTooltip: (cell, originalTooltip) => {
@@ -674,7 +478,6 @@ export const integrateHallwayFeatures = {
     const features = cell.hallwayFeatures || (cell.hallwayFeature ? [cell.hallwayFeature] : []);
     if (features.length === 0) return null;
     
-    // Show indicator for first feature, with count if multiple
     const indicator = getHallwayFeatureIndicator(features[0]);
     
     return (
@@ -691,7 +494,6 @@ export const integrateHallwayFeatures = {
     );
   },
   
-  // Add to selected cell info panel (supports multiple features)
   renderFeaturePanel: (cell) => {
     const features = cell.hallwayFeatures || (cell.hallwayFeature ? [cell.hallwayFeature] : []);
     if (features.length === 0) return null;
@@ -700,33 +502,38 @@ export const integrateHallwayFeatures = {
       <div className="space-y-2 mb-2">
         {features.map((feature, index) => {
           const indicator = getHallwayFeatureIndicator(feature);
+          const mechanicsType = getMechanicsType(feature);
           
           return (
-            <div key={feature.id || index} className={`${indicator.color}/80 p-2 rounded text-white`}>
+            <div key={feature.id || index} className={`${indicator.color}/80 p-2 rounded text-white border-l-4 border-${indicator.color.replace('bg-', '')}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-semibold text-sm">{feature.icon} {feature.name}</span>
-                {feature.media && (
-                  <span className="text-xs bg-black/30 px-1 rounded">{feature.media}</span>
-                )}
+                <div className="flex space-x-1">
+                  {mechanicsType === 'dangerous' && (
+                    <span className="text-xs bg-red-800 px-1 rounded">⚠️ HAZARD</span>
+                  )}
+                  {mechanicsType === 'beneficial' && (
+                    <span className="text-xs bg-green-800 px-1 rounded">✅ BENEFIT</span>
+                  )}
+                  {mechanicsType === 'interactive' && (
+                    <span className="text-xs bg-blue-800 px-1 rounded">💻 TERMINAL</span>
+                  )}
+                  {feature.ship_action && (
+                    <span className="text-xs bg-cyan-800 px-1 rounded">🚀 SHIP</span>
+                  )}
+                </div>
               </div>
               <div className="text-xs text-gray-100 mb-1">
                 {feature.description}
               </div>
               {feature.locationInRoom && (
                 <div className="text-xs text-gray-200 italic mb-1">
-                  Location: {feature.locationInRoom}
+                  📍 {feature.locationInRoom}
                 </div>
               )}
-              {feature.effect && (
-                <div className="text-xs text-gray-200 italic">
-                  Effect: {feature.effect}
-                </div>
-              )}
-              {feature.content && (
-                <div className="text-xs text-gray-200 mt-1">
-                  Contains: {feature.content}
-                </div>
-              )}
+              <div className="text-xs text-yellow-200 font-medium bg-black/30 p-1 rounded">
+                🎲 {feature.effect}
+              </div>
             </div>
           );
         })}
@@ -734,3 +541,6 @@ export const integrateHallwayFeatures = {
     );
   }
 };
+
+// Export the story-aligned generation function
+export const generateHallwayFeatures = generateStoryAlignedFeatures;
