@@ -1,47 +1,72 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom'
-import Home from './Main_Pages/homePage'
-import Groups from './Main_Pages/groups'
-import Outposts from './Main_Pages/outposts'
-import Levels from './Main_Pages/levels'
-import Objects from './Main_Pages/objects'
-import Entities from './Main_Pages/entities'
-import Quests from './Main_Pages/quests'
-import Information from './Main_Pages/information'
-import Crafting from './Main_Pages/crafting'
-import Navbar from './Components/navbar'
-import PeopleOfInterest from './Main_Pages/peopleOfInterest'
-import PlayerFunctions from './Main_Pages/playerFunctions'
-import Login from './Components/login'
-import NotLoggedIn from './Components/notLoggedIn'
-import SignUp from './Components/signUp'
-import SetBonuses from './Main_Pages/setBonuses'
-import WeatherApp from './Bethal/weatherApp'
-import SessionSelector from './Components/sessionSelector'
-import Phenomena from './Main_Pages/phenomena'
+
+//Structural
+import Navbar from './Structural/Navbar'
+import Login from './Structural/Login'
+import Sign_Up from './Structural/Sign_Up'
+import Not_Logged_In from './Structural/Not_Logged_In'
+import Session_Selector from './Structural/Session_Selector'
+
+//Settings Pages
+import ProfileSettings from './Core/ProfileSettings'
+import Preferences from './Core/Preferences'
+import SessionSettings from './Core/SessionSettings'
+
+//Collections
+import Crafts from './Collections/Crafts'
+import Entities from './Collections/Entities'
+import Factions from './Collections/Factions'
+import Levels from './Collections/Levels'
+import Phenomena from './Collections/Phenomena'
+import POI from './Collections/POI'
+import Objects from './Collections/Objects'
+import Outposts from './Collections/Outposts'
+import Quests from './Collections/Quests'
+import GearSets from './Collections/ItemSets'
+import Relations from './Collections/Relations'
+import PlayerPage from './Features/Player/PlayerPage'
+
+//Core Pages
+import Home from './Core/Home'
+import Rules from './Core/Rules'
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+        {/* Auth Routes */}
+        <Route path='/login' element={<Login />} />
+        <Route path='/signup' element={<Sign_Up />} />
+        <Route path='/notloggedin' element={<Not_Logged_In />} />
+        <Route path='/session-selector' element={<Session_Selector />} />
+
+        {/* Settings Routes */}
+        <Route path='/profile-settings' element={<ProfileSettings />} />
+        <Route path='/preferences' element={<Preferences />} />
+        <Route path='/session-settings' element={<SessionSettings />} />
+
+        {/* Main Routes */}
         <Route path='/' element={<Home />} />
-        <Route path='/session-selector' element={<SessionSelector />} />
-        <Route path='/groups' element={<Groups />} />
-        <Route path='/outposts' element={<Outposts />} />
+        <Route path='/rules' element={<Rules />} />
+
+        {/* Tools Routes */}
+        <Route path='/player-features' element={<PlayerPage />} />
+
+        {/* Content Routes */}
+        <Route path='/crafts' element={<Crafts />} />
+        <Route path='/entities' element={<Entities />} />
+        <Route path='/factions' element={<Factions />} />
         <Route path='/levels' element={<Levels />} />
         <Route path='/objects' element={<Objects />} />
-        <Route path='/entities' element={<Entities />} />
-        <Route path='/quests' element={<Quests />} />
-        <Route path='/information' element={<Information />} />
-        <Route path='/crafting' element={<Crafting />} />
-        <Route path='/interest' element={<PeopleOfInterest />} />
+        <Route path='/gear-sets' element={<GearSets />} />
+
+        {/* World Routes */}
+        <Route path='/poi' element={<POI />} />
         <Route path='/phenomena' element={<Phenomena />} />
-        <Route path='/functions' element={<PlayerFunctions />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/notLoggedIn' element={<NotLoggedIn />} />
-        <Route path='/signUp' element={<SignUp />} />
-        <Route path='/sets' element={<SetBonuses />} />
-        <Route path='/lethal' element={<WeatherApp />} />
+        <Route path='/outposts' element={<Outposts />} />
+        <Route path='/quests' element={<Quests />} />
+        <Route path='/relations' element={<Relations />} />
       </Routes>
     </Router>
   )
