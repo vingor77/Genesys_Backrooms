@@ -2,7 +2,7 @@ import { collection, doc, onSnapshot, query, where, setDoc, updateDoc, deleteDoc
 import { useEffect, useState } from 'react';
 import db from '../../Structural/Firebase';
 import NotLoggedIn from "../../Structural/Not_Logged_In";
-import { getActiveSession, isDM, requireSession, getCurrentUserId } from '../../Structural/Session_Utils';
+import { getActiveSession, isDM, requireSession } from '../../Structural/Session_Utils';
 
 // Sub-components
 import CharacterSheet from './CharacterSheet';
@@ -53,13 +53,14 @@ export default function PlayerPage() {
   const [activeTab, setActiveTab] = useState('sheet');
   const [loading, setLoading] = useState(true);
   const [showCreator, setShowCreator] = useState(false);
-  const [viewingOther, setViewingOther] = useState(null); // For viewing other players' characters
-  const [partyCharacters, setPartyCharacters] = useState([]); // Other players' characters
+  const [viewingOther, setViewingOther] = useState(null);
+  const [partyCharacters, setPartyCharacters] = useState([]);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [sessionMembers, setSessionMembers] = useState([]);
   
   const sessionId = getActiveSession();
   const userIsDM = isDM();
-  const userId = getCurrentUserId();
 
   const showToast = (message, severity = 'success') => {
     setToast({ open: true, message, severity });
@@ -69,57 +70,85 @@ export default function PlayerPage() {
     setToast({ ...toast, open: false });
   };
 
-  // Fetch user's own characters
+  // Fetch current user and session members from SessionMembers collection
   useEffect(() => {
     if (!requireSession()) return;
-    if (!userId) return;
+    if (!sessionId) return;
 
     const q = query(
-      collection(db, 'Characters'),
-      where('ownerId', '==', userId),
+      collection(db, 'SessionMembers'),
       where('sessionId', '==', sessionId)
     );
 
     const unsub = onSnapshot(q, (querySnapshot) => {
-      const chars = [];
+      const members = [];
       querySnapshot.forEach((doc) => {
-        chars.push({ id: doc.id, ...doc.data() });
+        members.push({ id: doc.id, ...doc.data() });
       });
-      setCharacters(chars);
+      setSessionMembers(members);
       
-      // Auto-select first character if none selected
-      if (chars.length > 0 && !selectedCharacter) {
-        setSelectedCharacter(chars[0]);
+      const storedUserId = localStorage.getItem('userID');
+      
+      if (storedUserId) {
+        const user = members.find(m => m.userId === storedUserId);
+        if (user) {
+          setCurrentUser(user);
+        }
+      }
+    });
+
+    return () => unsub();
+  }, [sessionId, userIsDM]);
+
+  // Fetch all characters for this session
+  useEffect(() => {
+    if (!requireSession()) return;
+    if (!currentUser) return;
+
+    const q = query(
+      collection(db, 'Characters'),
+      where('sessionId', '==', sessionId)
+    );
+
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const allChars = [];
+      querySnapshot.forEach((doc) => {
+        allChars.push({ id: doc.id, ...doc.data() });
+      });
+      
+      const dmUserIds = sessionMembers
+        .filter(m => m.role === 'dm')
+        .map(m => m.userId);
+      
+      const myChars = allChars.filter(c => c.ownerId === currentUser.userId);
+      
+      let otherChars;
+      if (userIsDM) {
+        otherChars = allChars.filter(c => c.ownerId !== currentUser.userId);
+      } else {
+        otherChars = allChars.filter(c => 
+          c.ownerId !== currentUser.userId && 
+          !dmUserIds.includes(c.ownerId)
+        );
+      }
+      
+      setCharacters(myChars);
+      setPartyCharacters(otherChars);
+      
+      if (myChars.length > 0 && !selectedCharacter) {
+        setSelectedCharacter(myChars[0]);
       }
       setLoading(false);
     });
 
     return () => unsub();
-  }, [sessionId, userId]);
+  }, [sessionId, currentUser, sessionMembers, userIsDM]);
 
-  // Fetch party characters (other players)
-  useEffect(() => {
-    if (!requireSession()) return;
-    if (!userId) return;
+  const getOwnerName = (ownerId) => {
+    const member = sessionMembers.find(m => m.userId === ownerId);
+    return member?.userName || 'Unknown';
+  };
 
-    const q = query(
-      collection(db, 'Characters'),
-      where('sessionId', '==', sessionId),
-      where('ownerId', '!=', userId)
-    );
-
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const chars = [];
-      querySnapshot.forEach((doc) => {
-        chars.push({ id: doc.id, ...doc.data() });
-      });
-      setPartyCharacters(chars);
-    });
-
-    return () => unsub();
-  }, [sessionId, userId]);
-
-  // Save character data
   const saveCharacter = async (characterId, data) => {
     try {
       const charRef = doc(db, 'Characters', characterId);
@@ -134,16 +163,21 @@ export default function PlayerPage() {
     }
   };
 
-  // Create new character
   const createCharacter = async (characterData) => {
+    if (!currentUser) {
+      showToast('User not identified', 'error');
+      return;
+    }
+    
     try {
-      const newId = `char-${userId}-${Date.now()}`;
+      const newId = `char-${currentUser.userId}-${Date.now()}`;
       const charRef = doc(db, 'Characters', newId);
       
       await setDoc(charRef, {
         ...characterData,
         id: newId,
-        ownerId: userId,
+        ownerId: currentUser.userId,
+        ownerName: currentUser.userName,
         sessionId: sessionId,
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString()
@@ -157,7 +191,6 @@ export default function PlayerPage() {
     }
   };
 
-  // Delete character
   const deleteCharacter = async (characterId) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this character? This cannot be undone.');
     if (!confirmDelete) return;
@@ -166,7 +199,6 @@ export default function PlayerPage() {
       await deleteDoc(doc(db, 'Characters', characterId));
       showToast('Character deleted', 'success');
       
-      // Select another character or clear selection
       if (selectedCharacter?.id === characterId) {
         const remaining = characters.filter(c => c.id !== characterId);
         setSelectedCharacter(remaining.length > 0 ? remaining[0] : null);
@@ -177,8 +209,7 @@ export default function PlayerPage() {
     }
   };
 
-  // Determine if viewing own character (editable) or other's (read-only)
-  const isViewingOwn = !viewingOther;
+  const isViewingOwn = viewingOther ? false : (selectedCharacter?.ownerId === currentUser?.userId);
   const displayCharacter = viewingOther || selectedCharacter;
 
   const tabs = [
@@ -196,34 +227,36 @@ export default function PlayerPage() {
   // Character Creator View
   if (showCreator) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900/20 to-gray-900 p-8">
+      <div className="min-h-screen bg-gray-900">
         <Toast message={toast.message} severity={toast.severity} isOpen={toast.open} onClose={hideToast} />
-        <div className="max-w-4xl mx-auto">
+        <div className="h-screen overflow-y-auto p-8">
+          <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setShowCreator(false)}
-            className="mb-4 text-gray-400 hover:text-white flex items-center space-x-2 transition-colors"
+            className="mb-4 text-gray-300 hover:text-white flex items-center space-x-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             <span>Back to Characters</span>
           </button>
-          <CharacterCreator onCreate={createCharacter} onCancel={() => setShowCreator(false)} />
+            <CharacterCreator onCreate={createCharacter} onCancel={() => setShowCreator(false)} />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-900/20 to-gray-900 p-8">
+    <div className="min-h-screen p-8 bg-gray-900">
       <Toast message={toast.message} severity={toast.severity} isOpen={toast.open} onClose={hideToast} />
       
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
           <div>
-            <h1 className="text-3xl font-bold text-white">Player Characters</h1>
-            <p className="text-gray-400">Session: {sessionId}</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Player Characters</h1>
+            <p className="text-gray-300">Session: <span className="text-indigo-400">{sessionId}</span></p>
           </div>
           
           <button
@@ -236,19 +269,22 @@ export default function PlayerPage() {
         </div>
 
         {/* Character Selector + Party View */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 bg-gray-900">
           {/* My Characters */}
           <div className="lg:col-span-3">
-            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-4">
+            <div className="bg-gray-800 backdrop-blur-lg border border-gray-600 rounded-xl p-4">
               <h2 className="text-lg font-semibold text-white mb-3">My Characters</h2>
               {loading ? (
-                <div className="text-gray-400">Loading...</div>
+                <div className="flex items-center space-x-3 text-gray-300">
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-indigo-500"></div>
+                  <span>Loading...</span>
+                </div>
               ) : characters.length === 0 ? (
-                <div className="text-gray-400 text-center py-8">
-                  <p className="mb-2">No characters yet.</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-300 mb-2">No characters yet.</p>
                   <button
                     onClick={() => setShowCreator(true)}
-                    className="text-indigo-400 hover:text-indigo-300 underline"
+                    className="text-indigo-400 hover:text-indigo-300 underline font-medium"
                   >
                     Create your first character
                   </button>
@@ -264,12 +300,12 @@ export default function PlayerPage() {
                       }}
                       className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center space-x-2
                         ${selectedCharacter?.id === char.id && !viewingOther
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          ? 'bg-indigo-600 text-white border border-indigo-400'
+                          : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-700'
                         }`}
                     >
                       <span>{char.name || 'Unnamed'}</span>
-                      {char.career && <span className="text-xs opacity-70">({char.career})</span>}
+                      {char.career && <span className="text-sm opacity-75">({char.career})</span>}
                     </button>
                   ))}
                 </div>
@@ -279,26 +315,37 @@ export default function PlayerPage() {
 
           {/* Party Members (View Only) */}
           <div className="lg:col-span-1">
-            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-4">
+            <div className="bg-gray-800 backdrop-blur-lg border border-gray-600 rounded-xl p-4">
               <h2 className="text-lg font-semibold text-white mb-3">Party</h2>
               {partyCharacters.length === 0 ? (
-                <p className="text-gray-500 text-sm">No other players yet</p>
+                <p className="text-gray-300 text-sm">No other characters yet</p>
               ) : (
                 <div className="space-y-2">
-                  {partyCharacters.map((char) => (
-                    <button
-                      key={char.id}
-                      onClick={() => setViewingOther(char)}
-                      className={`w-full px-3 py-2 rounded-lg text-left text-sm transition-all
-                        ${viewingOther?.id === char.id
-                          ? 'bg-purple-600/50 text-white border border-purple-500'
-                          : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300'
-                        }`}
-                    >
-                      <div className="font-medium">{char.name || 'Unnamed'}</div>
-                      {char.career && <div className="text-xs opacity-70">{char.career}</div>}
-                    </button>
-                  ))}
+                  {partyCharacters.map((char) => {
+                    const isDMCharacter = sessionMembers.find(m => m.userId === char.ownerId)?.role === 'dm';
+                    return (
+                      <button
+                        key={char.id}
+                        onClick={() => setViewingOther(char)}
+                        className={`w-full px-3 py-2 rounded-lg text-left text-sm transition-all
+                          ${viewingOther?.id === char.id
+                            ? 'bg-purple-600/50 text-white border border-purple-400'
+                            : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border border-gray-700'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{char.name || 'Unnamed'}</span>
+                          {isDMCharacter && userIsDM && (
+                            <span className="px-1.5 py-0.5 text-xs bg-amber-500/30 text-amber-300 rounded border border-amber-500/50">DM</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {char.career && <span>{char.career} • </span>}
+                          <span>{getOwnerName(char.ownerId)}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -307,17 +354,17 @@ export default function PlayerPage() {
 
         {/* Viewing Other Player Banner */}
         {viewingOther && (
-          <div className="bg-purple-900/30 border border-purple-500/50 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="bg-purple-900/30 border border-purple-500/50 p-4 mx-4 mb-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <span className="text-2xl">👁️</span>
               <div>
-                <div className="text-purple-300 font-semibold">Viewing: {viewingOther.name}</div>
-                <div className="text-purple-400 text-sm">Read-only view of another player's character</div>
+                <div className="text-white font-semibold">Viewing: {viewingOther.name}</div>
+                <div className="text-purple-300 text-sm">Read-only view of another player's character</div>
               </div>
             </div>
             <button
               onClick={() => setViewingOther(null)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
             >
               Back to My Character
             </button>
@@ -325,23 +372,24 @@ export default function PlayerPage() {
         )}
 
         {/* Main Content */}
-        {displayCharacter ? (
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl overflow-hidden">
+        <div className="flex-1 overflow-hidden px-4 pb-4">
+          {displayCharacter ? (
+            <div className="bg-gray-800 border border-gray-600 rounded-xl h-full flex flex-col overflow-hidden">
             {/* Character Header */}
-            <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-6 border-b border-white/10">
-              <div className="flex items-center justify-between">
+            <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-6 border-b border-gray-600">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center space-x-4">
                   {/* Character Portrait Placeholder */}
-                  <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-3xl">
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-3xl border-2 border-gray-600">
                     {displayCharacter.portrait || '👤'}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">{displayCharacter.name || 'Unnamed Character'}</h2>
-                    <div className="flex items-center space-x-3 text-gray-400">
+                    <div className="flex items-center space-x-3 text-gray-300">
                       {displayCharacter.archetype && <span>{displayCharacter.archetype}</span>}
                       {displayCharacter.career && (
                         <>
-                          <span className="text-gray-600">•</span>
+                          <span className="text-gray-500">•</span>
                           <span>{displayCharacter.career}</span>
                         </>
                       )}
@@ -350,23 +398,23 @@ export default function PlayerPage() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="flex items-center space-x-4">
-                  <div className="text-center px-4 py-2 bg-red-900/30 rounded-lg border border-red-500/30">
-                    <div className="text-xs text-red-300">Wounds</div>
+                <div className="flex items-center space-x-3">
+                  <div className="text-center px-4 py-2 bg-red-900/40 rounded-lg border border-red-500/50">
+                    <div className="text-xs text-red-300 font-medium">Wounds</div>
                     <div className="text-xl font-bold text-white">
                       {displayCharacter.currentWounds || 0}/{displayCharacter.woundThreshold || 0}
                     </div>
                   </div>
-                  <div className="text-center px-4 py-2 bg-blue-900/30 rounded-lg border border-blue-500/30">
-                    <div className="text-xs text-blue-300">Strain</div>
+                  <div className="text-center px-4 py-2 bg-blue-900/40 rounded-lg border border-blue-500/50">
+                    <div className="text-xs text-blue-300 font-medium">Strain</div>
                     <div className="text-xl font-bold text-white">
                       {displayCharacter.currentStrain || 0}/{displayCharacter.strainThreshold || 0}
                     </div>
                   </div>
-                  <div className="text-center px-4 py-2 bg-purple-900/30 rounded-lg border border-purple-500/30">
-                    <div className="text-xs text-purple-300">Sanity</div>
+                  <div className="text-center px-4 py-2 bg-purple-900/40 rounded-lg border border-purple-500/50">
+                    <div className="text-xs text-purple-300 font-medium">Sanity</div>
                     <div className="text-xl font-bold text-white">
-                      {displayCharacter.currentSanity || 100}%
+                      {displayCharacter.currentSanity ?? 100}%
                     </div>
                   </div>
                 </div>
@@ -376,7 +424,7 @@ export default function PlayerPage() {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => deleteCharacter(displayCharacter.id)}
-                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all"
+                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all border border-transparent hover:border-red-500/50"
                       title="Delete Character"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,7 +437,7 @@ export default function PlayerPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-white/10 bg-black/20 overflow-x-auto">
+            <div className="flex border-b border-gray-600 bg-gray-800 overflow-x-auto">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
@@ -397,7 +445,7 @@ export default function PlayerPage() {
                   className={`px-6 py-4 font-medium transition-all whitespace-nowrap
                     ${activeTab === tab.id
                       ? 'text-indigo-400 border-b-2 border-indigo-400 bg-indigo-500/10'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
                     }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
@@ -407,7 +455,7 @@ export default function PlayerPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               {activeTab === 'sheet' && (
                 <CharacterSheet
                   character={displayCharacter}
@@ -445,19 +493,20 @@ export default function PlayerPage() {
               )}
             </div>
           </div>
-        ) : (
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-12 text-center">
+          ) : (
+            <div className="bg-gray-800 border border-gray-600 rounded-xl p-12 text-center flex items-center justify-center h-full">
             <div className="text-6xl mb-4">🎭</div>
             <h3 className="text-xl font-semibold text-white mb-2">No Character Selected</h3>
-            <p className="text-gray-400 mb-6">Create a character to get started or select one from above.</p>
+            <p className="text-gray-300 mb-6">Create a character to get started or select one from above.</p>
             <button
               onClick={() => setShowCreator(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all"
             >
               Create Character
-            </button>
-          </div>
-        )}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

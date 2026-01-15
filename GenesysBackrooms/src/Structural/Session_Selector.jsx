@@ -125,6 +125,7 @@ export default function Session_Selector() {
     try {
       const code = generateJoinCode();
       
+      localStorage.setItem('userID', user.uid);
       // Create the session
       const sessionRef = await addDoc(collection(db, 'Sessions'), {
         name: sessionName,
@@ -228,6 +229,7 @@ export default function Session_Selector() {
       showToast('Successfully joined session!', 'success');
       setJoinCode('');
       setShowJoinModal(false);
+      localStorage.setItem('userID', user.uid);
       
       setTimeout(() => {
         window.location.href = '/';
@@ -253,6 +255,7 @@ export default function Session_Selector() {
       setActiveSession(session.id, session.role);
       
       showToast('Session activated!', 'success');
+      localStorage.setItem('userID', user.uid);
       setTimeout(() => {
         window.location.href = '/';
       }, 1000);

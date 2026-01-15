@@ -54,6 +54,7 @@ export default function Navbar() {
       label: 'Tools',
       items: [
         { path: '/player-features', label: 'Player Features', icon: '🎮' },
+        { path: '/dm-features', label: 'DM Features', icon: '🎮' },
         { path: '/game-runner', label: 'Game Runner', icon: '⚙️', dmOnly: true, placeholder: true },
       ]
     },

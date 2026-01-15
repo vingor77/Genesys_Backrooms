@@ -25,6 +25,7 @@ import Quests from './Collections/Quests'
 import GearSets from './Collections/ItemSets'
 import Relations from './Collections/Relations'
 import PlayerPage from './Features/Player/PlayerPage'
+import DMPage from './Features/DM/DMPage'
 
 //Core Pages
 import Home from './Core/Home'
@@ -52,6 +53,7 @@ function App() {
 
         {/* Tools Routes */}
         <Route path='/player-features' element={<PlayerPage />} />
+        <Route path='/dm-features' element={<DMPage />} />
 
         {/* Content Routes */}
         <Route path='/crafts' element={<Crafts />} />
